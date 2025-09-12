@@ -90,6 +90,14 @@ except ImportError as e:
     print("Install with: pip install torch transformers sentence-transformers scikit-learn")
     NLP_AVAILABLE = False
 
+# Import InstructionalLanguageDetector
+try:
+    from chess_rag_system.analysis.instructional_detector import InstructionalLanguageDetector
+    INSTRUCTIONAL_DETECTOR_AVAILABLE = True
+except ImportError as e:
+    print(f"InstructionalLanguageDetector not available: {e}")
+    INSTRUCTIONAL_DETECTOR_AVAILABLE = False
+
 
 # ====================================================================================================
 # IDF-ENHANCED WEIGHTING SYSTEM - v5.1 FEATURE WITH PROGRESS TRACKING

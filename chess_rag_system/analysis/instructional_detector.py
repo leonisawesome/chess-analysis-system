@@ -17,6 +17,10 @@ import unicodedata as ud
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple, Set
 from collections import defaultdict, Counter
+from ._signals import pgn_ratio, didactic_hits_per_1k
+
+_PGN_CUTOFF = 0.35
+_DIDACTIC_BOOST = 6
 
 # Import vocabulary from hotfix file
 from .instructional_vocabulary_hotfix import (
@@ -216,6 +220,56 @@ class ChessEntityDetector:
         return soft_cue_count >= 2
 
 class InstructionalLanguageDetector:
+    def __init__(self, embedding_model: Optional[object] = None, use_embedding_confirmation: bool = False):
+        self.entity_detector = ChessEntityDetector()
+        self.embedding_model = embedding_model
+        self.use_embedding_confirmation = use_embedding_confirmation
+        self._version = 'v2.1-empirical-lazy'
+        # Load vocab and compile patterns eagerly for reliability in tests
+        if hasattr(self, '_load_instructional_vocabulary') and hasattr(self, '_compile_patterns'):
+            self._load_instructional_vocabulary()
+            self._compile_patterns()
+            if hasattr(self, '_assert_categories'):
+                self._assert_categories()
+        else:
+            # Fallback: direct compile from hotfix lexicon
+            self.fixed_phrases = INSTRUCTIONAL_LEXICON
+            self._compiled = []
+            for cat, patterns in INSTRUCTIONAL_LEXICON.items():
+                for p in patterns:
+                    pattern_str = r'\b' + re.escape(p.lower()) + r'\b'
+                    self._compiled.append((cat, re.compile(pattern_str, re.IGNORECASE), p))
+            # Compile slot patterns
+            self.compiled_slot_patterns = []
+            for pattern_spec in SLOT_PATTERNS:
+                try:
+                    compiled = re.compile(pattern_spec['pattern'], re.IGNORECASE)
+                    self.compiled_slot_patterns.append({
+                        'category': pattern_spec['category'],
+                        'pattern': compiled,
+                        'weight': pattern_spec['weight'],
+                        'slots': pattern_spec.get('slots', [])
+                    })
+                except re.error:
+                    continue
+        # Expose a mapping used by tests and debug utilities
+        compiled_map: Dict[str, list] = {}
+        for cat, regex_obj, _ in getattr(self, '_compiled', []) or []:
+            compiled_map.setdefault(canon(cat), []).append(regex_obj)
+        csp = getattr(self, 'compiled_slot_patterns', None)
+        if isinstance(csp, dict):
+            for cat, patterns in csp.items():
+                compiled_map.setdefault(canon(cat), []).extend(patterns)
+        elif isinstance(csp, list):
+            for slot_spec in csp:
+                try:
+                    cat = slot_spec.get('category')
+                    pat = slot_spec.get('pattern')
+                    if cat and pat is not None:
+                        compiled_map.setdefault(canon(cat), []).append(pat)
+                except Exception:
+                    continue
+        self.compiled_patterns = compiled_map
     def _log_compiled_counts(self):
         pid = os.getpid()
         try:
@@ -300,6 +354,93 @@ class InstructionalLanguageDetector:
     def _gate_reason(self, reason: str):
         """DEBUG helper to log gating decisions by reason code."""
         logging.debug(f"gate:{reason}")
+
+
+# Convenience API for simple boolean classification in unit tests and quick checks
+_DETECTOR_SINGLETON = None
+
+def _get_detector():
+    global _DETECTOR_SINGLETON
+    if _DETECTOR_SINGLETON is None:
+        try:
+            _DETECTOR_SINGLETON = InstructionalLanguageDetector.factory()
+        except Exception:
+            _DETECTOR_SINGLETON = InstructionalLanguageDetector()
+    return _DETECTOR_SINGLETON
+
+def _normalize_text(s: str) -> str:
+    # Normalize common unicode dashes and minus signs
+    s = s.replace('\u2013', '-').replace('\u2014', '-').replace('\u2212', '-')
+    # Normalize ellipsis
+    s = s.replace('\u2026', '...')
+    return s
+
+def detect_instructional(text: str) -> bool:
+    """Lightweight boolean classifier for instructional prose.
+
+    Uses a combination of didactic phrase cues, chess-noun context,
+    simple SAN manoeuvre mentions, and the underlying detector score.
+    """
+    if not text or not text.strip():
+        return False
+
+    # === NEW: high-confidence early returns ===
+    try:
+        if pgn_ratio(text) >= _PGN_CUTOFF:
+            return False  # heavy PGN/move dump
+        if didactic_hits_per_1k(text) >= _DIDACTIC_BOOST:
+            return True   # clearly explanatory prose
+    except Exception:
+        pass
+
+    t = _normalize_text(text)
+    tl = t.lower()
+
+    # Didactic cues commonly found in seed labels
+    didactic_cues = [
+        'typical plan', 'typical plans', 'key ideas', 'common mistakes',
+        'strategic aim', 'remember', 'improve worst-placed', 'improve worst placed',
+        'coordinate rooks', 'fight for the center', 'queenside minority', 'minority',
+        'open file'
+    ]
+
+    chess_nouns = [
+        'bishop', 'rook', 'knight', 'queen', 'king', 'file', 'center',
+        'queenside', 'kingside', 'endgame', 'pawn', 'pawns', 'structure', 'piece', 'pieces'
+    ]
+
+    has_didactic = any(k in tl for k in didactic_cues)
+    has_chess_noun = any(k in tl for k in chess_nouns)
+
+    # Recognize manoeuvre notation like Nd2-f1-g3 after dash normalization
+    san_manoeuvre = bool(re.search(r'\b[KNBRQ]?[a-h][1-8](?:-[a-h][1-8]){1,3}\b', t))
+
+    # If contains advisory phrasing with chess nouns OR manoeuvre mention with advisory words
+    advisory_words = any(w in tl for w in ['typical', 'strategic', 'remember', 'plan', 'aim', 'manoeuvre', 'maneuver'])
+    if (has_didactic and has_chess_noun) or (san_manoeuvre and advisory_words):
+        return True
+
+    # Fall back to underlying detector score and raw matches
+    det = _get_detector()
+    score = 0.0
+    try:
+        score = float(det.analyze_instructional_language([t]))
+    except Exception:
+        score = 0.0
+
+    try:
+        raw = det.debug_raw_matches(t)
+        raw_hits = sum(len(v) for v in (raw or {}).values())
+    except Exception:
+        raw_hits = 0
+
+    # Heuristic threshold: modest score or any raw hit combined with chess nouns
+    if score >= 0.2:
+        return True
+    if raw_hits >= 1 and (has_didactic or has_chess_noun):
+        return True
+
+    return False
     """
     Chess-specific instructional language detector implementing 4-AI partner consensus:
     - Empirical vocabulary from GM content analysis

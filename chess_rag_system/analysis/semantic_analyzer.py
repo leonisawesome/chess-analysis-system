@@ -453,7 +453,8 @@ class ChessSemanticAnalyzer:
         
         Implements the 3-component approach from AI partner consultation:
         - Generic clarity (existing logic)
-        - Instructional language score (new component)  
+        - Instructional language score (new component)
+
         - Plan chain bonus (new component)
         """
         # Calculate generic clarity using existing logic
