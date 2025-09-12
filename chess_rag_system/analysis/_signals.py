@@ -64,6 +64,23 @@ def didactic_hits_per_1k(text: str) -> int:
     hits = sum(1 for t in toks if t in _DIDACTIC)
     return int(1000 * hits / max(1, len(toks)))
 
+# Heuristic detection of engine/analysis logs (Stockfish/LC0 style)
+# Terms: depth, seldepth, nodes, nps, multipv, pv, score cp/mate, hashfull, tbhits, wdl, bestmove
+_ENGINE_PATTERNS = [
+    r"\bdepth\b", r"\bseldepth\b", r"\bnodes\b", r"\bnps\b",
+    r"\bmultipv\b", r"\bpv\b", r"\bbestmove\b", r"\bponder\b",
+    r"\bhashfull\b", r"\btb(?:hits)?\b", r"\bwdl\b",
+    r"\bscore\s+(?:cp|mate)\b",
+    r"\btime\s+\d+", r"\bcurrmove(?:number)?\b",
+]
+
+_ENGINE_REGEXES = [re.compile(p, re.IGNORECASE) for p in _ENGINE_PATTERNS]
+
+def engine_dump_hits(text: str) -> int:
+    """Count occurrences of common engine log terms (case-insensitive)."""
+    t = text if isinstance(text, str) else str(text)
+    return sum(len(rx.findall(t)) for rx in _ENGINE_REGEXES)
+
 # Common headings in EN/ES that indicate structured, didactic prose
 _HEADING_WORDS = {
     # English
@@ -80,4 +97,3 @@ def heading_hits(text: str) -> int:
     t = text.lower()
     # count substrings; cheap and robust for short texts
     return sum(t.count(w) for w in _HEADING_WORDS)
-

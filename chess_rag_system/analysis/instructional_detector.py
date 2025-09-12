@@ -17,11 +17,12 @@ import unicodedata as ud
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple, Set
 from collections import defaultdict, Counter
-from ._signals import pgn_ratio, didactic_hits_per_1k, heading_hits
+from ._signals import pgn_ratio, didactic_hits_per_1k, heading_hits, engine_dump_hits
 
 _PGN_CUTOFF = 0.35
 _DIDACTIC_BOOST = 6
 _HEADINGS_BOOST = 3
+_ENGINE_NEG_HITS = 3
 
 # Import vocabulary from hotfix file
 from .instructional_vocabulary_hotfix import (
@@ -389,6 +390,9 @@ def detect_instructional(text: str) -> bool:
     try:
         if pgn_ratio(text) >= _PGN_CUTOFF:
             return False  # heavy PGN/move dump
+        # === NEW: engine dump negative ===
+        if engine_dump_hits(text) >= _ENGINE_NEG_HITS:
+            return False  # engine analysis log
         if didactic_hits_per_1k(text) >= _DIDACTIC_BOOST:
             return True   # clearly explanatory prose
     except Exception:
