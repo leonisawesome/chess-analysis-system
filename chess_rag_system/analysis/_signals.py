@@ -36,6 +36,7 @@ _DIDACTIC = {
     "theme",
     "themes",
     "concepts",
+    "planes","clave","claves","típico","típicos","típica","típicas","principio","principios","evitar","evita","eviten","error","errores","estrategia","estrategias","estratégico","estratégica","estructura","estructuras","mejorar","mejora","recuerda","recuerde","explica","explicado","explicación","tema","temas","concepto","conceptos",
 }
 
 
