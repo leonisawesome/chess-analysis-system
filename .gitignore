@@ -21,3 +21,4 @@ env/
 # Local temp and coverage outputs
 .tmp/
 htmlcov/
+scripts/__pycache__/
