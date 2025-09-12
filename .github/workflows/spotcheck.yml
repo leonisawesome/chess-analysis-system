@@ -12,3 +12,14 @@ jobs:
       - run: chmod +x ci/check_spotcheck.sh
       - run: ci/check_spotcheck.sh
 
+  diag-cap:
+    runs-on: ubuntu-latest
+    needs: prod-invariance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt || true
+      - run: chmod +x scripts/test_diag_cap.py
+      - run: DETECTOR_NO_EMBED=1 python scripts/test_diag_cap.py
