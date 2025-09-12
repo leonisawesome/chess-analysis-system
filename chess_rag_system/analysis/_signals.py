@@ -81,6 +81,39 @@ def engine_dump_hits(text: str) -> int:
     t = text if isinstance(text, str) else str(text)
     return sum(len(rx.findall(t)) for rx in _ENGINE_REGEXES)
 
+# Detect instructional annotation markers: symbols, NAGs, and PGN comments
+_ANNOT_PATTERNS = [
+    r"\!\?", r"\?\!", r"\!\!", r"\?\?",      # !?, ?!, !!, ??
+    r"\+\=", r"\=\+", r"\-\=", r"\=\-",      # +=, =+, -=, =-
+    r"[±∓]",                                  # ±, ∓
+    r"\$\d{1,3}",                             # NAGs like $1..$139
+    r"\{[^}]{0,400}\}",                       # {comment}
+    r"(?m)^\s*;",                             # ; line comment (multiline)
+]
+
+_ANNOT_REGEXES = [re.compile(p) for p in _ANNOT_PATTERNS]
+
+def annotation_hits(text: str) -> int:
+    """Count occurrences of common chess annotation markers."""
+    t = text if isinstance(text, str) else str(text)
+    return sum(len(rx.findall(t)) for rx in _ANNOT_REGEXES)
+
+# Detect "table of contents" style lines (dotted leaders, page refs, EOL page numbers)
+_DOT_LEADER   = re.compile(r"\.{3,}")                       # ..... or ...........
+_PAGE_PREFIX  = re.compile(r"\bpp?\.\s*\d+")                # p. 12 / pp. 12–20
+_EOL_PAGENUM  = re.compile(r"(?m)^\s*.+\s(\d{1,4})\s*$")    # line ends with page number
+_RANGE_DASH   = re.compile(r"\d+\s*[–-]\s*\d+")             # 12–20 / 12-20
+
+def toc_like_hits(text: str) -> int:
+    """Count occurrences that look like TOC lines. Higher = more likely pure index."""
+    if not isinstance(text, str):
+        text = str(text)
+    hits  = len(_DOT_LEADER.findall(text))
+    hits += len(_PAGE_PREFIX.findall(text))
+    hits += len(_EOL_PAGENUM.findall(text))
+    hits += len(_RANGE_DASH.findall(text))
+    return hits
+
 # Common headings in EN/ES that indicate structured, didactic prose
 _HEADING_WORDS = {
     # English

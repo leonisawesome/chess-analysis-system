@@ -17,12 +17,14 @@ import unicodedata as ud
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple, Set
 from collections import defaultdict, Counter
-from ._signals import pgn_ratio, didactic_hits_per_1k, heading_hits, engine_dump_hits
+from ._signals import pgn_ratio, didactic_hits_per_1k, heading_hits, engine_dump_hits, annotation_hits, toc_like_hits
 
 _PGN_CUTOFF = 0.35
 _DIDACTIC_BOOST = 6
 _HEADINGS_BOOST = 3
 _ENGINE_NEG_HITS = 3
+_ANNOT_POS_HITS = 3
+_TOC_NEG_HITS = 4
 
 # Import vocabulary from hotfix file
 from .instructional_vocabulary_hotfix import (
@@ -393,6 +395,9 @@ def detect_instructional(text: str) -> bool:
         # === NEW: engine dump negative ===
         if engine_dump_hits(text) >= _ENGINE_NEG_HITS:
             return False  # engine analysis log
+        # === NEW: TOC negative ===
+        if toc_like_hits(text) >= _TOC_NEG_HITS:
+            return False  # looks like a table of contents/index page
         if didactic_hits_per_1k(text) >= _DIDACTIC_BOOST:
             return True   # clearly explanatory prose
     except Exception:
@@ -401,6 +406,10 @@ def detect_instructional(text: str) -> bool:
     # === NEW: headings boost ===
     if heading_hits(text) >= _HEADINGS_BOOST:
         return True  # book/course structure present
+
+    # === NEW: annotation symbols boost ===
+    if annotation_hits(text) >= _ANNOT_POS_HITS:
+        return True  # annotated games/books are typically instructional
 
     t = _normalize_text(text)
     tl = t.lower()
