@@ -1,0 +1,504 @@
+"""
+File Processor - Complete analysis pipeline for individual chess files.
+
+This module orchestrates the complete analysis workflow:
+1. Text extraction from various file formats
+2. Semantic analysis for instructional value detection
+3. PGN analysis for EVS calculation
+4. Integration scoring to combine results
+5. RAG fitness evaluation
+6. Final quality scoring and classification
+
+This is where the sophisticated analysis architecture comes together
+to evaluate chess content and determine EVS scores.
+"""
+
+import logging
+import os
+import hashlib
+import time
+from pathlib import Path
+from typing import Optional, Dict, Any
+
+from ..core.models import (
+    FileRecord, AnalysisRequest, AnalysisResponse,
+    SemanticAnalysisResult, RenameConfig
+)
+from ..core.models import QualityTier
+from ..analysis.semantic_analyzer import ChessSemanticAnalyzer
+from ..analysis.pgn_detector import AdvancedPGNDetector
+from ..scoring.rag_evaluator import RAGFitnessEvaluator
+from ..scoring.integration_scorer import IntegrationScorer
+from ..file_ops.text_extractor import TextExtractor
+
+
+class FileProcessor:
+    """
+    Complete file analysis pipeline processor.
+
+    This class coordinates all analysis components to evaluate chess files
+    and generate comprehensive quality scores including the critical EVS
+    calculation that should reach 85+ for GM instructional content.
+
+    ARCHITECTURAL RESPONSIBILITY:
+    This processor implements the complete analysis workflow using the
+    sophisticated semantic analysis and integration architecture to
+    properly identify and score high-quality instructional content.
+    """
+
+    def __init__(self, config: RenameConfig):
+        self.config = config
+        self.logger = logging.getLogger(__name__)
+
+        # Initialize analysis components
+        self.text_extractor = TextExtractor()
+        self.semantic_analyzer = ChessSemanticAnalyzer()
+        self.pgn_detector = AdvancedPGNDetector()
+        self.integration_scorer = IntegrationScorer()
+        self.rag_evaluator = RAGFitnessEvaluator()
+
+        self.logger.info("File processor initialized with complete analysis pipeline")
+
+    def set_idf_weights(self, idf_weights):
+        """Set IDF weights for enhanced semantic analysis"""
+        self.semantic_analyzer.set_idf_weights(idf_weights)
+        self.logger.info("IDF weights loaded for enhanced file analysis")
+
+    def analyze_file(self, file_path: str) -> FileRecord:
+        """
+        Perform complete analysis of a single chess file.
+
+        This is the main entry point that orchestrates the entire analysis
+        pipeline to evaluate chess content and calculate quality scores.
+
+        Args:
+            file_path: Path to the file to analyze
+
+        Returns:
+            FileRecord with complete analysis results and EVS score
+        """
+        start_time = time.time()
+
+        try:
+            self.logger.debug(f"Starting analysis of {file_path}")
+
+            # Step 1: Extract file metadata and content
+            file_metadata = self._extract_file_metadata(file_path)
+            if not file_metadata:
+                raise Exception("Failed to extract file metadata")
+
+            text_content = self.text_extractor.extract_text(file_path)
+            if not text_content.strip():
+                raise Exception("No readable text content found")
+
+            self.logger.debug(f"Extracted {len(text_content)} characters from {Path(file_path).name}")
+
+            # Step 2: Perform complete content analysis
+            analysis_response = self._analyze_content(text_content, file_path)
+            if analysis_response.status != "success":
+                raise Exception(f"Content analysis failed: {analysis_response.error_message}")
+
+            # Step 3: Calculate final EVS using integration scorer
+            final_evs = self.integration_scorer.calculate_final_evs_score(
+                analysis_response.semantic_result,
+                analysis_response.semantic_result.pgn_analysis
+            )
+
+            # Step 4: Generate comprehensive file record
+            processing_time = time.time() - start_time
+
+            record = FileRecord(
+                id=0,  # Will be set by database
+                original_path=file_path,
+                new_filename="",  # Will be set by filename generator
+                new_directory="",
+                content_hash=file_metadata['content_hash'],
+                file_size=file_metadata['file_size'],
+                modification_time=file_metadata['modification_time'],
+                analysis_data=self._create_analysis_data(analysis_response),
+                evs_score=int(final_evs),  # This is the critical score that should be 85+ for GM content
+                content_quality=analysis_response.semantic_result.content_quality_score,
+                game_type=analysis_response.semantic_result.pgn_analysis.game_type,
+                status="analyzed",
+                processing_time=processing_time,
+                timestamp=time.time()
+            )
+
+            # Log analysis results for debugging
+            tier = QualityTier.classify_evs(final_evs)
+            self.logger.info(f"Analysis complete for {Path(file_path).name}: "
+                             f"EVS={final_evs:.1f} ({tier}), "
+                             f"Quality={analysis_response.semantic_result.content_quality_score:.3f}, "
+                             f"Instructional={analysis_response.semantic_result.instructional_value:.3f}")
+
+            return record
+
+        except Exception as e:
+            processing_time = time.time() - start_time
+
+            error_record = FileRecord(
+                id=0,
+                original_path=file_path,
+                new_filename="",
+                new_directory="",
+                content_hash="",
+                file_size=0,
+                modification_time=0.0,
+                analysis_data={},
+                evs_score=0,
+                content_quality=0.0,
+                game_type="error",
+                status="failed",
+                error_message=str(e),
+                processing_time=processing_time,
+                timestamp=time.time()
+            )
+
+            self.logger.error(f"File analysis failed for {file_path}: {e}")
+            return error_record
+
+    def _extract_file_metadata(self, file_path: str) -> Optional[Dict[str, Any]]:
+        """Extract basic file metadata including content hash"""
+        try:
+            # Get file statistics
+            file_stat = os.stat(file_path)
+            file_size = file_stat.st_size
+            mod_time = file_stat.st_mtime
+
+            # Compute content hash for deduplication
+            content_hash = self._compute_file_hash(file_path)
+            if not content_hash:
+                return None
+
+            # Extract additional metadata from file content
+            content_metadata = self.text_extractor.extract_metadata(file_path)
+
+            return {
+                'file_size': file_size,
+                'modification_time': mod_time,
+                'content_hash': content_hash,
+                'content_metadata': content_metadata
+            }
+
+        except Exception as e:
+            self.logger.error(f"Failed to extract metadata from {file_path}: {e}")
+            return None
+
+    def _compute_file_hash(self, file_path: str) -> str:
+        """Compute SHA256 hash of file content for deduplication"""
+        try:
+            hash_sha256 = hashlib.sha256()
+            with open(file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_sha256.update(chunk)
+            return hash_sha256.hexdigest()
+        except Exception as e:
+            self.logger.error(f"Failed to compute hash for {file_path}: {e}")
+            return ""
+
+    def _analyze_content(self, text: str, file_path: str) -> AnalysisResponse:
+        """
+        Perform complete content analysis using the sophisticated pipeline.
+
+        This method implements the proper integration of semantic analysis,
+        PGN analysis, and integration scoring without shortcuts or hacks.
+        """
+        start_time = time.time()
+
+        try:
+            # Extract metadata from filename for better analysis
+            file_name = Path(file_path).name
+            title = file_name
+            author = self._extract_author_from_filename(file_name)
+            year = self._extract_year_from_filename(file_name)
+
+            # Step 1: Semantic Analysis (detects instructional value)
+            semantic_request = AnalysisRequest(
+                text=text,
+                file_path=file_path,
+                title=title,
+                author=author,
+                year=year,
+                surrounding_text=f"File: {file_name}",
+                use_idf_weighting=True
+            )
+
+            semantic_result = self.semantic_analyzer.analyze_chess_content(semantic_request)
+
+            # Step 2: PGN Analysis (calculates base EVS)
+            pgn_analysis = self.pgn_detector.analyze_pgn_content(text, f"File: {file_name}")
+
+            # Step 3: CRITICAL INTEGRATION - This is where the EVS fix happens
+            # The integration scorer combines semantic and PGN analysis using sophisticated
+            # weighting that boosts EVS when instructional value is high
+
+            # Update semantic result with PGN analysis
+            semantic_result.pgn_analysis = pgn_analysis
+
+            # Calculate integration score (this should boost EVS for instructional content)
+            integration_score = self.integration_scorer.calculate_pgn_integration_score(
+                semantic_result, pgn_analysis
+            )
+            semantic_result.pgn_integration_score = integration_score
+
+            # Update content quality with integration
+            enhanced_quality = self.integration_scorer.calculate_enhanced_content_quality(
+                semantic_result, pgn_analysis
+            )
+            semantic_result.content_quality_score = enhanced_quality
+
+            # Step 4: RAG Fitness Evaluation
+            rag_fitness = self.rag_evaluator.evaluate_rag_fitness(
+                text, title, semantic_result
+            )
+
+            processing_time = time.time() - start_time
+
+            # Log integration details for debugging
+            self.logger.debug(f"Content analysis for {Path(file_path).name}:")
+            self.logger.debug(f"  Instructional Value: {semantic_result.instructional_value:.3f}")
+            self.logger.debug(f"  PGN EVS: {pgn_analysis.evs_score:.1f}")
+            self.logger.debug(f"  Integration Score: {integration_score:.3f}")
+            self.logger.debug(f"  Enhanced Quality: {enhanced_quality:.3f}")
+
+            return AnalysisResponse(
+                semantic_result=semantic_result,
+                rag_fitness=rag_fitness,
+                processing_time=processing_time,
+                status="success"
+            )
+
+        except Exception as e:
+            processing_time = time.time() - start_time
+            self.logger.error(f"Content analysis failed: {e}")
+
+            # Return minimal response for error case
+            from ..core.models import create_empty_semantic_result
+            empty_semantic = create_empty_semantic_result()
+            empty_rag = self.rag_evaluator._empty_fitness_result()
+
+            return AnalysisResponse(
+                semantic_result=empty_semantic,
+                rag_fitness=empty_rag,
+                processing_time=processing_time,
+                status="failed",
+                error_message=str(e)
+            )
+
+    def _extract_author_from_filename(self, filename: str) -> str:
+        """Extract author information from filename if present"""
+        # Look for common author patterns in filenames
+        filename_lower = filename.lower()
+
+        # Common chess author patterns
+        famous_authors = [
+            'kasparov', 'fischer', 'karpov', 'carlsen', 'anand', 'kramnik',
+            'dvoretsky', 'aagaard', 'silman', 'watson', 'tal', 'petrosian'
+        ]
+
+        for author in famous_authors:
+            if author in filename_lower:
+                return author.title()
+
+        return ""
+
+    def _extract_year_from_filename(self, filename: str) -> str:
+        """Extract publication year from filename if present"""
+        import re
+
+        # Look for 4-digit years in filename
+        year_pattern = r'\b(19\d{2}|20\d{2})\b'
+        matches = re.findall(year_pattern, filename)
+
+        if matches:
+            # Return the most recent year found
+            years = [int(year) for year in matches]
+            return str(max(years))
+
+        return "UnknownYear"
+
+    def _create_analysis_data(self, analysis_response: AnalysisResponse) -> Dict[str, Any]:
+        """
+        Create analysis data dictionary for storage.
+
+        This preserves key analysis results for debugging and reporting
+        while keeping storage size manageable.
+        """
+        semantic = analysis_response.semantic_result
+        pgn = semantic.pgn_analysis
+
+        return {
+            # Semantic analysis results
+            'domain_relevance': semantic.chess_domain_relevance,
+            'instructional_value': semantic.instructional_value,
+            'concept_density': semantic.concept_density,
+            'explanation_clarity': semantic.explanation_clarity,
+            'detected_openings': semantic.detected_openings[:10],  # Limit for storage
+            'detected_players': semantic.detected_players[:10],
+            'detected_books': semantic.detected_books[:10],
+            'top_concepts': semantic.top_concepts[:15],
+
+            # PGN analysis results
+            'pgn_structure_score': pgn.structure_score,
+            'pgn_annotation_richness': pgn.annotation_richness,
+            'pgn_humanness_score': pgn.humanness_score,
+            'pgn_educational_context': pgn.educational_context,
+            'pgn_annotation_density': pgn.annotation_density,
+            'pgn_total_moves': pgn.total_moves,
+            'pgn_educational_cues': pgn.educational_cues,
+            'famous_game_detected': pgn.famous_game_detected,
+
+            # Integration results
+            'pgn_integration_score': semantic.pgn_integration_score,
+            'publication_year_score': semantic.publication_year_score,
+            'comprehensive_concept_score': semantic.comprehensive_concept_score,
+
+            # RAG fitness
+            'rag_overall_fitness': analysis_response.rag_fitness.overall_rag_fitness,
+            'rag_answerability': analysis_response.rag_fitness.answerability_score,
+            'rag_chunkability': analysis_response.rag_fitness.chunkability_score,
+            'rag_factual_density': analysis_response.rag_fitness.factual_density_score,
+
+            # Processing metadata
+            'analysis_timestamp': analysis_response.semantic_result.pgn_analysis.game_type,
+            'processing_time': analysis_response.processing_time
+        }
+
+    def analyze_content_quality_breakdown(self, file_path: str) -> Dict[str, Any]:
+        """
+        Provide detailed breakdown of content quality analysis.
+
+        This method is useful for debugging and understanding why
+        content received specific scores.
+        """
+        try:
+            # Extract text and perform analysis
+            text_content = self.text_extractor.extract_text(file_path)
+            if not text_content:
+                return {'error': 'No text content extracted'}
+
+            analysis_response = self._analyze_content(text_content, file_path)
+            if analysis_response.status != "success":
+                return {'error': analysis_response.error_message}
+
+            # Get integration analysis
+            integration_analysis = self.integration_scorer.analyze_integration_quality(
+                analysis_response.semantic_result,
+                analysis_response.semantic_result.pgn_analysis
+            )
+
+            # Get RAG tier evaluation
+            rag_tier_eval = self.rag_evaluator.evaluate_content_for_rag_tiers(
+                analysis_response.semantic_result,
+                analysis_response.rag_fitness
+            )
+
+            return {
+                'file_path': file_path,
+                'semantic_breakdown': {
+                    'instructional_value': analysis_response.semantic_result.instructional_value,
+                    'domain_relevance': analysis_response.semantic_result.chess_domain_relevance,
+                    'concept_density': analysis_response.semantic_result.concept_density,
+                    'explanation_clarity': analysis_response.semantic_result.explanation_clarity,
+                    'content_quality': analysis_response.semantic_result.content_quality_score
+                },
+                'pgn_breakdown': {
+                    'evs_score': analysis_response.semantic_result.pgn_analysis.evs_score,
+                    'structure_score': analysis_response.semantic_result.pgn_analysis.structure_score,
+                    'annotation_richness': analysis_response.semantic_result.pgn_analysis.annotation_richness,
+                    'humanness_score': analysis_response.semantic_result.pgn_analysis.humanness_score,
+                    'educational_context': analysis_response.semantic_result.pgn_analysis.educational_context,
+                    'game_type': analysis_response.semantic_result.pgn_analysis.game_type
+                },
+                'integration_analysis': integration_analysis,
+                'rag_evaluation': rag_tier_eval,
+                'final_scores': {
+                    'evs_score': integration_analysis['final_evs'],
+                    'quality_tier': integration_analysis['quality_tier'],
+                    'rag_fitness': analysis_response.rag_fitness.overall_rag_fitness,
+                    'meets_rag_threshold': integration_analysis['meets_rag_threshold']
+                }
+            }
+
+        except Exception as e:
+            self.logger.error(f"Quality breakdown analysis failed for {file_path}: {e}")
+            return {'error': str(e)}
+
+    def batch_analyze_sample(self, file_paths: list, sample_size: int = 10) -> Dict[str, Any]:
+        """
+        Analyze a sample of files for quality estimation and debugging.
+
+        Useful for understanding the distribution of quality scores
+        and identifying issues with the analysis pipeline.
+        """
+        import random
+
+        if len(file_paths) > sample_size:
+            sample_files = random.sample(file_paths, sample_size)
+        else:
+            sample_files = file_paths
+
+        results = []
+        total_time = 0
+
+        for file_path in sample_files:
+            start_time = time.time()
+            try:
+                record = self.analyze_file(file_path)
+                analysis_time = time.time() - start_time
+                total_time += analysis_time
+
+                results.append({
+                    'file_path': file_path,
+                    'file_name': Path(file_path).name,
+                    'evs_score': record.evs_score,
+                    'content_quality': record.content_quality,
+                    'game_type': record.game_type,
+                    'status': record.status,
+                    'analysis_time': analysis_time,
+                    'quality_tier': QualityTier.classify_evs(record.evs_score)
+                })
+
+            except Exception as e:
+                results.append({
+                    'file_path': file_path,
+                    'file_name': Path(file_path).name,
+                    'error': str(e),
+                    'status': 'failed'
+                })
+
+        # Calculate summary statistics
+        successful_results = [r for r in results if r.get('evs_score', 0) > 0]
+
+        if successful_results:
+            evs_scores = [r['evs_score'] for r in successful_results]
+            quality_scores = [r['content_quality'] for r in successful_results]
+
+            summary = {
+                'sample_size': len(sample_files),
+                'successful_analyses': len(successful_results),
+                'failed_analyses': len(results) - len(successful_results),
+                'avg_evs_score': sum(evs_scores) / len(evs_scores),
+                'max_evs_score': max(evs_scores),
+                'min_evs_score': min(evs_scores),
+                'avg_content_quality': sum(quality_scores) / len(quality_scores),
+                'avg_analysis_time': total_time / len(sample_files),
+                'tier_distribution': {
+                    'TIER_1': len([r for r in successful_results if r['quality_tier'] == 'TIER_1']),
+                    'TIER_2': len([r for r in successful_results if r['quality_tier'] == 'TIER_2']),
+                    'TIER_3': len([r for r in successful_results if r['quality_tier'] == 'TIER_3']),
+                    'BELOW_THRESHOLD': len([r for r in successful_results if r['quality_tier'] == 'BELOW_THRESHOLD'])
+                }
+            }
+        else:
+            summary = {
+                'sample_size': len(sample_files),
+                'successful_analyses': 0,
+                'failed_analyses': len(results),
+                'error': 'No successful analyses'
+            }
+
+        return {
+            'summary': summary,
+            'detailed_results': results
+        }
