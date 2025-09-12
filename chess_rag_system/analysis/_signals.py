@@ -64,3 +64,20 @@ def didactic_hits_per_1k(text: str) -> int:
     hits = sum(1 for t in toks if t in _DIDACTIC)
     return int(1000 * hits / max(1, len(toks)))
 
+# Common headings in EN/ES that indicate structured, didactic prose
+_HEADING_WORDS = {
+    # English
+    "chapter","chap.","section","sec.","introduction","intro","summary","conclusion",
+    "objectives","objective","goals","goal","overview","contents","table of contents",
+    # Spanish (include plain + accents)
+    "capitulo","capítulo","cap.","seccion","sección","leccion","lección",
+    "introduccion","introducción","resumen","conclusion","conclusión",
+    "objetivos","objetivo","indice","índice","contenido","contenidos",
+}
+
+def heading_hits(text: str) -> int:
+    """Count occurrences of heading-like words (case-insensitive)."""
+    t = text.lower()
+    # count substrings; cheap and robust for short texts
+    return sum(t.count(w) for w in _HEADING_WORDS)
+
