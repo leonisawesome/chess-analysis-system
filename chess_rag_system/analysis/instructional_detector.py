@@ -7,6 +7,30 @@ Rollback: Restore from instructional_detector.py.bak.TIMESTAMP
 """
 
 import re
+# --- Regex flag & guardrails (flag-gated) ---
+import os, re
+
+def _truthy(v:str)->bool:
+    return str(v or '').strip().lower() in ('1','true','yes','on')
+
+_REGEX_FLAG = _truthy(os.getenv('ENHANCED_VOCAB_REGEX',''))
+_REGEX_CATS = {'planning_patterns','teaching_method','strategic_concepts','intent_patterns'}
+
+def _is_safe_regex(p:str)->bool:
+    if len(p) > 100:
+        return False
+    # obvious nested-repeat / multi-wildcard traps
+    if re.search(r'\([^)]*\)[*+]\s*[*+]', p):  # ( ... )+*  etc.
+        return False
+    if p.count('.*') > 1 or p.count('.+') > 1:
+        return False
+    return True
+
+def _escape_or_regex(category:str, pat:str)->str:
+    if _REGEX_FLAG and category in _REGEX_CATS and _is_safe_regex(pat):
+        return pat  # raw regex honored
+    return re.escape(pat)
+
 import logging
 import os
 import threading
@@ -25,6 +49,26 @@ _HEADINGS_BOOST = 3
 _ENGINE_NEG_HITS = 3
 _ANNOT_POS_HITS = 3
 _TOC_NEG_HITS = 4
+
+def _env_int(var, default):
+    try:
+        return int(__import__('os').getenv(var, '').strip())
+    except Exception:
+        return default
+
+def _env_float(var, default):
+    try:
+        return float(__import__('os').getenv(var, '').strip())
+    except Exception:
+        return default
+
+# Runtime-tunable thresholds (env vars take precedence if set)
+_PGN_CUTOFF      = _env_float('DETECTOR_PGN_CUTOFF', _PGN_CUTOFF)
+_ENGINE_NEG_HITS = _env_int('DETECTOR_ENGINE_NEG_HITS', _ENGINE_NEG_HITS)
+_TOC_NEG_HITS    = _env_int('DETECTOR_TOC_NEG_HITS', _TOC_NEG_HITS)
+_DIDACTIC_BOOST  = _env_int('DETECTOR_DIDACTIC_BOOST', _DIDACTIC_BOOST)
+_HEADINGS_BOOST  = _env_int('DETECTOR_HEADINGS_BOOST', _HEADINGS_BOOST)
+_ANNOT_POS_HITS  = _env_int('DETECTOR_ANNOT_POS_HITS', _ANNOT_POS_HITS)
 
 # Import vocabulary from hotfix file
 from .instructional_vocabulary_hotfix import (
@@ -75,11 +119,18 @@ def _norm(s: str) -> str:
     s = ud.normalize("NFKC", s).replace("\u00A0", " ").replace("\u00b1", "+/-")
     return re.sub(r"\s+", " ", s).lower()
 
-# Optional embedding support
+# NO_EMBED flag to disable heavy model imports for CLI tools and spot-checks
+NO_EMBED = os.getenv('DETECTOR_NO_EMBED', '').lower() in ('1', 'true', 'yes', 'y')
+POSITIVES_WIN = os.getenv('DETECTOR_POSITIVES_WIN', '').lower() in ('1', 'true', 'yes', 'y')
+
+# Optional embedding support (skipped if NO_EMBED)
 try:
-    from sentence_transformers import SentenceTransformer
-    import numpy as np
-    EMBEDDING_AVAILABLE = True
+    if not NO_EMBED:
+        from sentence_transformers import SentenceTransformer
+        import numpy as np
+        EMBEDDING_AVAILABLE = True
+    else:
+        EMBEDDING_AVAILABLE = False
 except ImportError:
     EMBEDDING_AVAILABLE = False
 
@@ -241,7 +292,7 @@ class InstructionalLanguageDetector:
             self._compiled = []
             for cat, patterns in INSTRUCTIONAL_LEXICON.items():
                 for p in patterns:
-                    pattern_str = r'\b' + re.escape(p.lower()) + r'\b'
+                    pattern_str = r'\b' + _escape_or_regex(cat, p.lower()) + r'\b'
                     self._compiled.append((cat, re.compile(pattern_str, re.IGNORECASE), p))
             # Compile slot patterns
             self.compiled_slot_patterns = []
@@ -402,6 +453,33 @@ def detect_instructional(text: str) -> bool:
             return True   # clearly explanatory prose
     except Exception:
         pass
+
+    # --- rule-only fallback when NO_EMBED is set ---
+    if NO_EMBED:
+        # Compute positives/negatives once
+        pos = (
+            didactic_hits_per_1k(text) >= _DIDACTIC_BOOST
+            or heading_hits(text) >= _HEADINGS_BOOST
+            or annotation_hits(text) >= _ANNOT_POS_HITS
+        )
+        toc_neg = (toc_like_hits(text) >= _TOC_NEG_HITS) and not pos
+        neg = (
+            pgn_ratio(text) >= _PGN_CUTOFF
+            or engine_dump_hits(text) >= _ENGINE_NEG_HITS
+            or toc_neg
+        )
+        if POSITIVES_WIN:
+            if pos:
+                return True
+            if neg:
+                return False
+            return False
+        else:
+            if neg:
+                return False
+            if pos:
+                return True
+            return False
 
     # === NEW: headings boost ===
     if heading_hits(text) >= _HEADINGS_BOOST:
@@ -592,7 +670,7 @@ def detect_instructional(text: str) -> bool:
             for p in patterns:
                 try:
                     # Escape and compile individual pattern - Fixed word boundaries
-                    escaped = re.escape(p.lower())
+                    escaped = _escape_or_regex(cat, p.lower())
                     # Fix: Use r'\b' not r'\\b' for word boundaries
                     pattern_str = r'\b' + escaped + r'\b'
                     r = re.compile(pattern_str, re.IGNORECASE)

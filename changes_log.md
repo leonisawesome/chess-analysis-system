@@ -24,6 +24,28 @@ cp chess_rag_system/analysis/instructional_vocabulary_hotfix.py.backup chess_rag
 
 ---
 
+## Change 1a - Env-gated EN/ES Regex (2025-09-12)
+
+**Target File:** `chess_rag_system/analysis/instructional_vocabulary_hotfix.py`
+
+**Change Type:** Option A implementation (smallest viable change)
+
+**Details:**
+- Add Spanish equivalents for the 9-category instructional lexicon.
+- Gate inclusion via `DETECTOR_LANGS` env var (default `en`; supports `es`, `en,es`, `all`).
+- No changes to TOC/engine detectors or other subsystems.
+
+**Tests Added:** `tests/test_vocab_lang_gate.py` (4 focused tests)
+- Validate ES patterns are off by default and enabled with `DETECTOR_LANGS=en,es`.
+- Ensure EN patterns remain available.
+- Verify accented Spanish boundaries match.
+
+**Expected Impact:**
+- +precision with optional ES regex; ≤2% recall impact in EN-only default.
+- Zero flaky tests (deterministic gating via env).
+
+**Status:** COMPLETED
+
 ## Change 2 - Category Mapping Layer Fix (2025-09-11)
 
 **Target Files:** 
