@@ -1,0 +1,68 @@
+2025-09-11 06:56:52,191 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:61 - Loading semantic models...
+2025-09-11 06:56:52,192 - sentence_transformers.SentenceTransformer - INFO - __init__:227 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-09-11 06:56:54,120 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:78 - Semantic analyzer initialized with 481 chess terms
+2025-09-11 06:56:54,121 - chess_rag_system.analysis.instructional_detector - INFO - __init__:172 - InstructionalLanguageDetector initialized:
+2025-09-11 06:56:54,121 - chess_rag_system.analysis.instructional_detector - INFO - __init__:173 -   - Fixed phrases: 73
+2025-09-11 06:56:54,121 - chess_rag_system.analysis.instructional_detector - INFO - __init__:174 -   - Slot patterns: 5
+2025-09-11 06:56:54,121 - chess_rag_system.analysis.instructional_detector - INFO - __init__:175 -   - Embedding confirmation: False
+2025-09-11 06:56:54,121 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:88 - Instructional language detector initialized successfully
+2025-09-11 06:56:54,122 - chess_rag_system.file_ops.file_processor - INFO - __init__:60 - File processor initialized with complete analysis pipeline
+2025-09-11 06:56:54,281 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:450 - DETECTOR INPUT: 20 chunks, first=[Event "?"] [Site "?"] [Date "????.??.??"] [Round "?"] [White "1.d4 - Part 1"] [Black "GM Sam Shankl
+2025-09-11 06:56:54,281 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:456 - === DETECTOR STATE ANALYSIS ===
+2025-09-11 06:56:54,281 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:462 - DETECTOR: module=chess_rag_system.analysis.instructional_detector, file=/Users/leon/Downloads/python/chess-analysis-system/chess_rag_system/__init__.py, id=6119297744
+2025-09-11 06:56:54,281 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:468 - VOCABULARY: loaded=73 phrases, categories=['teaching_intent', 'opening_principle', 'middlegame_plan', 'tactical_explanation', 'endgame_technique', 'evaluation_shift', 'practical_prep', 'methodology']
+2025-09-11 06:56:54,281 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:475 - VOCABULARY_SAMPLE: ['the idea is', 'the key idea here', 'the point behind']
+2025-09-11 06:56:54,281 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:482 - PATTERNS: compiled=8
+2025-09-11 06:56:54,281 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:489 - PAYLOAD: hash=b62f2ea4cca7510f, len=9025, preview=[Event "?"] [Site "?"] [Date "????.??.??"] [Round "?"] [White "1.d4 - Part 1"] [Black "GM Sam Shankl
+2025-09-11 06:56:54,281 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:491 - === END DETECTOR ANALYSIS ===
+2025-09-11 06:56:54,282 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:274 - INSTRUCTIONAL ANALYSIS - Raw hits: 0, Gated: 0, Pass rate: 0.000
+2025-09-11 06:56:54,282 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:275 - INSTRUCTIONAL ANALYSIS - Categories: {}
+2025-09-11 06:56:54,282 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:276 - INSTRUCTIONAL ANALYSIS - Final score: 0.000
+2025-09-11 06:56:54,881 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-11 06:56:54,881 - chess_rag_system.file_ops.file_processor - INFO - analyze_file:129 - Analysis complete for 1.d4 - GM Sam Shankland - (Part 1) (3)_1.pgn: EVS=79.7 (TIER_3), Quality=0.797, Instructional=0.320
+2025-09-11 06:56:55,002 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:450 - DETECTOR INPUT: 20 chunks, first=[Event "?"] [Site "?"] [Date "????.??.??"] [Round "?"] [White "1.d4 - Part 1"] [Black "GM Sam Shankl
+2025-09-11 06:56:55,002 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:456 - === DETECTOR STATE ANALYSIS ===
+2025-09-11 06:56:55,002 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:462 - DETECTOR: module=chess_rag_system.analysis.instructional_detector, file=/Users/leon/Downloads/python/chess-analysis-system/chess_rag_system/__init__.py, id=6119297744
+2025-09-11 06:56:55,002 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:468 - VOCABULARY: loaded=73 phrases, categories=['teaching_intent', 'opening_principle', 'middlegame_plan', 'tactical_explanation', 'endgame_technique', 'evaluation_shift', 'practical_prep', 'methodology']
+2025-09-11 06:56:55,002 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:475 - VOCABULARY_SAMPLE: ['the idea is', 'the key idea here', 'the point behind']
+2025-09-11 06:56:55,002 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:482 - PATTERNS: compiled=8
+2025-09-11 06:56:55,002 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:489 - PAYLOAD: hash=b62f2ea4cca7510f, len=9025, preview=[Event "?"] [Site "?"] [Date "????.??.??"] [Round "?"] [White "1.d4 - Part 1"] [Black "GM Sam Shankl
+2025-09-11 06:56:55,002 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:491 - === END DETECTOR ANALYSIS ===
+2025-09-11 06:56:55,003 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:274 - INSTRUCTIONAL ANALYSIS - Raw hits: 0, Gated: 0, Pass rate: 0.000
+2025-09-11 06:56:55,003 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:275 - INSTRUCTIONAL ANALYSIS - Categories: {}
+2025-09-11 06:56:55,003 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:276 - INSTRUCTIONAL ANALYSIS - Final score: 0.000
+2025-09-11 06:56:55,620 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-11 08:18:15,176 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:61 - Loading semantic models...
+2025-09-11 08:18:15,176 - sentence_transformers.SentenceTransformer - INFO - __init__:227 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-09-11 08:18:17,301 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:78 - Semantic analyzer initialized with 481 chess terms
+2025-09-11 08:18:17,302 - chess_rag_system.analysis.instructional_detector - INFO - __init__:172 - InstructionalLanguageDetector initialized:
+2025-09-11 08:18:17,302 - chess_rag_system.analysis.instructional_detector - INFO - __init__:173 -   - Fixed phrases: 73
+2025-09-11 08:18:17,302 - chess_rag_system.analysis.instructional_detector - INFO - __init__:174 -   - Slot patterns: 5
+2025-09-11 08:18:17,302 - chess_rag_system.analysis.instructional_detector - INFO - __init__:175 -   - Embedding confirmation: False
+2025-09-11 08:18:17,302 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:88 - Instructional language detector initialized successfully
+2025-09-11 08:18:17,302 - chess_rag_system.file_ops.file_processor - INFO - __init__:60 - File processor initialized with complete analysis pipeline
+2025-09-11 08:18:17,459 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:450 - DETECTOR INPUT: 20 chunks, first=[Event "?"] [Site "?"] [Date "????.??.??"] [Round "?"] [White "1.d4 - Part 1"] [Black "GM Sam Shankl
+2025-09-11 08:18:17,459 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:456 - === DETECTOR STATE ANALYSIS ===
+2025-09-11 08:18:17,459 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:462 - DETECTOR: module=chess_rag_system.analysis.instructional_detector, file=/Users/leon/Downloads/python/chess-analysis-system/chess_rag_system/__init__.py, id=5141615440
+2025-09-11 08:18:17,459 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:468 - VOCABULARY: loaded=73 phrases, categories=['teaching_intent', 'opening_principle', 'middlegame_plan', 'tactical_explanation', 'endgame_technique', 'evaluation_shift', 'practical_prep', 'methodology']
+2025-09-11 08:18:17,459 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:475 - VOCABULARY_SAMPLE: ['the idea is', 'the key idea here', 'the point behind']
+2025-09-11 08:18:17,459 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:482 - PATTERNS: compiled=8
+2025-09-11 08:18:17,459 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:489 - PAYLOAD: hash=b62f2ea4cca7510f, len=9025, preview=[Event "?"] [Site "?"] [Date "????.??.??"] [Round "?"] [White "1.d4 - Part 1"] [Black "GM Sam Shankl
+2025-09-11 08:18:17,459 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:491 - === END DETECTOR ANALYSIS ===
+2025-09-11 08:18:17,460 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:274 - INSTRUCTIONAL ANALYSIS - Raw hits: 0, Gated: 0, Pass rate: 0.000
+2025-09-11 08:18:17,460 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:275 - INSTRUCTIONAL ANALYSIS - Categories: {}
+2025-09-11 08:18:17,460 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:276 - INSTRUCTIONAL ANALYSIS - Final score: 0.000
+2025-09-11 08:18:18,054 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-11 08:18:18,054 - chess_rag_system.file_ops.file_processor - INFO - analyze_file:129 - Analysis complete for chessable_shankland_test.pgn: EVS=79.7 (TIER_3), Quality=0.797, Instructional=0.320
+2025-09-11 08:18:18,135 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:450 - DETECTOR INPUT: 20 chunks, first=[Event "?"] [Site "?"] [Date "????.??.??"] [Round "?"] [White "1.d4 - Part 1"] [Black "GM Sam Shankl
+2025-09-11 08:18:18,135 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:456 - === DETECTOR STATE ANALYSIS ===
+2025-09-11 08:18:18,135 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:462 - DETECTOR: module=chess_rag_system.analysis.instructional_detector, file=/Users/leon/Downloads/python/chess-analysis-system/chess_rag_system/__init__.py, id=5141615440
+2025-09-11 08:18:18,135 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:468 - VOCABULARY: loaded=73 phrases, categories=['teaching_intent', 'opening_principle', 'middlegame_plan', 'tactical_explanation', 'endgame_technique', 'evaluation_shift', 'practical_prep', 'methodology']
+2025-09-11 08:18:18,135 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:475 - VOCABULARY_SAMPLE: ['the idea is', 'the key idea here', 'the point behind']
+2025-09-11 08:18:18,135 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:482 - PATTERNS: compiled=8
+2025-09-11 08:18:18,135 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:489 - PAYLOAD: hash=b62f2ea4cca7510f, len=9025, preview=[Event "?"] [Site "?"] [Date "????.??.??"] [Round "?"] [White "1.d4 - Part 1"] [Black "GM Sam Shankl
+2025-09-11 08:18:18,135 - chess_rag_system.analysis.semantic_analyzer - INFO - _analyze_explanation_clarity:491 - === END DETECTOR ANALYSIS ===
+2025-09-11 08:18:18,136 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:274 - INSTRUCTIONAL ANALYSIS - Raw hits: 0, Gated: 0, Pass rate: 0.000
+2025-09-11 08:18:18,136 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:275 - INSTRUCTIONAL ANALYSIS - Categories: {}
+2025-09-11 08:18:18,136 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:276 - INSTRUCTIONAL ANALYSIS - Final score: 0.000
+2025-09-11 08:18:18,726 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)

@@ -1,0 +1,23 @@
+# IDE files
+.idea/
+.vscode/
+*.pyc
+__pycache__/
+.DS_Store
+
+# Output files
+*.csv
+*.txt
+analysis_output.txt
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Large data files  
+*.json
+
+# Local temp and coverage outputs
+.tmp/
+htmlcov/

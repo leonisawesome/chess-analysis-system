@@ -1,0 +1,147 @@
+"""
+High-confidence instructional vocabulary for hotfix implementation
+Based on 4-AI partner consultation consensus with empirical GM content analysis
+"""
+
+# Empirically-derived from Shankland and GM content per AI partner recommendations
+INSTRUCTIONAL_LEXICON = {
+    "teaching_intent": [
+        "the idea is",
+        "the key idea here", 
+        "the point behind",
+        "the plan is", 
+        "easy plan",
+        "simple plan",
+        "with the idea of",
+        "how to proceed",
+        "typical plan",
+        "model game",
+        "textbook example",
+        "rule of thumb",
+        "fundamental principle",
+        "important concept",
+        "breaking down the principles",
+        "easily understandable guidelines",
+        "fundamental aspect of chess strategy",
+        "three-step process",
+        "this is the way strategy books should be written"
+    ],
+    "opening_principle": [
+        "develops with tempo",
+        "challenges the center", 
+        "violates the principle",
+        "keeps the tension",
+        "move order issue",
+        "equalizes",
+        "keeps a small pull",
+        "keeps the edge"
+    ],
+    "middlegame_plan": [
+        "improve the worst piece",
+        "reroute the knight",
+        "dominate the file", 
+        "seize the open file",
+        "create luft",
+        "accumulate small advantages",
+        "probe weaknesses",
+        "attack the base of the pawn chain",
+        "minority attack",
+        "press without risk",
+        "build a strategically won position"
+    ],
+    "tactical_explanation": [
+        "removal of the defender",
+        "deflection theme",
+        "clearance idea", 
+        "zwischenzug resource",
+        "only resource",
+        "quiet move that wins",
+        "make impossible moves work"
+    ],
+    "endgame_technique": [
+        "don't hurry",
+        "rook behind the passed pawn", 
+        "build the bridge",
+        "opposition",
+        "triangulation", 
+        "outside passed pawn",
+        "corresponding squares",
+        "philidor setup",
+        "vancura defense",
+        "exchange pieces and win the endgame"
+    ],
+    "evaluation_shift": [
+        "only move",
+        "keeps the advantage",
+        "hard to hold", 
+        "consolidates the advantage",
+        "imprecise move order",
+        "draw the right conclusions"
+    ],
+    "practical_prep": [
+        "anti-sicilian setup",
+        "tabiya position", 
+        "human-friendly plan",
+        "practical choice",
+        "exact training methods",
+        "winning pawn moves"
+    ],
+    "methodology": [
+        "providing exercises",
+        "carefully annotated examples", 
+        "sheds light on",
+        "crystal-clear guidelines",
+        "helpful tips and exercises",
+        "to make myself a better chess player"
+    ]
+}
+
+# Slot patterns for dynamic content (from Grok's specification)
+SLOT_PATTERNS = [
+    {
+        "category": "template",
+        "pattern": r"(?P<MOVE>[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?)\s+(?:aims to|prepares|prevents)",
+        "slots": ["MOVE"],
+        "weight": 1.0
+    },
+    {
+        "category": "template", 
+        "pattern": r"the idea (?:of|behind)\s+(?P<MOVE>[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?)",
+        "slots": ["MOVE"], 
+        "weight": 1.0
+    },
+    {
+        "category": "middlegame_plan",
+        "pattern": r"reroute (?:the )?(?:knight|bishop)\s+(?:to )?(?P<SQ>[a-h][1-8])",
+        "slots": ["SQ"],
+        "weight": 0.8
+    },
+    {
+        "category": "middlegame_plan", 
+        "pattern": r"overprotect\s+(?P<SQ>[a-h][1-8])",
+        "slots": ["SQ"],
+        "weight": 0.8
+    },
+    {
+        "category": "middlegame_plan",
+        "pattern": r"double rooks on\s+(?P<FILE>[a-h]-file)",
+        "slots": ["FILE"], 
+        "weight": 0.8
+    }
+]
+
+# Category weights from AI partner recommendations
+CATEGORY_WEIGHTS = {
+    "teaching_intent": 1.0,
+    "template": 1.0,
+    "methodology": 0.9,
+    "endgame_technique": 0.9, 
+    "tactical_explanation": 0.8,
+    "middlegame_plan": 0.8,
+    "evaluation_shift": 0.8,
+    "opening_principle": 0.7,
+    "practical_prep": 0.6
+}
+
+# Diminishing returns caps (from Grok)
+CATEGORY_CAPS = {k: 6 for k in CATEGORY_WEIGHTS}

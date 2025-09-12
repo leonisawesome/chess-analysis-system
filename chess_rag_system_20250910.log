@@ -1,0 +1,45 @@
+2025-09-10 13:34:07,550 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:53 - Loading semantic models...
+2025-09-10 13:34:07,550 - sentence_transformers.SentenceTransformer - INFO - __init__:227 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-09-10 13:34:10,232 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:70 - Semantic analyzer initialized with 481 chess terms
+2025-09-10 13:34:10,232 - chess_rag_system.file_ops.file_processor - INFO - __init__:60 - File processor initialized with complete analysis pipeline
+2025-09-10 13:34:10,981 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-10 13:34:10,981 - chess_rag_system.file_ops.file_processor - INFO - analyze_file:129 - Analysis complete for 1.d4 - GM Sam Shankland - (Part 1) (3)_1.pgn: EVS=79.7 (TIER_3), Quality=0.797, Instructional=0.320
+2025-09-10 13:34:11,667 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-10 17:57:31,246 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:53 - Loading semantic models...
+2025-09-10 17:57:31,247 - sentence_transformers.SentenceTransformer - INFO - __init__:227 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-09-10 17:57:33,528 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:70 - Semantic analyzer initialized with 481 chess terms
+2025-09-10 17:57:33,529 - chess_rag_system.file_ops.file_processor - INFO - __init__:60 - File processor initialized with complete analysis pipeline
+2025-09-10 17:57:34,213 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-10 17:57:36,327 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:53 - Loading semantic models...
+2025-09-10 17:57:36,327 - sentence_transformers.SentenceTransformer - INFO - __init__:227 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-09-10 17:57:38,163 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:70 - Semantic analyzer initialized with 481 chess terms
+2025-09-10 17:57:38,164 - chess_rag_system.file_ops.file_processor - INFO - __init__:60 - File processor initialized with complete analysis pipeline
+2025-09-10 17:57:38,918 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-10 17:57:38,918 - chess_rag_system.file_ops.file_processor - INFO - analyze_file:129 - Analysis complete for 1.d4 - GM Sam Shankland - (Part 1) (3)_1.pgn: EVS=79.7 (TIER_3), Quality=0.797, Instructional=0.320
+2025-09-10 17:57:39,596 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-10 19:06:57,590 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:61 - Loading semantic models...
+2025-09-10 19:06:57,591 - sentence_transformers.SentenceTransformer - INFO - __init__:227 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-09-10 19:06:59,845 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:78 - Semantic analyzer initialized with 481 chess terms
+2025-09-10 19:07:01,361 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:88 - Instructional language detector initialized successfully
+2025-09-10 19:07:01,362 - chess_rag_system.file_ops.file_processor - INFO - __init__:60 - File processor initialized with complete analysis pipeline
+2025-09-10 19:07:02,129 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-10 19:07:02,129 - chess_rag_system.file_ops.file_processor - INFO - analyze_file:129 - Analysis complete for 1.d4 - GM Sam Shankland - (Part 1) (3)_1.pgn: EVS=79.7 (TIER_3), Quality=0.797, Instructional=0.320
+2025-09-10 19:07:02,815 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-10 19:17:27,083 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:61 - Loading semantic models...
+2025-09-10 19:17:27,084 - sentence_transformers.SentenceTransformer - INFO - __init__:227 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-09-10 19:17:29,730 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:78 - Semantic analyzer initialized with 481 chess terms
+2025-09-10 19:17:29,878 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:88 - Instructional language detector initialized successfully
+2025-09-10 19:17:29,878 - chess_rag_system.file_ops.file_processor - INFO - __init__:60 - File processor initialized with complete analysis pipeline
+2025-09-10 19:17:30,677 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-10 19:17:30,677 - chess_rag_system.file_ops.file_processor - INFO - analyze_file:129 - Analysis complete for 1.d4 - GM Sam Shankland - (Part 1) (3)_1.pgn: EVS=79.7 (TIER_3), Quality=0.797, Instructional=0.320
+2025-09-10 19:17:31,361 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-10 19:26:33,274 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:61 - Loading semantic models...
+2025-09-10 19:26:33,275 - sentence_transformers.SentenceTransformer - INFO - __init__:227 - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-09-10 19:26:35,786 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:78 - Semantic analyzer initialized with 481 chess terms
+2025-09-10 19:26:35,936 - chess_rag_system.analysis.semantic_analyzer - INFO - __init__:88 - Instructional language detector initialized successfully
+2025-09-10 19:26:35,937 - chess_rag_system.file_ops.file_processor - INFO - __init__:60 - File processor initialized with complete analysis pipeline
+2025-09-10 19:26:36,102 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:262 - SMOKE TEST - Raw: 0, Gated: 0, Pass rate: 0.000
+2025-09-10 19:26:36,705 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
+2025-09-10 19:26:36,705 - chess_rag_system.file_ops.file_processor - INFO - analyze_file:129 - Analysis complete for 1.d4 - GM Sam Shankland - (Part 1) (3)_1.pgn: EVS=79.7 (TIER_3), Quality=0.797, Instructional=0.320
+2025-09-10 19:26:36,788 - chess_rag_system.analysis.instructional_detector - INFO - analyze_instructional_language:262 - SMOKE TEST - Raw: 0, Gated: 0, Pass rate: 0.000
+2025-09-10 19:26:37,395 - chess_rag_system.scoring.integration_scorer - INFO - calculate_final_evs_score:352 - Final EVS calculation: integrated=0.797 -> evs=79.7 (TIER_3)
