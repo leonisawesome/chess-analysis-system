@@ -17,10 +17,11 @@ import unicodedata as ud
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple, Set
 from collections import defaultdict, Counter
-from ._signals import pgn_ratio, didactic_hits_per_1k
+from ._signals import pgn_ratio, didactic_hits_per_1k, heading_hits
 
 _PGN_CUTOFF = 0.35
 _DIDACTIC_BOOST = 6
+_HEADINGS_BOOST = 3
 
 # Import vocabulary from hotfix file
 from .instructional_vocabulary_hotfix import (
@@ -392,6 +393,10 @@ def detect_instructional(text: str) -> bool:
             return True   # clearly explanatory prose
     except Exception:
         pass
+
+    # === NEW: headings boost ===
+    if heading_hits(text) >= _HEADINGS_BOOST:
+        return True  # book/course structure present
 
     t = _normalize_text(text)
     tl = t.lower()
