@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2d512687-ebc2-482a-99c7-0b617cf64c82" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.coverage" beforeDir="false" afterPath="$PROJECT_DIR$/.coverage" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/chess_rag_system/analysis/_signals.py" beforeDir="false" afterPath="$PROJECT_DIR$/chess_rag_system/analysis/_signals.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/chess_rag_system/analysis/instructional_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/chess_rag_system/analysis/instructional_detector.py" afterDir="false" />
     </list>
@@ -103,7 +103,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1757454850915</updated>
-      <workItem from="1757454859809" duration="72607000" />
+      <workItem from="1757454859809" duration="72911000" />
     </task>
     <servers />
   </component>
