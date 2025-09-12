@@ -5,19 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2d512687-ebc2-482a-99c7-0b617cf64c82" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/analysis/instructional_detector.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/analysis/semantic_analyzer_integration.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deploy_instructional_hotfix.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/instructional_director.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/instructional_vocabulary_hotfix.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/validate_hotfix.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/validation_implementation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/chess-analysis-system.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/chess-analysis-system.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.coverage" beforeDir="false" afterPath="$PROJECT_DIR$/.coverage" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_instructional.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/detailed_analyzer.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chess_rag_system/analysis/instructional_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/chess_rag_system/analysis/instructional_detector.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chess_rag_system/analysis/semantic_analyzer.py" beforeDir="false" afterPath="$PROJECT_DIR$/chess_rag_system/analysis/semantic_analyzer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pytest.ini" beforeDir="false" afterPath="$PROJECT_DIR$/pytest.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/legacy/test_detector_init.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/legacy/test_detector_init.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/legacy/test_multiprocessing_fix.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/legacy/test_multiprocessing_fix.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/the_evaluator.py" beforeDir="false" afterPath="$PROJECT_DIR$/the_evaluator.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -114,7 +108,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1757454850915</updated>
-      <workItem from="1757454859809" duration="63877000" />
+      <workItem from="1757454859809" duration="70452000" />
     </task>
     <servers />
   </component>
