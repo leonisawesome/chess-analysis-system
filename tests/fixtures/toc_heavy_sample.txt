@@ -1,0 +1,31 @@
+# TABLE OF CONTENTS
+1. Introduction
+2. About this course
+3. How to use this book
+4. Chapters
+5. Index
+6. Acknowledgments
+7. License
+8. Contact
+9. Support
+10. FAQ
+11. Version history
+12. Credits
+13. Contents continue
+14. More contents
+15. Even more contents
+16. Still contents
+17. Yet more contents
+18. Finally contents
+19. Contents end
+20. Start of material
+
+This is an actual page with some headings:
+### Chapter 1 — Fundamentals
+### Chapter 2 — Tactics
+### Chapter 3 — Strategy
+
+Here are a few PGN fragments (kept low on purpose):
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6
+1. d4 d5 2. c4 e6
+
