@@ -225,3 +225,29 @@ git clean -f scripts/ tests/test_pgn_manifest_external_merge.py || true
 - Deterministic, scale-safe manifests for ETL; negligible CPU overhead for key recomputation during merge; no changes to analyzers/IDF/EVS/ETL interfaces.
 
 **Status:** COMPLETED
+## 2025-09-13 — Restore spotchecks & add DSU PGN manifest
+**Branch:** feature/pgn-manifest-dsu  
+**Commit:** e1f5d21  
+**Changes:**
+- Makefile: drop stale flags (`--mode production`, `--diagnostic`) on spotcheck targets.
+- ci/baselines/spotcheck_production.json: update to current output shape (bare array).
+- scripts/pgn_manifest.py: NEW — mode-aware DSU external merge (numeric/shuffle), bounded memory, lazy-key merge.
+- tests/test_pgn_manifest_external_merge.py: NEW — multi-chunk numeric + deterministic shuffle test.
+
+**Why:** Unblock prod spotchecks/evals; stabilize manifests for reproducible ETL/EVS runs.
+
+**Validation:**
+- `pytest -q` → PASS, coverage 65.56% (≥64).
+- `make spotcheck-prod` → PASS.
+- `make check-prod` → PASS, diff clean.
+
+**Partner input (cold):**
+- Gemini → Track B (add timings + 2 assertions).
+- Claude/Grok/Perplexity → Track A (ship now).
+**Decision:** Track A (3–1). Timings/assertions can follow if needed.
+
+**Rollback:**
+- Revert code/data change commit: `git revert e1f5d21`
+- Or restore files individually:
+  - `git checkout HEAD~1 -- Makefile ci/baselines/spotcheck_production.json`
+  - `git rm -f scripts/pgn_manifest.py tests/test_pgn_manifest_external_merge.py && git commit -m "revert: remove manifest tool + test"`
