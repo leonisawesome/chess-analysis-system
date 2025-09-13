@@ -6,14 +6,14 @@ test:
 	TRANSFORMERS_OFFLINE=1 pytest
 
 spotcheck-prod:
-	DETECTOR_NO_EMBED=1 python scripts/spotcheck.py --mode production tests/fixtures/toc_heavy_sample.txt
+	DETECTOR_NO_EMBED=1 python scripts/spotcheck.py tests/fixtures/toc_heavy_sample.txt
 
 spotcheck-diag:
-	DETECTOR_NO_EMBED=1 python scripts/spotcheck.py --diagnostic tests/fixtures/toc_heavy_sample.txt
+	DETECTOR_NO_EMBED=1 python scripts/spotcheck.py tests/fixtures/toc_heavy_sample.txt
 
 check-prod:
 	mkdir -p .local_out
-	DETECTOR_NO_EMBED=1 python scripts/spotcheck.py --mode production tests/fixtures/toc_heavy_sample.txt > .local_out/out.json; \
+	DETECTOR_NO_EMBED=1 python scripts/spotcheck.py tests/fixtures/toc_heavy_sample.txt > .local_out/out.json; \
 		diff -u ci/baselines/spotcheck_production.json .local_out/out.json
 
 check-diag:

@@ -1,31 +1,26 @@
-{
-  "mode": "production",
-  "results": [
-    {
-      "label": "tests/fixtures/toc_heavy_sample.txt",
-      "decision": true,
-      "triggers": [
-        "DIDACTIC_POS(≥6)",
-        "HEADINGS_POS(≥3)"
-      ],
-      "metrics": {
-        "pgn_ratio": 0.093,
-        "engine_hits": 0,
-        "toc_hits": 0,
-        "didactic_per_1k": 9,
-        "heading_hits": 15,
-        "annot_hits": 0
-      },
-      "mode": "production",
-      "thresholds": {
-        "PGN_CUTOFF": 0.35,
-        "ENGINE_NEG_HITS": 3,
-        "TOC_NEG_HITS": 4,
-        "DIDACTIC_BOOST": 6,
-        "HEADINGS_BOOST": 3,
-        "ANNOT_POS_HITS": 3
-      }
+[
+  {
+    "label": "tests/fixtures/toc_heavy_sample.txt",
+    "decision": true,
+    "triggers": [
+      "DIDACTIC_POS(≥6)",
+      "HEADINGS_POS(≥3)"
+    ],
+    "metrics": {
+      "pgn_ratio": 0.093,
+      "engine_hits": 0,
+      "toc_hits": 0,
+      "didactic_per_1k": 9,
+      "heading_hits": 15,
+      "annot_hits": 0
+    },
+    "thresholds": {
+      "PGN_CUTOFF": 0.35,
+      "ENGINE_NEG_HITS": 3,
+      "TOC_NEG_HITS": 4,
+      "DIDACTIC_BOOST": 6,
+      "HEADINGS_BOOST": 3,
+      "ANNOT_POS_HITS": 3
     }
-  ]
-}
-
+  }
+]
