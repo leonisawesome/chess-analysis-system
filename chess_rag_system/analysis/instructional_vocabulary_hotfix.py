@@ -138,8 +138,8 @@ _EN_LEXICON: Dict[str, List[str]] = {
         "learning objectives",
         "improvement method",
         "lesson",
-        "lessons"
-    ],
+        "lessons",
+             "how to",
     "strategic_concepts": [
         "space advantage",
         "time factor",
