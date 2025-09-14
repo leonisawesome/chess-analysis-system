@@ -3,6 +3,7 @@ import argparse, sys, json, pathlib
 from chess_rag_system.analysis.instructional_detector import (
     detect_instructional,
     _PGN_CUTOFF, _DIDACTIC_BOOST, _HEADINGS_BOOST, _ENGINE_NEG_HITS, _TOC_NEG_HITS, _ANNOT_POS_HITS,
+    _early_slice,
 )
 from chess_rag_system.analysis._signals import (
     pgn_ratio, didactic_hits_per_1k, heading_hits, engine_dump_hits, annotation_hits, toc_like_hits
@@ -13,7 +14,7 @@ def analyze(label: str, text: str):
     metrics = {
         "pgn_ratio": round(pgn_ratio(text), 3),
         "engine_hits": engine_dump_hits(text),
-        "toc_hits": toc_like_hits(text),
+        "toc_hits": toc_like_hits(_early_slice(text)),
         "didactic_per_1k": didactic_hits_per_1k(text),
         "heading_hits": heading_hits(text),
         "annot_hits": annotation_hits(text),

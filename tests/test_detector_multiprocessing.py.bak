@@ -1,23 +1,3 @@
-import os, signal, subprocess, time, pytest
-
-def _sigterm_blocked():
-    """Return True if sandbox blocks SIGTERM to child processes."""
-    try:
-        proc = subprocess.Popen(["sleep", "0.1"])  # short-lived child
-        time.sleep(0.05)
-        os.kill(proc.pid, signal.SIGTERM)
-        proc.wait(timeout=0.2)
-        return False
-    except OSError as e:
-        return e.errno == 1  # Operation not permitted
-    except Exception:
-        return False
-
-pytestmark = pytest.mark.skipif(
-    _sigterm_blocked(),
-    reason="Sandbox blocks SIGTERM; multiprocessing teardown cannot run here"
-)
-
 import multiprocessing as mp
 from chess_rag_system.analysis.instructional_detector import InstructionalLanguageDetector
 

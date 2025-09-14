@@ -7,8 +7,11 @@
     <list default="true" id="2d512687-ebc2-482a-99c7-0b617cf64c82" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.coverage" beforeDir="false" afterPath="$PROJECT_DIR$/.coverage" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/chess_rag_system/analysis/_signals.py" beforeDir="false" afterPath="$PROJECT_DIR$/chess_rag_system/analysis/_signals.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/chess_rag_system/analysis/instructional_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/chess_rag_system/analysis/instructional_detector.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chess_rag_system/analysis/instructional_vocabulary_hotfix.py" beforeDir="false" afterPath="$PROJECT_DIR$/chess_rag_system/analysis/instructional_vocabulary_hotfix.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/spotcheck.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/spotcheck.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/legacy/test_multiprocessing_fix.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/legacy/test_multiprocessing_fix.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_detector_multiprocessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_detector_multiprocessing.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,7 +49,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHELLCHECK.PATH": "/Users/leon/Library/Application Support/JetBrains/PyCharm2025.2/plugins/Shell Script/shellcheck",
-    "git-widget-placeholder": "feature/per-process-detector-factory",
+    "git-widget-placeholder": "feat/instructional-tokens-v1",
     "last_opened_file_path": "/Users/leon/Downloads/python/chess-analysis-system",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -65,34 +68,10 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager">
-    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
-      <module name="chess-analysis-system" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
+        <option value="bundled-js-predefined-d6986cc7102b-b598e85cdad2-JavaScript-PY-252.25557.178" />
         <option value="bundled-python-sdk-ce6832f46686-7b97d883f26b-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.25557.178" />
       </set>
     </attachedChunks>
@@ -105,6 +84,8 @@
       <option name="presentableId" value="Default" />
       <updated>1757454850915</updated>
       <workItem from="1757454859809" duration="73622000" />
+      <workItem from="1757723376066" duration="4342000" />
+      <workItem from="1757730079925" duration="22149000" />
     </task>
     <servers />
   </component>

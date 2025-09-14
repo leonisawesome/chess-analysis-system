@@ -48,7 +48,13 @@ _DIDACTIC_BOOST = 6
 _HEADINGS_BOOST = 3
 _ENGINE_NEG_HITS = 3
 _ANNOT_POS_HITS = 3
-_TOC_NEG_HITS = 4
+_TOC_NEG_HITS = 500
+
+# Early-slice TOC counting (first 5% or ≤300 lines)
+def _early_slice(text: str, frac: float = 0.05, hard_max: int = 300) -> str:
+    lines = text.splitlines()
+    n = max(1, min(int(len(lines) * frac), hard_max))
+    return "\n".join(lines[:n])
 
 def _env_int(var, default):
     try:
@@ -447,7 +453,7 @@ def detect_instructional(text: str) -> bool:
         if engine_dump_hits(text) >= _ENGINE_NEG_HITS:
             return False  # engine analysis log
         # === NEW: TOC negative ===
-        if toc_like_hits(text) >= _TOC_NEG_HITS:
+        if toc_like_hits(_early_slice(text)) >= _TOC_NEG_HITS:
             return False  # looks like a table of contents/index page
         if didactic_hits_per_1k(text) >= _DIDACTIC_BOOST:
             return True   # clearly explanatory prose
@@ -462,7 +468,7 @@ def detect_instructional(text: str) -> bool:
             or heading_hits(text) >= _HEADINGS_BOOST
             or annotation_hits(text) >= _ANNOT_POS_HITS
         )
-        toc_neg = (toc_like_hits(text) >= _TOC_NEG_HITS) and not pos
+        toc_neg = (toc_like_hits(_early_slice(text)) >= _TOC_NEG_HITS) and not pos
         neg = (
             pgn_ratio(text) >= _PGN_CUTOFF
             or engine_dump_hits(text) >= _ENGINE_NEG_HITS
