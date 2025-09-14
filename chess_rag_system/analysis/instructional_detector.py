@@ -46,7 +46,7 @@ from ._signals import pgn_ratio, didactic_hits_per_1k, heading_hits, engine_dump
 _PGN_CUTOFF = 0.35
 _DIDACTIC_BOOST = 6
 _HEADINGS_BOOST = 3
-_ENGINE_NEG_HITS = 3
+_ENGINE_NEG_HITS = 8
 _ANNOT_POS_HITS = 3
 _TOC_NEG_HITS = 500
 
