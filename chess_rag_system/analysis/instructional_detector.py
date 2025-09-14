@@ -43,7 +43,7 @@ from typing import List, Dict, Optional, Tuple, Set
 from collections import defaultdict, Counter
 from ._signals import pgn_ratio, didactic_hits_per_1k, heading_hits, engine_dump_hits, annotation_hits, toc_like_hits
 
-_PGN_CUTOFF = 0.35
+_PGN_CUTOFF = 0.33
 _DIDACTIC_BOOST = 6
 _HEADINGS_BOOST = 3
 _ENGINE_NEG_HITS = 8
