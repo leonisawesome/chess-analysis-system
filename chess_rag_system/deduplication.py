@@ -34,29 +34,38 @@ class ChessDeduplicator:
 
     def normalize_game(self, pgn_text: str) -> Optional[str]:
         """
-        Normalize PGN to UCI move sequence for consistent hashing.
+        Conservative normalization that preserves games with different annotations.
 
         Args:
             pgn_text: Raw PGN text
 
         Returns:
-            Space-separated UCI move sequence or None if parsing fails
+            Hash of entire PGN content (preserving all annotations) or None if parsing fails
         """
         try:
             game = chess.pgn.read_game(StringIO(pgn_text))
             if not game:
                 return None
 
-            # Generate UCI moves (unambiguous format)
-            moves = []
-            board = game.board()
-            for move in game.mainline_moves():
-                moves.append(move.uci())
-                board.push(move)
+            # Check if game has any moves
+            moves = list(game.mainline_moves())
+            if not moves:
+                return None
 
-            move_sequence = " ".join(moves)
-            # Return None if no moves found (empty or malformed game)
-            return move_sequence if move_sequence.strip() else None
+            # Use the ENTIRE PGN text as the basis for deduplication
+            # This preserves different annotations, commentary, variations, etc.
+            # Only removes games that are byte-for-byte identical
+            normalized_pgn = pgn_text.strip()
+
+            # Remove only insignificant whitespace differences
+            # but preserve all content including annotations
+            lines = []
+            for line in normalized_pgn.split('\n'):
+                line = line.strip()
+                if line:  # Skip empty lines
+                    lines.append(line)
+
+            return '\n'.join(lines) if lines else None
         except Exception:
             return None
 
