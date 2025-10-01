@@ -124,7 +124,7 @@ class MassivePGNProcessor:
 
                         # Convert to string
                         exporter = StringIO()
-                        game.export(exporter)
+                        print(game, file=exporter)
                         pgn_text = exporter.getvalue()
 
                     except Exception as e:
@@ -192,11 +192,13 @@ class MassivePGNProcessor:
                 print("="*60)
                 print(f"Total processed: {checkpoint['total_processed']:,}")
                 print(f"Unique games: {checkpoint['total_unique']:,}")
-                print(f"Duplicates removed: {checkpoint['total_duplicates']:,} ({checkpoint['total_duplicates']/checkpoint['total_processed']*100:.1f}%)")
+                dup_percent = (checkpoint['total_duplicates']/checkpoint['total_processed']*100) if checkpoint['total_processed'] > 0 else 0
+                print(f"Duplicates removed: {checkpoint['total_duplicates']:,} ({dup_percent:.1f}%)")
                 print(f"Errors: {checkpoint['total_errors']:,}")
                 print(f"Output chunks: {checkpoint['chunk_num']}")
                 print(f"Total time: {elapsed/3600:.1f} hours")
-                print(f"Average speed: {checkpoint['total_processed']/elapsed:.0f} games/sec")
+                avg_speed = checkpoint['total_processed']/elapsed if elapsed > 0 else 0
+                print(f"Average speed: {avg_speed:.0f} games/sec")
 
                 # Write manifest
                 with open(self.manifest_file, 'w') as f:
