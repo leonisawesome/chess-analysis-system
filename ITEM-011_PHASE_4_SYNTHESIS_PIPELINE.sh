@@ -378,7 +378,9 @@ with open('app.py', 'w') as f:
 print("✅ Functions removed from app.py")
 PYEOF
 
-python3 /tmp/remove_synthesis_functions.py
+# Activate virtual environment for Python operations
+source .venv/bin/activate
+python /tmp/remove_synthesis_functions.py
 echo ""
 
 # Step 6: Verify line counts
@@ -390,7 +392,7 @@ echo ""
 
 # Step 7: Syntax validation
 echo "Step 7: Python syntax validation..."
-python3 -m py_compile synthesis_pipeline.py 2>&1
+python -m py_compile synthesis_pipeline.py 2>&1
 if [ $? -eq 0 ]; then
     echo "✅ synthesis_pipeline.py syntax valid"
 else
@@ -401,7 +403,7 @@ else
     exit 1
 fi
 
-python3 -m py_compile app.py 2>&1
+python -m py_compile app.py 2>&1
 if [ $? -eq 0 ]; then
     echo "✅ app.py syntax valid"
 else
@@ -419,9 +421,12 @@ pkill -f "flask run" 2>/dev/null || true
 pkill -f "python.*app.py" 2>/dev/null || true
 sleep 2
 
+# Activate virtual environment
+source .venv/bin/activate
+
 export FLASK_APP=app.py
 export FLASK_ENV=development
-python3 -m flask run --port=5001 > flask_phase4_test.log 2>&1 &
+python -m flask run --port=5001 > flask_phase4_test.log 2>&1 &
 FLASK_PID=$!
 
 echo "Flask PID: $FLASK_PID"
