@@ -24,6 +24,7 @@ import query_classifier
 from chess_positions import detect_fen, parse_moves_to_fen, extract_chess_positions, filter_relevant_positions, create_lichess_url
 from diagram_processor import extract_moves_from_description, extract_diagram_markers, replace_markers_with_ids
 from opening_validator import extract_contamination_details, generate_section_with_retry, validate_stage2_diagrams, validate_and_fix_diagrams
+from synthesis_pipeline import stage1_generate_outline, stage2_expand_sections, stage3_final_assembly, synthesize_answer
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
@@ -60,325 +61,20 @@ try:
 except FileNotFoundError:
     print("⚠️  canonical_fens.json not found - middlegame queries will use RAG only")
 
-
 # ============================================================================
 # MULTI-STAGE SYNTHESIS PIPELINE
 # ============================================================================
 
 import json
 
-def stage1_generate_outline(openai_client, query: str, top_chunks: list) -> dict:
-    """
-    Stage 1: Generate structured outline from query and top chunks.
-
-    Args:
-        openai_client: OpenAI client instance
-        query: User's query
-        top_chunks: List of top 5 relevant text chunks
-
-    Returns:
-        dict with sections: {'sections': [{'title': ..., 'bullets': [...]}]}
-    """
-    # Combine top chunks into context
-    context = "\n\n---\n\n".join([chunk[:800] for chunk in top_chunks[:5]])
-
-    prompt = f"""You are a chess instructor creating a comprehensive guide. Based on the user's question and reference material, create a structured outline.
-
-User Question: {query}
-
-Reference Material:
-{context}
-
-Create a JSON outline with 5-7 sections. Each section should have:
-- title: A clear section heading (e.g., "Overview", "Strategic Themes", "Main Variations", "Key Plans", "Common Tactics")
-- bullets: 3-5 bullet points summarizing key information for that section
-- diagram_anchor: A standard diagram position for this section (see templates below)
-
-DIAGRAM ANCHOR TEMPLATES:
-When creating the outline, specify which standard diagram position to use for each major section:
-
-For Sicilian Defense queries, use these anchors:
-- Introduction section: [ANCHOR: Basic Sicilian - 1.e4 c5]
-- Najdorf section: [ANCHOR: Najdorf - 1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6]
-- Dragon section: [ANCHOR: Dragon - 1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 g6]
-- Sveshnikov section: [ANCHOR: Sveshnikov - 1.e4 c5 2.Nf3 Nc6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 e5]
-- Strategic themes section: [ANCHOR: Typical Sicilian pawn structure]
-
-For each section in your JSON outline, include a "diagram_anchor" field with the appropriate anchor.
-
-Return ONLY valid JSON in this exact format:
-{{
-  "sections": [
-    {{"title": "Overview", "bullets": ["...", "...", "..."], "diagram_anchor": "[ANCHOR: Basic Sicilian - 1.e4 c5]"}},
-    {{"title": "Strategic Themes", "bullets": ["...", "..."], "diagram_anchor": "[ANCHOR: Typical Sicilian pawn structure]"}},
-    ...
-  ]
-}}"""
-
-    response = openai_client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}],
-        max_completion_tokens=1500
-    )
-
-    try:
-        raw_response = response.choices[0].message.content
-
-        # Strip markdown code blocks if present
-        if "```json" in raw_response:
-            raw_response = raw_response.split("```json")[1].split("```")[0]
-        elif "```" in raw_response:
-            raw_response = raw_response.split("```")[1].split("```")[0]
-
-        outline = json.loads(raw_response.strip())
-        print(f"[Stage 1] ✅ Generated outline with {len(outline['sections'])} sections")
-        return outline
-
-    except json.JSONDecodeError as e:
-        print(f"[Stage 1] ❌ JSON parse error: {e}")
-        print(f"[Stage 1] Raw response: {response.choices[0].message.content[:500]}...")
-        return {"sections": [{"title": "Overview", "bullets": ["General information about " + query]}]}
-    except Exception as e:
-        print(f"[Stage 1] ❌ Unexpected error: {e}")
-        print(f"[Stage 1] Raw response: {response.choices[0].message.content[:500]}...")
-        return {"sections": [{"title": "Overview", "bullets": ["General information about " + query]}]}
-def stage2_expand_sections(openai_client, query: str, sections: list, context: str) -> list:
-    """
-    Stage 2: Expand each section into 150-300 words with chess notation and diagram markers.
-
-    Args:
-        openai_client: OpenAI client instance
-        query: User's query
-        sections: List of section dicts from stage 1
-        context: Combined reference text
-
-    Returns:
-        List of expanded section texts
-    """
-    # ITEM-008: Detect opening BEFORE loop to use in retry logic
-    detected_opening, expected_signature, eco_code = detect_opening(query)
-
-    if detected_opening:
-        print(f"\n[ITEM-008] Detected opening: {detected_opening}")
-        print(f"[ITEM-008] Expected signature: {expected_signature}")
-        print(f"[ITEM-008] Regeneration feedback loop ENABLED")
-    else:
-        print(f"\n[ITEM-008] No opening detected - regeneration feedback loop DISABLED")
-
-    expanded_sections = []
-
-    # ITEM-008: Use regeneration feedback loop for each section
-    for section in sections:
-        title = section['title']
-
-        if detected_opening:
-            # Use retry logic with contamination detection
-            print(f"\n[ITEM-008] Processing section '{title}' with retry logic")
-            expanded_content, success, attempts = generate_section_with_retry(
-                openai_client, section, query, context,
-                detected_opening, expected_signature
-            )
-
-            if success:
-                print(f"[ITEM-008] ✅ Section '{title}' generated successfully after {attempts} attempt(s)")
-            else:
-                print(f"[ITEM-008] ⚠️ Section '{title}' still contaminated after {attempts} attempts")
-
-            expanded_sections.append(f"## {title}\n\n{expanded_content}")
-            print(f"[Stage 2] Expanded section: {title} ({len(expanded_content.split())} words)")
-        else:
-            # No opening detected - use simplified generation without retry
-            bullets = section['bullets']
-            bullets_text = "\n".join([f"- {b}" for b in bullets])
-
-            prompt = f"""You are writing a section of a chess guide. Expand the following outline into 150-300 words.
-
-Section Title: {title}
-Key Points:
-{bullets_text}
-
-Reference Context (if needed):
-{context[:1500]}
-
-Requirements:
-- Write 150-300 words in an educational, engaging style
-- Include specific chess moves in algebraic notation where appropriate
-- Be specific and practical
-- Focus on understanding, not just memorization
-
-Write the expanded section now:"""
-
-            response = openai_client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": "system", "content": "You are an expert chess instructor creating educational content."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_completion_tokens=800
-            )
-
-            expanded = response.choices[0].message.content.strip()
-            expanded_sections.append(f"## {title}\n\n{expanded}")
-            print(f"[Stage 2] Expanded section: {title} ({len(expanded.split())} words)")
-
-    # ITEM-008: Validation now happens during generation inside generate_section_with_retry()
-    # Old post-loop validation removed since it's redundant
-    return expanded_sections
-def stage3_final_assembly(openai_client, query: str, expanded_sections: list) -> str:
-    """
-    Stage 3: Assemble expanded sections into coherent 800-1500 word article.
-
-    Args:
-        openai_client: OpenAI client instance
-        query: User's query
-        expanded_sections: List of expanded section texts
-
-    Returns:
-        Final synthesized article text
-    """
-    sections_text = "\n\n".join(expanded_sections)
-
-    # Count diagrams BEFORE Stage 3
-    diagram_count = sections_text.count('[DIAGRAM:')
-    print(f"[Stage 3] Input has {diagram_count} diagram markers")
-
-    prompt = f"""You are combining multiple draft sections into a cohesive chess article.
-
-CRITICAL STRUCTURE INTEGRITY REQUIREMENT:
-- Input contains {diagram_count} diagram markers in the format [DIAGRAM: ...].
-- Every diagram marker MUST appear in the final article exactly as written.
-- These markers are structural and cannot be edited, merged, or deleted.
-- You may move them for readability but not remove them.
-- Output MUST contain exactly {diagram_count} markers.
-- If any are missing, your answer is INVALID.
-
-User Question: {query}
-
-Input sections:
-{sections_text}
-
-Requirements:
-- Add smooth transitions between sections
-- Ensure logical flow from basics to advanced concepts
-- Add a brief "Study Recommendations" section at the end
-- Target length: 800-1500 words
-- Preserve all {diagram_count} diagram markers exactly
-
-Now produce the final integrated article:"""
-
-    response = openai_client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}],
-        max_completion_tokens=2500
-    )
-
-    article = response.choices[0].message.content.strip()
-
-    # POST-VALIDATION: Check diagram count
-    output_diagram_count = article.count('[DIAGRAM:')
-    print(f"[Stage 3] Output has {output_diagram_count}/{diagram_count} markers")
-
-    if output_diagram_count < diagram_count:
-        print(f"[Stage 3] ⚠️ VALIDATION FAILED: Missing {diagram_count - output_diagram_count} markers")
-        print(f"[Stage 3] Attempting corrective retry...")
-
-        correction_prompt = f"""You failed to preserve all diagram markers in your previous attempt.
-
-ORIGINAL STAGE 3 INPUT (which had {diagram_count} markers):
-{sections_text}
-
-CRITICAL STRUCTURE INTEGRITY REQUIREMENT:
-- Input contains {diagram_count} diagram markers in the format [DIAGRAM: ...].
-- Every diagram marker MUST appear in the final article exactly as written.
-- Output MUST contain exactly {diagram_count} markers.
-- If any are missing, your answer is INVALID.
-
-Your previous output had only {output_diagram_count} markers (INCORRECT).
-
-Requirements:
-- Add smooth transitions between sections
-- Ensure logical flow from basics to advanced concepts
-- Add a brief "Study Recommendations" section at the end
-- Target length: 800-1500 words
-- Preserve all {diagram_count} diagram markers exactly
-
-Regenerate the complete article with ALL {diagram_count} markers preserved:"""
-
-        retry_response = openai_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": correction_prompt}],
-            max_completion_tokens=2500
-        )
-
-        article = retry_response.choices[0].message.content.strip()
-        final_count = article.count('[DIAGRAM:')
-        print(f"[Stage 3] Retry result: {final_count}/{diagram_count} markers")
-
-    word_count = len(article.split())
-    print(f"[Stage 3] Final article: {word_count} words")
-
-    return article
-def synthesize_answer(openai_client, query: str, top_chunks: list) -> str:
-    """
-    Complete 3-stage synthesis pipeline.
-
-    Args:
-        openai_client: OpenAI client instance
-        query: User's query
-        top_chunks: List of top ranked text chunks
-
-    Returns:
-        Synthesized answer text
-    """
-    print("\n" + "="*60)
-    print("MULTI-STAGE SYNTHESIS PIPELINE")
-    print("="*60)
-
-    # Stage 1: Generate outline
-    outline = stage1_generate_outline(openai_client, query, top_chunks)
-
-    # Stage 2: Expand sections
-    context = "\n\n".join([chunk[:1000] for chunk in top_chunks[:8]])
-    expanded_sections = stage2_expand_sections(
-        openai_client,
-        query,
-        outline['sections'],
-        context
-    )
-
-    # Stage 2.5: Validate diagrams and fix if missing
-    expanded_sections = validate_and_fix_diagrams(
-        openai_client,
-        query,
-        expanded_sections,
-        context
-    )
-
-    # Stage 3: Final assembly
-    final_article = stage3_final_assembly(openai_client, query, expanded_sections)
-
-    print("="*60 + "\n")
-
-    return final_article
-
-
-
-
-# ============================================================================
-# FLASK ROUTES
-# ============================================================================
-
-@app.route('/')
 def index():
     """Main page."""
     return render_template('index.html')
-
 
 @app.route('/test', methods=['POST'])
 def test():
     """Test endpoint."""
     return jsonify({'status': 'ok', 'message': 'test works'})
-
 
 @app.route('/query', methods=['POST'])
 def query():
@@ -607,7 +303,6 @@ def query():
         print(error_details)
         return jsonify({'error': str(e), 'details': error_details}), 500
 
-
 @app.route('/fen_to_lichess', methods=['POST'])
 def fen_to_lichess():
     """Convert FEN to Lichess URL."""
@@ -623,7 +318,6 @@ def fen_to_lichess():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 if __name__ == '__main__':
     # Check for API key
