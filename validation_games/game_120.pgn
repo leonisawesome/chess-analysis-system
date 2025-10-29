@@ -1,0 +1,46 @@
+[Event "44th Olympiad 2022"]
+[Site "Chennai IND"]
+[Date "2022.08.08"]
+[Round "10.48"]
+[White "Berend, Fred"]
+[Black "Gerena Rivas, Eliam"]
+[Result "1-0"]
+[ECO "A45"]
+[WhiteElo "2307"]
+[BlackElo "2102"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "213"]
+[EventDate "2022.07.29"]
+[WhiteTeam "Luxembourg"]
+[BlackTeam "Puerto Rico"]
+
+1. d4 Nf6 2. Bg5 c5 3. d5 Qb6 4. Nc3 Qxb2 5. Bd2 Qb6 6. e4 d6 7. f4 e5 (
+{ Black must stop White from expanding in the centre. If } 7... Nbd7 8. Nf3 g6
+9. e5 $18 { White already has a winning advantage. } ) 8. f5 Qd8 9. Nh3
+{ White develops and keeps the option to play g4. } ( 9. g4 $5 ) 9... Be7 10.
+Nf2 a6 11. a4 { (stopping ...b5) } 11... g6 12. g4 ( 12. Qf3 $5 gxf5 13. exf5
+$16 ) 12... Ng8 ( 12... gxf5 13. exf5 $1
+{ Much better than
+gxf5. White maintains the option to play g4-g5 and gets the e4-square for his knights. }
+13... Ng8 { (the engine's first choice. ..) } 14. Qf3 Bh4 15. Ne4 $18
+{ White can continue with Bg2, 0-0, etc. and soon start a decisive attack. } )
+13. Qc1 ( 13. Qf3 $5 $16
+{ was more natural. However,
+White also maintained an advantage and managed to win a good game. }
+) 13... h6 14. Ncd1 b6 15. Ra3 $1 Nd7 16. Be2 ( 16. h4 $16 ) 16... Nf8 17. Ne3
+Bd7 18. Qa1 Bc8 19. Nc4 Qc7 20. Qb2 Rb8 21. Rb3 Nd7 22. O-O ( 22. h4 $5 ) 22...
+Ngf6 $2 ( 22... gxf5 $16 ) 23. fxg6 fxg6 24. Rb1 Bd8 25. Qc1 O-O 26. Bxh6 Rf7
+27. Bd2 Nh7 28. g5 Be7 29. h4 Qd8 30. Bg4 Kh8 31. Be6 Rg7 32. Qf1 Nhf8 33. Bg4
+Rh7 34. Qh3 Qe8 35. Qg3 b5 36. Na5 c4 37. Nxc4 Nc5 38. Nxe5 Nxb3 39. Rxb3 Bb7
+40. Bc3 Kg8 41. Ned3 Bc8 42. axb5 Rxb5 43. Nb4 Bd7 44. Nxa6 Rxb3 45. cxb3 Qc8
+46. Nb4 Qc5 47. Kg2 Rf7 48. Bxd7 Nxd7 49. Ng4 Bf8 50. Nc6 Bg7 51. Nh6+ Bxh6 52.
+gxh6 Kh7 53. Nd8 Re7 54. Ne6 Qb5 55. Nf4 Nf8 56. h5 gxh5 57. Qg5 Rf7 58. Bf6
+Qd7 59. Nxh5 Ng6 60. Bg7 Qe7 61. Qxe7 Nxe7 62. Nf6+ Kg6 63. Nd7 Ng8 64. Nf8+
+Kh5 65. Ne6 Nxh6 66. Bf8 Rb7 67. Bxd6 Rxb3 68. Bf4 Nf7 69. Kf2 Kg4 70. Ke2 Rb2+
+71. Kd3 Kf3 72. d6 Rb7 73. e5 Rd7 74. Kd4 Kg4 75. Ke4 Ra7 76. Be3 Ra5 77. Nc5
+Ra8 78. d7 Nd8 79. Kd5 Kf5 80. e6 Nxe6 81. Nxe6 Kf6 82. Bd4+ Ke7 83. Nc5 Rg8
+84. Kc6 Rd8 85. Kc7 Rxd7+ 86. Nxd7 Ke6 87. Kc6 Kf5 88. Kd5 Kf4 89. Nc5 Kf5 90.
+Be5 Kg5 91. Ke4 Kg4 92. Bf4 Kh4 93. Nd3 Kh5 94. Kf5 Kh4 95. Nf2 Kh5 96. Bg3 Kh6
+97. Ne4 Kg7 98. Bh4 Kf7 99. Nd6+ Kg7 100. Bg5 Kh7 101. Kf6 Kg8 102. Kg6 Kf8
+103. Bh4 Kg8 104. Be7 Kh8 105. Nf5 Kg8 106. Nh6+ Kh8 107. Bf6# 1-0
+

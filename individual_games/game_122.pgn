@@ -1,0 +1,49 @@
+[Event "champions league RODOS"]
+[Site "?"]
+[Date "2013.10.26"]
+[Round "7"]
+[White "Papaioannou, Ioannis"]
+[Black "Lubszynski, Rafal"]
+[Result "1-0"]
+[ECO "D11"]
+[WhiteElo "2633"]
+[BlackElo "2432"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "77"]
+[EventDate "2007.11.25"]
+
+{ An instructive game for the theme of space advantage! } 1. d4 d5 2. Nf3 c6 3.
+c4 Nf6 4. e3 a6 5. Bd3 ( 5. Nc3 b5 { is the main continuation. } ) 5... b5 (
+5... dxc4 $5 6. Bxc4 c5 7. O-O e6
+{ transposes to the Queen's Gambit Accepted. } ) 6. c5 $5
+{ White plays for a space advantage, while
+Black may not find it easy to carry out ...e5. }
+6... Bg4 7. Qc2 { I discovered this variation in the pre-computer era. } 7...
+Bxf3 ( { If Black prepares
+...e5 with } 7... Nbd7 8. Nbd2 Qc7 9. a4 $1 Rc8
+{ White gets a winning position after } 10. b4 e5 11. dxe5 Nxe5 12. Nxe5 Qxe5
+13. Bb2 Qe6 14. O-O $18
+{ White is too far ahead in development; he can transfer his knight to d4, or prepare e4. }
+) 8. gxf3 g6 9. f4 e6 10. a4
+{ I knew about
+this position, that White can play for a piece sacrifice on b5, or transfer the knight to a5. }
+10... Nbd7 11. b4 Bg7 12. Nd2 Nh5 13. Bb2 Bf6 14. Ke2 $1
+{ White connects the rooks; the king is safe in the centre. } 14... Ng7 15. Bc3
+$1 ( 15. Ra3 Nf5 16. Rha1 Rc8 17. axb5 axb5 18. Ra7 $16 ) 15... Nf5 16. Rhg1 $3
+{ With this move, White prevents Black from castling. } 16... Bg7
+{ This was my idea - once the a-file is opened, the bishop is kind
+of misplaced on this square. }
+( 16... O-O 17. Bxf5 exf5 18. Qxf5 $18 ) 17. axb5 axb5 18. Rxa8 Qxa8 19. Ra1
+Qb7 20. Qa2 Ke7 21. Qa7 Rb8 22. Qxb7 Rxb7 23. Ra8 $3 $16 Nf6 ( 23... Rb8 24.
+Ra6 Rc8 25. Nb3 Nb8 26. Ra7+ $18 ) ( 23... Nb8 24. Nb3 Kd7 25. Na5 $18 ) 24.
+Nb3 Kd7 ( 24... Ne4 25. Bxe4 dxe4 26. Nd2 $18 ) 25. Na5 Rc7 26. Ra6 Ne7 27.
+Nxc6 $3 $18
+{ This typical piece sacrifice wins - White's passed pawns on the queenside
+will be too strong. }
+27... Nxc6 28. Bxb5 Ng8 ( 28... Ne4 29. Be1 Nd6 30. cxd6 Kxd6 31. Ba4 $18 ) 29.
+Ba4 Ne7 30. b5 Nb8 31. Ra8 Rc8 ( 31... Rb7 32. c6+ Nexc6 33. bxc6+ Nxc6 34. Ra6
+Rc7 35. Ba5 Rc8 36. Ra7+ Ke8 ( 36... Kd6 37. Bb4+ $3 Nxb4 38. Rd7# ) 37. Bc7
+Kd7 38. Be5+ Kd8 39. Bxc6 Bxe5 40. Rd7+ Ke8 41. Rc7+ Kd8 42. Rxc8+ Kxc8 43.
+fxe5 $18 ) 32. b6+ Nec6 33. Ra7+ Ke8 34. Rc7 Kd8 35. Rxf7 Bh6 36. Rxh7 Bf8 37.
+Bb5 $1 Be7 38. b7 Rc7 39. Rh8+ ( 39. Rh8+ Kd7 40. Rxb8 $18 ) 1-0
+

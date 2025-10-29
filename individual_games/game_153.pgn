@@ -1,0 +1,25 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 8"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "r4rk1/2pn1q2/pp1p2pb/3Ppp1p/NPP1P3/8/P1QN1PPP/4RRK1 b - - 0 1"]
+[PlyCount "2"]
+
+{ Black has some pressure in this position - how should he continue?  Evaluate 1...f4. }
+1... f4 $2
+{ Black is still fine, but he has lost a
+lot of his dynamic resources! } ( 1...
+a5 $3
+{ Black is using the fact that the white pieces are hanging to achieve positional goals! }
+2. bxa5 ( 2. a3 $4 axb4 3. axb4 Bxd2 4. Qxd2 Rxa4 ) ( 2. b5 { ...and now ? }
+2... Bxd2 $3 { We no longer need the bishop! } 3. Qxd2 f4 $1 $19
+{ With no active
+possibilities whatsoever, White can just wait for the end! } )
+2... Rxa5 3. Nc3 Bxd2 $3 4. Qxd2 f4 $3 $19 { Ghaem Maghami-Short 2013 (0-1) } )
+2. c5 $132 *
+

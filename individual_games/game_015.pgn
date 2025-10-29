@@ -1,0 +1,41 @@
+[Event "Tilburg"]
+[Site "Tilburg"]
+[Date "1993.??.??"]
+[Round "5"]
+[White "Karpov, Anatoly"]
+[Black "Jussupow, Artur"]
+[Result "1-0"]
+[ECO "E17"]
+[WhiteElo "2760"]
+[BlackElo "2630"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "117"]
+[EventDate "1993.11.??"]
+[EventType "k.o."]
+[EventRounds "7"]
+[EventCountry "NED"]
+[SourceTitle "CBM 039"]
+[Source "ChessBase"]
+[SourceDate "2004.01.01"]
+[SourceVersion "1"]
+[SourceVersionDate "2004.01.01"]
+[SourceQuality "1"]
+
+1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 Bb7 5. Bg2 Be7 ( 5... Bb4+ 6. Nbd2 O-O 7.
+O-O d5 8. a3 Be7 9. cxd5 exd5 10. Nb1 $5 { [%cal Yb1c3] } ) 6. Nc3 Ne4 ( 6...
+O-O 7. Qc2 d5 8. cxd5 exd5 9. O-O $14 ) 7. Bd2 Bf6 8. Qc2 Nxd2 9. Qxd2 d6 10.
+d5 O-O 11. Nd4 $1 e5 12. Nc6 $3 Qd7 13. Nxb8 Rfxb8 14. h4 $3 a5 $6 ( 14... a6
+$5 ) 15. a4 $3 $16 Rf8 ( 15... Ba6 16. b3 e4 17. Bxe4 Re8 18. Bf3 Qe7 19. O-O
+Qe5 20. Rac1 $16 ) 16. e4 h5 ( 16... c6 17. dxc6 Bxc6 18. b3 $16 ) 17. O-O-O g6
+18. Bh3 Qe7 19. Kc2 Kg7 20. f3 Rh8 21. Rh2 Ba6 22. Nb5 Raf8 23. Kb1 Qd8 24. Qd3
+Be7 25. Re2 Bc8 26. Bxc8 Qxc8 27. Rg1 Bd8 ( 27... f5 28. f4 $1 $16 ) 28. Na7
+Qh3 29. Qc2 Re8 ( 29... f5 30. Rh2 $18 ) 30. Nc6 Bf6 31. Rf2 Qd7 32. Qe2 Rhf8
+33. Rh2 Rh8 34. Qf2 Ref8 35. Rf1 Kg8 ( 35... Re8 36. g4 $16 ) 36. f4 Qg4 37.
+Qf3 Re8 38. Qxg4 hxg4 39. f5 g5 40. h5 Ra8 ( 40... Kh7 41. Na7 Ra8 42. Nb5 Rhc8
+43. Nc3 Rh8 44. Nd1 Rac8 45. Ne3 Kg7 46. Nxg4 $18 ) 41. Kc2 Kg7 42. Kc3 Ra6 43.
+Ra1 Rha8 44. b4 Kf8 ( 44... axb4+ 45. Kxb4 Kh6 46. Rha2 Kh7 ( 46... Kxh5 47.
+Rh2# ) 47. Kb5 $18 ) 45. b5 R6a7 46. h6 Bh8 ( 46... Rb7 47. h7 Bh8 48. f6 $18 )
+47. f6 Bxf6 48. Rf1 Bh8 49. Nxa7 Rxa7 50. Rh5 Ke7 51. Rxg5 Ra8 52. h7 f6 53.
+Rg8 Rf8 54. c5 dxc5 55. Kc4 Kf7 56. d6 cxd6 57. Rxf8+ Kxf8 58. Kd5 Kg7 59. Kc6
+1-0
+

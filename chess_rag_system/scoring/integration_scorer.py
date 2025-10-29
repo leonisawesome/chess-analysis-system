@@ -10,6 +10,7 @@ in the original requirements - no shortcuts or hacks, just proper architectural
 integration that boosts EVS when instructional value is high.
 """
 
+from chess_rag_system.evs_calibration import calibrate_evs
 import logging
 import math
 from typing import Dict, Any, Optional
@@ -352,7 +353,7 @@ class IntegrationScorer:
         self.logger.info(f"Final EVS calculation: integrated={integrated_score:.3f} -> "
                          f"evs={final_evs:.1f} ({tier})")
 
-        return final_evs
+        return calibrate_evs(final_evs)
 
     def analyze_integration_quality(self, semantic_result: SemanticAnalysisResult,
                                     pgn_analysis: PGNAnalysisResult) -> Dict[str, Any]:

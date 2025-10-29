@@ -1,0 +1,41 @@
+[Event "Sakthi"]
+[Site "Sakthi"]
+[Date "1996.??.??"]
+[Round "4"]
+[White "Miles, Anthony John"]
+[Black "Lovlu, Saifuddi"]
+[Result "1-0"]
+[ECO "D00"]
+[WhiteElo "2635"]
+[BlackElo "2215"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "101"]
+[EventDate "1996.??.??"]
+[EventType "tourn"]
+[EventRounds "11"]
+[EventCountry "IND"]
+[EventCategory "9"]
+
+1. d4 d5 2. Bg5 Bf5 3. e3 Nd7 4. c4 h6 5. Bh4 c6 6. Nc3 Ngf6 7. Nf3 e6
+{ This position appears to be fine for Black, but things are not so
+easy: } 8.
+Qb3 Qb6 ( 8... b6 9. cxd5 exd5 10. Ba6 $16 ) ( 8... Qc8 9. Rc1 $14 ) 9. c5 Qxb3
+$2 ( 9... Qc7 $1 10. Bg3 Qc8 11. Qd1 b6 12. b4 a5 $11 ) 10. axb3
+{ We have ended up in a similar position to the London System. White is better thanks to his space advantage on the queenside. }
+10... a6 ( 10... Be7 11. b4 O-O ( 11... a6 $6 12. b5 $1 $16 ) 12. b5 $16 ) 11.
+b4 Rc8 ( 11... O-O-O $2 12. b5 $1 cxb5 13. Bxb5 $1 axb5 14. Ra8+ Nb8 15. Nxb5
+Kd7 16. Ne5+ Ke8 17. Ra7 $18 ) 12. Be2 Be7 13. Nd2 $1
+{ The knight is transferred to a5. } 13... O-O ( 13... Bd8 $5 14. Nb3 Bc7 15.
+Na5 Rb8 $14 ) 14. Nb3 Bd8 15. Na5 Bxa5 16. bxa5 $16
+{ Here, White has a clear advantage. He has the pair of bishops, and there's the idea of doubling
+rooks on the b-file! }
+16... Rfe8 17. Ra4 $1 e5 18. Kd1 exd4 19. exd4 Nf8 20. Rb4 Rc7 21. Bg3 Rd7 22.
+f3 Re6 23. Kd2 Ne8 24. Ra1 $1 f6 25. Ra3 Ree7 26. Rab3
+{ Black is tied down to the defence of the b7-pawn. } 26... Ne6 27. Bf2 Nd8 28.
+g4 Bh7 29. Bg3 g5 30. Na4 Re6 31. Nb6 Rf7 32. Nc8 Bg6 33. f4
+{ White is playing on both sides of the board. } 33... gxf4 34. Bxf4 Rh7 35.
+Nd6 ( 35. h4 $5 ) 35... Nxd6 36. Bxd6 ( 36. cxd6 $1 $16 ) 36... Rf7 37. Rh3 Rh7
+38. Bf4 h5 $2 ( 38... Re4 $1 39. Bxh6 $2 Ne6 $132 ) 39. gxh5 $18 Be4 40. Rg3+
+Kf8 41. Bg4 f5 42. Be2 Ke8 43. Rbb3 Kd7 44. Rg6 Re8 45. h6 Kc8 46. Bxa6 Ne6 47.
+Rxb7 Rxb7 48. h7 Nxf4 49. Rg8 Kd7 50. Bxb7 Ng6 51. Bxc6+ 1-0
+

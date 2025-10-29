@@ -1,0 +1,22 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 9"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "r2qr1k1/1p3pp1/1bppbnnp/pP2p3/P1P1P3/3PBNPP/4QPBK/RN3R2 b - - 0 1"]
+[PlyCount "10"]
+
+{ It is Black to move - evaluate 1...d5. } 1... d5 $2 ( 1... Bxe3 $1 2. Qxe3 d5
+$15 { is the right way ! } ) 2. c5 $1 Bc7 3. b6 $1
+{ It's good to
+gain space on the queenside, while blocking the black bishop and the black rook. }
+3... Bb8 4. Qc2 $14 d4 $6
+{ On the other hand, this gaining of
+space is wrong, as it releases the tension in the centre and clarifies White's plans. }
+5. Bc1 $1 Qe7 6. Ba3 $16 { Suleymanli-Debray 2022
+(1-0) } *
+

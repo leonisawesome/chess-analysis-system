@@ -1,0 +1,50 @@
+[Event "Asian Continental op 14th"]
+[Site "Al Ain"]
+[Date "2015.08.06"]
+[Round "5"]
+[White "Ayyad, Maher"]
+[Black "Maghsoodloo, Parham"]
+[Result "0-1"]
+[ECO "E11"]
+[WhiteElo "2122"]
+[BlackElo "2416"]
+[Annotator "IM Siegfried Baumegger"]
+[PlyCount "69"]
+[EventDate "2015.08.02"]
+[EventType "swiss"]
+[EventRounds "9"]
+[EventCountry "UAE"]
+[SourceTitle "CBM 168"]
+[Source "ChessBase"]
+[SourceDate "2015.09.14"]
+[SourceVersion "1"]
+[SourceVersionDate "2015.09.14"]
+[SourceQuality "1"]
+
+1. d4 Nf6 2. Nf3 e6 3. c4 Bb4+ 4. Bd2 a5 5. a3 Bxd2+ 6. Qxd2 O-O 7. Nc3 d6 8.
+e4 Nc6 9. Be2 e5 10. d5 Ne7 ( 10... Nb8 $5 ) 11. O-O Ng6
+{ Black
+aims to prepare an attack on the kingside. } 12. g3 ( 12. b3 $5 ) 12...
+a4 { Black fixes the structure on the queenside. } 13. Qc2 Bg4
+{ a4 is
+indirectly protected. } 14. Nd1 $6 ( 14. Nxa4 Nxe4 $1 15. Qxe4 Bxf3 16.
+Bxf3 Rxa4 17. Qc2 Ra8 $11 ( 17... Ra7
+{ may appear sophisticated, but
+the rook is better placed on a8, where it is connected to White's other pieces. }
+) ) 14... Nd7 $1
+{ Black unblocks the f-pawn, and the knight
+will find a perfect square on c5. }
+15. Ne3 Bh3 16. Rfe1 Nc5 17. Bf1 Bd7 18. Bg2 Ne7
+{ The knight had no more business on g6 and retreats in
+order to prepare ...f5. }
+19. Nd2 f5 20. f3 $2 (
+{ Even though Black is much better in any case, White had to try } 20. exf5
+Nxf5 21. Nxf5 Bxf5 22. Ne4 Nb3 $17 { [%cal Yb3d4] } ) 20... f4 $1 $19
+{ Now Black is winning due to his large space advantage on the kingside. Due to the queenside
+being fixed by the pawn on ...a4, White cannot generate counterplay. }
+( 20... fxe4 $17 ) 21. Nd1 Ng6 22. g4 h5 { Black's attack plays itself. } 23.
+h3 Nh4 24. Bh1 Qg5 25. Nf2 Rf6 { (transferring the rook to the h-file) } 26.
+Kf1 hxg4 27. Nxg4 Bxg4 28. hxg4 Rh6 29. Ke2 Ng6 30. Bg2 Rh2 31. Rg1 Nh4 32. Kf1
+Nxg2 33. Rxg2 Rh1+ 34. Rg1 Qh4 35. Re1
+{ and White resigned because he is about to lose a rook. } 0-1
+

@@ -1,0 +1,43 @@
+[Event "Karlsruhe Grenke op"]
+[Site "Karlsruhe"]
+[Date "2019.04.21"]
+[Round "6"]
+[White "Goumas, Georgios"]
+[Black "Shyam Prasad Reddy, K"]
+[Result "1-0"]
+[ECO "B33"]
+[WhiteElo "2386"]
+[BlackElo "2215"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "79"]
+[EventDate "2019.04.18"]
+[EventType "swiss"]
+[EventRounds "9"]
+[EventCountry "GER"]
+[SourceTitle "CBM 189 Extra"]
+[Source "ChessBase"]
+[SourceDate "2019.06.03"]
+[SourceVersion "1"]
+[SourceVersionDate "2019.06.03"]
+[SourceQuality "1"]
+
+1. e4 c5 2. Nf3 Nc6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 e5 6. Ndb5 d6 7. Nd5
+{ The most fashionable move nowadays. } 7... Nxd5 8. exd5 Nb8 9. a4 Be7 ( 9...
+a6 10. Na3 { [%cal Ya3c4] } ) 10. Be2 O-O 11. O-O a6 12. Na3 f5
+{ White has an advantage in space on the queenside, while Black has an
+advantage in space on the kingside. }
+13. f4 { White tries to slow down Black's attack. } 13... e4 $2
+{ Closing the position is a big strategic
+mistake. Now Black struggles to create counterplay. The passed e4-pawn does not compensate for this. }
+( 13... Nd7 $1 ) 14. Be3 $16 Nd7 15. c3 Nf6 16. Nc4 Bd7 17. Nb6 Rb8 18. c4 Be8
+19. a5 Bf7 20. b4
+{ White has made great progress on the queenside, while Black has not achieved
+anything on the other wing. }
+20... Nd7 21. Qd2 h6 22. Rfd1 Nxb6 23. axb6 $1 $18
+{ Similar to examples we previously discussed, taking with the
+pawn on b6 is very strong. }
+( 23. Bxb6 $16 ) 23... Rc8 24. Rac1 g5 25. g3 gxf4 26. gxf4 Kh7 27. c5 Qe8 28.
+c6 Bh5 29. cxb7 Qg6+ 30. Kh1 Rg8 31. Rg1 Rxc1 32. Qxc1 Bxe2 33. Rxg6 Rxg6 34.
+h4 Rg4 35. Qc7 Bf3+ 36. Kh2 Rxh4+ 37. Kg3 Rg4+ 38. Kf2 Rg7 39. Qxe7 Rxe7 40.
+b8=Q 1-0
+

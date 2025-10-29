@@ -1,0 +1,27 @@
+[Event "Lindores Abbey Tal Mem"]
+[Site "Riga LAT"]
+[Date "2021.11.08"]
+[Round "16.26"]
+[White "Maghsoodloo, Parham"]
+[Black "Ivic, Velimir"]
+[Result "0-1"]
+[ECO "B33"]
+[WhiteElo "2706"]
+[BlackElo "2620"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "74"]
+[EventDate "2021.11.08"]
+
+1. e4 c5 2. Nf3 Nc6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 e5 6. Ndb5 d6 7. Nd5 Nxd5 8.
+exd5 Nb8 9. a4 Be7 10. a5 O-O 11. Be2 Nd7 12. O-O a6 $1
+{ Played at the right moment. } 13. Nc3 ( 13. Na3 $2 Qxa5 $17 ) (
+{ If the knight was not dropping, White would very much prefer to play } 13. c4
+f5 14. Nc3 $1 ) 13... f5 14. f4 Bf6 $132 { Black has good counterplay. } (
+14... e4 $2 15. Be3 Bf6 16. Qd2 Rf7 17. Na4 $16 ) 15. Ra3 exf4 16. Bxf4 Ne5
+{ Black has a good game. His knight is well placed on e5 and he is ready to expand on the kingside. White's attack on the queenside
+hasn't started yet. }
+17. b4 g5 18. Be3 f4 19. Bd4 Bf5 20. Na4 Qe7 21. c4 Rae8 22. c5 Qg7 23. Kh1 Qh6
+24. cxd6 g4 25. d7 g3 26. Bg1 Bxd7 27. Nc5 Bf5 28. d6 Kh8 29. Qd5 Rg8 30. d7
+Rd8 31. Qd6 Bh3 32. Qd5 Rg5 33. Ne6 Rxd7 34. Qa2 Bxg2+ 35. Kxg2 gxh2+ 36. Nxg5
+h1=Q+ 37. Kf2 Q6h4+ 0-1
+

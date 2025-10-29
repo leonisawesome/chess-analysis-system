@@ -1,0 +1,18 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 7"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "r2qk2r/pp1bbp1p/4pnp1/3pN3/3P1P2/P1NBP3/1PQ3PP/R3K2R w KQkq - 0 1"]
+[PlyCount "7"]
+
+{ How should White continue in this position ? } 1. g4 $3 $16
+{ By gaining space on the kingside! } ( 1. O-O $6 { is less good! } 1... Bd6 2.
+Qf2 O-O $132 ) 1... Bc6 2. h4 $16 ( 2. g5 $16 ) 2... Nd7 3. Nf3 $3
+{ White avoids exchanges because he has a space advantage! } 3... Rc8 4. g5 $3
+$16 { Aravindh-Sjugirov 2020 (1-0) } *
+

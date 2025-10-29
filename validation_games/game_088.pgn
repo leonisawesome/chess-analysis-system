@@ -1,0 +1,45 @@
+[Event "Astana"]
+[Site "Astana"]
+[Date "2001.05.24"]
+[Round "4"]
+[White "Gelfand, Boris"]
+[Black "Morozevich, Alexander"]
+[Result "1-0"]
+[ECO "D15"]
+[WhiteElo "2712"]
+[BlackElo "2749"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "71"]
+[EventDate "2001.05.20"]
+[EventType "tourn"]
+[EventRounds "10"]
+[EventCountry "KAZ"]
+[EventCategory "20"]
+[SourceTitle "CBM 084"]
+[Source "ChessBase"]
+[SourceDate "2001.09.13"]
+[SourceVersion "1"]
+[SourceVersionDate "2001.09.13"]
+[SourceQuality "1"]
+
+1. d4 d5 2. c4 c6 3. Nc3 Nf6 4. Nf3 a6 5. a4 Bf5
+{ This variation was once popular. However, after } 6. Qb3 Ra7 7. a5
+{ I consider the position
+to be lost for Black. } 7... e6
+{ White to play and get a winning advantage - 8.? } 8. Qb6 $1
+{ After the forced exchange of queens, White gains a
+huge spatial advantage on the queenside. }
+8... Qxb6 9. axb6 Ra8 10. c5
+{ Now all endings are lost for Black due to White enormous space advantage.
+For example: White can transfer a knight to a5, when apart from attacking b7, several sacrifices on c6, b7, or a6 are threatened. }
+10... Nbd7 11. e3 Be7 12. Be2 O-O 13. Nd2 e5 14. O-O Rfe8 (
+{ Gaining space with } 14... e4 { is not sufficient. For example } 15. Nb3 Rfe8
+16. Na5 Reb8 17. b4 Ne8 18. Nxb7 $5 ( 18. f3 $5 ) 18... Rxb7 19. Rxa6 Rbb8 20.
+b5 $18 { White's passers are stronger than Black's extra piece. } ) 15. Nb3 Bf8
+16. Bd2 ( 16. Na5 $5 ) 16... Bc2 17. Na5 exd4 18. exd4 $18 Nxc5
+{ A desperate attempt to free the game. However, the compensation for the piece is
+clearly insufficient. Gelfand went on to win. }
+19. dxc5 d4 20. Bf3 dxc3 21. Bxc3 Ne4 22. Rfc1 Bd3 23. Nxb7 Rab8 24. Bxe4 Rxe4
+25. Rd1 Be2 26. Rd7 Bg4 27. Rc7 Rc4 28. Rxa6 h5 29. Ra7 Be6 30. Rxc6 Bd5 31.
+Rc7 Re8 32. h3 Rf4 33. Nd6 Re2 34. f3 Rxg2+ 35. Kxg2 Rxf3 36. Kg1 1-0
+

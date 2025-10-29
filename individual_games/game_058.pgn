@@ -1,0 +1,38 @@
+[Event "Gibraltar Masters 8th"]
+[Site "Caleta"]
+[Date "2010.02.03"]
+[Round "9"]
+[White "Naumann, Axel"]
+[Black "Vallejo Pons, Francisco"]
+[Result "0-1"]
+[ECO "E01"]
+[WhiteElo "2258"]
+[BlackElo "2705"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "72"]
+[EventDate "2010.01.26"]
+[EventType "swiss"]
+[EventRounds "10"]
+[EventCountry "ENG"]
+[SourceTitle "CBM 134 Extra"]
+[Source "ChessBase"]
+[SourceDate "2010.03.03"]
+[SourceVersion "1"]
+[SourceVersionDate "2010.03.03"]
+[SourceQuality "1"]
+
+1. d4 Nf6 2. c4 e6 3. Nf3 c5 4. g3 cxd4 5. Nxd4 d5 6. Bg2 e5 7. Nf3 d4 8. O-O
+Nc6 9. e3 ( 9. a3 a5 $11 ( 9... Be7 $6 10. b4 e4 $6 11. Ng5 Bf5 12. Nd2 $16 ) )
+9... Be7 10. exd4 exd4 11. Bf4 Be6 $1 12. Ne5 Rc8 13. Re1 ( 13. Qa4 Qb6 $1 (
+13... O-O 14. Bxc6 bxc6 15. Nxc6 Qd7 16. Nxe7+ Qxe7 17. Nd2 Rfd8 $13 ) 14. Nd2
+O-O 15. Rfe1 Nh5 $1 $13 ) 13... O-O 14. Nd2 ( 14. Nxc6 bxc6 15. Nd2 Qb6 $15 (
+15... Re8 $15 ) ( 15... Bd6 $5 ) 16. Nf3 Rfd8 17. Ne5 c5 18. b3 h6 19. Nd3 Bd6
+20. Bxd6 Qxd6 $15 ) 14... Nxe5 15. Bxe5 Qd7 16. Ne4 Rfd8 $3 17. Bxf6 ( 17.
+Nxf6+ Bxf6 ( 17... gxf6 18. Bf4 Rxc4 $17 ) 18. Bxf6 gxf6 19. b3 d3 $17 ( 19...
+b5 20. cxb5 Qxb5 $17 ) 20. Qd2 b5 21. cxb5 Qxb5 22. Rad1 Rc2 23. Qe3 d2 24. Re2
+( 24. Rf1 Rxa2 $19 ) 24... Rc1 $19 ) 17... gxf6 $3 18. Qh5 ( 18. b3 d3 ( 18...
+f5 $5 ) 19. Nc3 Bb4 20. Qd2 Bxc3 21. Qxc3 d2 22. Red1 b5 $17 ) 18... d3 19. Qh6
+Qd4 20. b3 b5 21. c5 Rxc5 22. Nxc5 Bxc5 23. Rad1 Qxf2+ 24. Kh1 Bf8 25. Qh5 Qc5
+26. Qf3 d2 27. Rf1 Qg5 28. Qxf6 Qxf6 29. Rxf6 a5 30. Rf4 Bh6 31. Rh4 Kg7 32.
+Kg1 Bf5 33. Kf2 Bc2 34. Bf3 Rd6 35. Rg4+ Kf8 36. Re4 Rf6 0-1
+

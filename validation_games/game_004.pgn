@@ -1,0 +1,51 @@
+[Event "19th Sant Marti Open 2017"]
+[Site "Barcelona ESP"]
+[Date "2017.07.19"]
+[Round "7.72"]
+[White "Sama Salinas, Alejandro"]
+[Black "Catala Ulied, Bernat"]
+[Result "1-0"]
+[ECO "E73"]
+[WhiteElo "2000"]
+[BlackElo "1761"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "119"]
+[EventDate "2017.07.13"]
+
+1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Be2 O-O 6. Bg5 h6 7. Be3 e5 8. d5 a5
+( 8... Ne8 9. g4 ( 9. Qd2 $5 ) 9... f5 10. exf5 gxf5 11. gxf5 Bxf5 12. Nf3 $16
+) 9. h4 { White aims to gain space on the kingside. } (
+{ A second idea could be to start with } 9. g4 ) 9... Ne8 ( 9... h5 10. f3 $16
+{ [%cal Yg1h3] } ) 10. h5 ( 10. g4 { [%cal Gh4h5] } 10... f5 11. gxf5 gxf5 12.
+exf5 Bxf5 13. Nf3 $16
+{ [%cal Gh1g1] with promising chances for an
+attack. Without the pawn on d5, or if that pawn were instead on d3, White would have no realistic chances for an attack, as Black would
+swiftly dominate the center. Thus, possessing a space advantage is an important precondition for launching a successful attack on the
+king. }
+) 10... g5 11. Bg4 ( 11. g4 Na6 12. f3 Bd7 13. Nh3 Nc5 14. Nf2 b6 15. O-O $16
+{ Once again, White has a spatial advantage. It is
+important to emphasize that a space advantage gives us greater maneuvering possibilities for the pieces. For example, in this position,
+White’s bishop can go to d3, then to c2, allowing White to prepare b3, a3, and b4. White also has a wide choice of squares on the second and
+third ranks, especially the g3 square, which can serve as a springboard for a knight to f5 later on. On the other hand, Black lacks
+sufficient space for his pieces and consequently has no good squares from which to initiate any meaningful action. }
+) 11... Na6 ( 11... f5 { This was a move that had to be played! } ) 12. Bxc8
+Qxc8 13. g4 Nc5 14. f3
+{ White's position is already strategically winning, with the space
+advantage being the key factor. }
+14... f6
+{ The bishop on g7 functions more like a large pawn. Black allowed White to carry out his plan, and now
+that bishop is suffering as a result. }
+15. Nge2 b6 16. b3 Rf7 17. Ng3 Bf8 18. Nf5 Kh7 19. Kf2 ( 19. O-O $5 ) 19... Rd7
+20. Qc2 Rd8 21. a3 { White wants to break through with b4. } 21... Ng7 22. Ng3
+{ A very important move. It’s crucial to remember that when we have a space advantage, we
+should generally avoid exchanging pieces. The opponent’s pieces are more cramped due to the lack of space. }
+22... Qb7 23. b4 Nd7 24. Rhb1 axb4 25. axb4 Rxa1 26. Rxa1 Ra8 27. Rxa8 Qxa8 28.
+Qa2 Qxa2+ 29. Nxa2
+{ White is once again exerting pressure on both flanks. The f5-square is firmly
+in White’s hands, and an invasion via the queenside is drawing near. }
+29... Kg8 30. Nc3 Kf7 31. Nb5 Ne8 32. Nf5 Nb8 33. Na7 Kg8 34. Ke2 Kh7 35. Kd3
+Ng7 36. Ng3 Be7 37. Kc3 Kg8 38. Kb3 Kf7 39. Ka4 Ke8 40. Kb5 Kd7 41. Ne2 Ne8 42.
+Nc3 Bf8 43. Bf2 Be7 44. Nd1 Bf8 45. Ne3 Ng7 46. Nc6 Nxc6 47. dxc6+ Kc8 48. Nd5
+Ne8 49. c5 bxc5 50. bxc5 Kb8 51. Kc4 Kc8 52. Nb4 Kb8 53. Kd5 Ng7 54. Na6+ Kc8
+55. Nb4 Kb8 56. Nd3 Kc8 57. cxd6 Bxd6 58. Bc5 Ne8 59. Ke6 Kd8 60. Kf7 1-0
+

@@ -1,0 +1,46 @@
+[Event "Christmas Master Open"]
+[Site "Zurich SUI"]
+[Date "2008.12.26"]
+[Round "1"]
+[White "Czebe, Attila"]
+[Black "Monteforte Fink, Klaus"]
+[Result "1-0"]
+[ECO "B30"]
+[WhiteElo "2468"]
+[BlackElo "2113"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "61"]
+[EventDate "2008.12.26"]
+[EventType "swiss"]
+[EventRounds "7"]
+[EventCountry "SUI"]
+[SourceTitle "The Week in Chess 739"]
+[Source "Mark Crowther"]
+[SourceDate "2009.01.05"]
+[SourceVersion "1"]
+[SourceVersionDate "2009.01.05"]
+[SourceQuality "2"]
+
+1. e4 c5 2. Nf3 Nc6 3. Bb5 Qc7 4. O-O ( 4. c3 $5 ) 4... e6 5. c3 Nf6 6. Re1 $1
+Be7
+{ Black is merely developing pieces without a deep
+understanding of the theory. }
+7. d4 { White is already better. } 7... O-O ( 7... cxd4 8. cxd4 d5 9. e5 Ne4
+10. Nbd2 ( 10. Nc3 Nxc3 11. bxc3 $14 ) 10... Nxd2 11. Bxd2 Bd7 12. Bd3 O-O 13.
+Rc1 Qb6 14. Bc3 Rac8 15. Qd2 $14 { White’s got a small space edge once again. }
+) 8. d5 $16 Ne5 ( 8... Nb8 9. d6 Bxd6 10. e5 Qb6 11. Na3 ) 9. Nxe5 Qxe5 10. d6
+$3 $16
+{ Brilliant move by White. The pawn reaches d6 and halts Black’s entire
+development. If Black doesn’t play 10...Bd8, he will lose a piece. }
+10... Bd8 ( 10... Qxd6 11. Qxd6 Bxd6 12. e5 $18 ) ( 10... Bxd6 11. f4 Qh5 12.
+Qxd6 $18 ) 11. f4 Qh5 12. Be2 ( 12. e5 Qxd1 13. Rxd1 $18
+{ I would prefer to permit the queen exchange and proceed into a winning endgame
+rather than play out the winning middlegame. }
+) 12... Qg6 13. Bf3 h6 14. Nd2 Rb8 15. a4 b6 16. Nf1 ( { Simpler would be } 16.
+e5 $18 ) 16... Bb7 17. Ng3 Ne8 18. f5 Qh7 19. a5 Bh4 20. axb6 axb6 21. Ra7 Nf6
+22. Rxb7 Rxb7 23. e5 Nd5 24. c4 Bxg3 25. hxg3 Qxf5 26. Be4 Qxe5 27. Bh7+ Kxh7
+28. Rxe5 Nb4 29. Rh5 Ra7 30. Bxh6 f5 31. Qc1
+{ White captured Black’s queen and won the game. Thanks mainly to the pawn on d6 and the
+significant space advantage. }
+1-0
+

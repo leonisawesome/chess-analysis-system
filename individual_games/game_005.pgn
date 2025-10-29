@@ -1,0 +1,65 @@
+[Event "China Elite Mind blitz"]
+[Site "Huaian"]
+[Date "2016.03.01"]
+[Round "24"]
+[White "Navara, David"]
+[Black "Mamedyarov, Shakhriyar"]
+[Result "1-0"]
+[ECO "C79"]
+[WhiteElo "2734"]
+[BlackElo "2747"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "71"]
+[EventDate "2016.02.28"]
+[EventType "tourn (blitz)"]
+[EventRounds "30"]
+[EventCountry "CHN"]
+[EventCategory "19"]
+[SourceTitle "CBM 171 Extra"]
+[Source "ChessBase"]
+[SourceDate "2016.04.26"]
+[SourceVersion "1"]
+[SourceVersionDate "2016.04.26"]
+[SourceQuality "1"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 d6 5. c3 Bd7 6. d4 g6 7. O-O Bg7
+{ It’s natural to consider taking space with d4-d5 here, but that could
+also backfire for White. Black can simplify by exchanging a piece and then begin targeting the weak points at the base of White’s pawn
+chain. }
+8. Re1 ( 8. d5 Nce7 9. Bxd7+ Qxd7 10. c4 h6 11. Nc3 f5 12. Re1 Nf6 13. Nd2 O-O
+14. f3 c6 15. b3 b5 16. Bb2 cxd5 17. cxd5 h5 $17
+{ As
+we can see, White has more space, but Black still stands better. } ) 8...
+b5 9. Bb3 Nf6 10. Nbd2 O-O 11. Nf1 { Black has now missed their
+chance. } 11...
+h6 ( { He should have captured on d4. } 11... exd4 12. cxd4 Bg4 $132
+{ The white pawns in the center have also become targets of
+attack. } ) 12. h3
+{ Now White prophylactically stops Bg4. } 12... Re8 13. Ng3 Na5 ( 13... a5 14.
+a4 bxa4 15. Bxa4 exd4 16. cxd4 Nb4 17. Bxd7 Nxd7 $11
+{ This can be played by both White and Black. } ) 14. Bc2 c5 15. b3 ( { After }
+15. d5 Nc4
+{ With the knight moving to b6 after b3, Black then has
+the opportunity to attack with a5 followed by a4. Alternatively, after Nb6, Black can also advance with c4, then after b4, a5 would be a
+move. }
+) 15... Rc8 ( { It would have been better to play } 15... exd4 16. cxd4 Nc6
+$132 ( 16... cxd4 $5 ) ) 16. d5 $16 Nb7 ( 16... c4 17. b4 Nb7 18. a4 $16
+{ This is a typical idea. White plays a4 before Black plays a5. Now the options of capturing on b5 arise, followed by Karpov-style
+moves like Be3, and sometimes Ba7, followed by doubling on the a-file. }
+) 17. a4 b4 ( 17... bxa4 18. bxa4 Na5 19. Qe2 c4 20. Ba3 $16
+{ [%cal
+Rf3d2] Now White can begin regrouping their pieces on the queenside. }
+) 18. Bd2 a5 19. Bd3 Qb6 20. Qc1 Kh7 21. c4
+{ Now White has realized
+that Black cannot reach f5, and White therefore decides to block the queenside. }
+21... Qd8 22. Ra2 Qe7 23. Nh2 Rf8 24. f4 Rce8 ( 24... exf4 25. Bxf4
+{ Black refrains from capturing on f4 because both knights are far from the key e5 square. }
+) 25. Nf3 Ng8 26. f5 Bf6
+{ And White won
+thanks to a significant space advantage. } ( 26... g5
+{ [%cal Rg3h5,Rg2g4] } 27. Nh5 Nf6 ( 27... f6 28. g4 $18
+{ [%csl Ga2][%cal Yd2e3,
+Yh3h4,Ya2h2] } ) 28. Nxg5+ hxg5 29. Bxg5 $18 ) 27. Rf1
+Nd8 28. Be3 Kg7 29. Raf2 Bc8 30. Kh1 Bd7 31. Nh2 Bh4 32. Ng4 h5 33. f6+ Nxf6
+34. Nxf6 Bxg3 35. Bh6+ Kh8 36. Bxf8 1-0
+

@@ -280,7 +280,7 @@ class ChessEntityDetector:
                 
         return soft_cue_count >= 2
 
-class InstructionalLanguageDetector:
+class InstructionalLanguageDetector_OLD_DISABLED:
     def __init__(self, embedding_model: Optional[object] = None, use_embedding_confirmation: bool = False):
         self.entity_detector = ChessEntityDetector()
         self.embedding_model = embedding_model
@@ -543,16 +543,19 @@ def detect_instructional(text: str) -> bool:
         return True
 
     return False
+
+
+class InstructionalLanguageDetector:
     """
     Chess-specific instructional language detector implementing 4-AI partner consensus:
     - Empirical vocabulary from GM content analysis
-    - Context gates with OR logic and ±1 sentence window  
+    - Context gates with OR logic and ±1 sentence window
     - Embedding confirmation (optional)
     - Diminishing returns with category caps
     - Slot template support for dynamic patterns
     """
-    
-    def __init__(self, embedding_model: Optional[SentenceTransformer] = None, 
+
+    def __init__(self, embedding_model: Optional[object] = None, 
                  use_embedding_confirmation: bool = False):
         # PARTNER-VALIDATED DIAGNOSTIC: Execution context validation (PID/TID)
         logger.info({
@@ -591,6 +594,12 @@ def detect_instructional(text: str) -> bool:
             "lex_counts": lex_counts,
             "embedding_confirmation": self.use_embedding_confirmation
         })
+
+        # Set compiled_patterns for compatibility with semantic analyzer
+        compiled_map = {}
+        for cat, regex_obj, _ in self._compiled:
+            compiled_map.setdefault(canon(cat), []).append(regex_obj)
+        self.compiled_patterns = compiled_map
     
     def _load_instructional_vocabulary(self):
         """Load empirical vocabulary from AI partner consultation with comprehensive diagnostics"""

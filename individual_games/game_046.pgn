@@ -1,0 +1,53 @@
+[Event "Rasht Khazar op 15th"]
+[Site "Rasht"]
+[Date "2017.01.21"]
+[Round "2"]
+[White "Sargissian, Gabriel"]
+[Black "Toufighi, Homayoon"]
+[Result "1-0"]
+[ECO "D37"]
+[WhiteElo "2667"]
+[BlackElo "2407"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "91"]
+[EventDate "2017.01.20"]
+[EventType "swiss"]
+[EventRounds "9"]
+[EventCountry "IRI"]
+[SourceTitle "CBMs"]
+[Source "ChessBase"]
+[SourceDate "1987.12.01"]
+[SourceVersion "1"]
+[SourceVersionDate "1987.12.01"]
+[SourceQuality "1"]
+
+{ Again, we see a game by Gabriel Sargissian, a great strategist who excels at finishing technical positions without difficulty. }
+1. d4 e6 2. Nf3 Nf6 3. c4 d5 4. Nc3 Be7 5. Bf4 O-O 6. e3 Nbd7 7. c5
+{ White is expanding space. This strategic idea frequently appears in the Queen's
+Gambit when the bishop is developed to f4. }
+7... Nh5 8. Bd3
+{ White can allow the capture on f4, as the pawn on f4 will gain even more support for
+the e5 square. If Black cannot push e5, the only way to develop the c8 bishop is via a6. }
+(
+{ If White were to retreat the bishop, the control
+of the e5 square would be lost. }
+8. Bg3 c6 9. Bd3 g6 10. O-O Nxg3 11. hxg3 e5 $17 ) 8... Nxf4 9. exf4 c6 10. O-O
+b6 11. b4 a5 12. a3 Ba6 13. Bxa6 Rxa6 14. Qe2 b5 15. Rab1 axb4 16. axb4
+{ Black currently controls the a-file, but White is about to take it, since Black must transfer
+the rook to c8 to keep control. This can only happen after the queen is relocated. }
+16... Ra3 ( { But after } 16... Qc7 17. f5 $18 ) 17. Qb2 Ra8 18. Ra1 Qc7 19.
+Ne2 Bf6 20. Ra3 { White is now taking control of the line. } 20... Rxa3 21.
+Qxa3 g6 22. Ra1 Rb8 23. g3
+{ A prophylactic move. The
+kingside is now secure, allowing White to continue the attack on the queenside. }
+23... Bg7 24. Qa5 Qc8 25. Qa6 Qc7 26. Ne5 Rc8 ( 26... Nxe5 27. dxe5 f6 28. Nd4
+{ White holds a decisive advantage. } ) 27. Qa7 Nxe5 28. fxe5 Bh6 29. Qxc7 Rxc7
+30. Ra8+ Kg7 31. f4 g5 32. Kf2 gxf4 33. gxf4
+{ Naturally, we capture with the pawn to keep the bishop passive. } 33... f6
+34. Kf3 Kg6 35. Nc1 Kf5 36. Ne2 Kg6 37. Ra6 Bg7 38. Nc1 Kf5 39. Nd3 fxe5 40.
+dxe5 Bh6 41. h3 ( 41. Ra8 ) 41... d4 42. h4 $2 ( 42. Ra8 $18 ) 42... Bxf4 $2 (
+42... Rf7 $1 43. Rxc6 Ra7 44. Rd6 Bxf4 $11
+{ At this
+point, Black has a solid chance to survive. } ) 43. Nxf4 Kxe5 44. Ra1
+Kf5 45. Ra8 Rf7 46. Nd3 1-0
+

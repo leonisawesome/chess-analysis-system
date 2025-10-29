@@ -1,0 +1,45 @@
+[Event "Caissa IM New Year 2014"]
+[Site "Kecskemet HUN"]
+[Date "2014.01.01"]
+[Round "6.5"]
+[White "Bo, Li"]
+[Black "Bird, A."]
+[Result "1-0"]
+[ECO "D12"]
+[WhiteElo "2414"]
+[BlackElo "2205"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "125"]
+[EventDate "2013.12.27"]
+
+1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. e3 Bf5 5. Nc3 e6 6. Nh4 Bg6 ( 6... Be4 $5 ) 7.
+Qb3 Qc7 8. Nxg6 hxg6 9. g3
+{ This position is slightly better
+for White thanks to the presence of his light-squared bishop. }
+9... Nbd7 10. Bg2 Bd6 11. Bd2 O-O 12. O-O Rfe8 (
+{ Black usually plays something
+like } 12... dxc4 13. Qxc4 e5
+{ , for example, } 14. dxe5 Nxe5 15. Qe2 Rfd8 16. Rac1 Qe7 17. Rfd1 Rac8 18. h3
+$14
+{ At some point, White will
+threaten to advance in the centre. Long-term, White's bishop pair can become very important. }
+) 13. Rfc1 Qb6 14. Qc2 ( 14. c5 Qxb3 15. axb3 Bc7
+{ How should White continue in this position? } 16. f4 $1
+{ White has to stop ...e5, after which Black has no counterplay. } 16... a6 17.
+b4 Rac8 18. Bf3 $16
+{ White plays for two results - he has a space advantage on the queenside and on the kingside. }
+) 14... Bf8 15. b3 Rac8 16. Qd3 a6 17. c5 Qd8 18. f4 $16
+{ White has a strategically winning game, with a space advantage on both sides of the board. If White manages to play
+both c4-c5 and f2-f4, Black is left without pawn breaks. }
+18... Nh7 19. b4 f5 20. g4 Nhf6 21. g5 Ne4 22. Nxe4 $1
+{ White eliminates the knight
+since Black's other knight has no active prospects. }
+22... fxe4 ( 22... dxe4 23. Qb3 $18 ) 23. Qe2 Ra8 24. h4 Kf7 25. Bh3 b6 26. Kg2
+a5 27. a3 axb4 28. axb4 b5 29. Be1 Be7 30. h5 Nf8 31. hxg6+ Nxg6 32. Qh5 Qd7 (
+32... Rh8 33. Bxe6+ Kxe6 34. Qxg6+ $18 ) 33. Bg3 Rh8 34. Qg4 Rxa1 35. Rxa1 Bd8
+36. Rf1 Ne7 37. g6+ Ke8 38. Qxe6 Qxe6 39. Bxe6 Nxg6 40. Ra1 Nf8 41. Bg4 Nd7 42.
+Ra7 Nf6 43. Bf5 Rh6 44. Rxg7 Kf8 45. Ra7 Nh5 46. Ra8 Ke8 47. Bf2 Ng7 48. Bc8
+Rh7 49. Kf1 Rh6 50. Ra7 Kf8 51. Bd7 Bh4 52. Bxh4 Rxh4 53. Kg2 Rh6 54. Rc7 Rd6
+55. Kf2 Rh6 56. Bxc6 Rh2+ 57. Kg3 Re2 58. Kg4 Rg2+ 59. Kh3 Re2 60. Bxd5 Nh5 61.
+Rf7+ Ke8 62. Kg4 Rh2 63. c6 1-0
+

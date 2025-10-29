@@ -1,0 +1,24 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 3"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "r2qr1k1/1b1nbppp/p2ppn2/1pp5/4PB2/2PP1N1P/PPBNQPP1/R4RK1 b - - 0 1"]
+[PlyCount "9"]
+[EventDate "2025.??.??"]
+
+{ White has adopted a relatively passive setup. Black should look for an active response. What would you recommend? How should black continue
+here ? }
+1... e5 $1 { Black responds in the center and gains space. } 2. Bh2 Bf8 $1
+{ He aims to defend e5, anticipating another central
+strike. } 3. Rfe1 d5 $15
+{ With nice extra space in the center ! } 4. c4 { ...and now ? } 4... bxc4 $1
+5. dxc4 d4 $17
+{ Black holds a space advantage
+and has a protected passed pawn in the center. Bayer-Berchtenbreiter 2014 (0-1) }
+*
+

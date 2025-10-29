@@ -1,0 +1,50 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.09.30"]
+[Round "?"]
+[White "Ioannis Papaioannou"]
+[Black "Rapid game"]
+[Result "*"]
+[ECO "B38"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "57"]
+[EventDate "2025.??.??"]
+
+1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Be3 c5 7. Nge2 cxd4 (
+{ The most frequently played move is } 7... Nc6 ) 8. Nxd4
+{ Now the
+game transitions into a Maroczy structure, with White enjoying a space advantage thanks to pawns on c4 and e4, facing Black’s pawn on d6. }
+8... Nc6 9. Qd2
+{ White has the option to launch an attack on Black’s king or to seek opportunities in the endgame. These are typical plans in
+these kinds of positions. }
+9... Nxd4
+{ Exchanging pieces when space is limited is a principle we have mentioned often. }
+10. Bxd4 Be6 11. Rc1
+{ White initially secures the queenside in order to respond to ...Nd7 with Be3, thereby preserving the bishop’s presence in the game. }
+11... Rc8 12. b3 Qa5 13. Be2 Rfd8 ( 13... a6 14. Na4
+{ White utilizes control over the weak b6 square and seeks to initiate a queen exchange. }
+) 14. Be3 a6 ( 14... Nd7
+{ The question arises whether White should now attack on the kingside with g4 or h4. The answer is no, because that would give
+Black good counterplay. The correct continuation is }
+15. Nd5 { , maintaining White’s long-term advantage. } 15... Qxd2+ 16. Kxd2 $14
+) 15. Nd5 ( 15. Na4 Qxd2+ 16. Kxd2 $14 ) 15... Qxd2+ 16. Kxd2 Kf8
+{ This move is inaccurate, as it allows White to expand further on the kingside. }
+( 16... Bd7 $5 ) ( 16... Nxd5 17. cxd5 Bd7
+{ This was the best method to equalize the position. Suppose White succeeds in exchanging the dark-squared
+bishops, leaving only the light-squared bishops on the board. }
+18. Bd4 { Just to illustrate that scenario. } 18... Kf8 19. Bxg7+ Kxg7
+{ White stands
+a bit better here, despite having all his pawns on light squares. The important thing is that, except for the d5 pawn, White’s pawns are
+flexible and can advance onto dark squares. }
+) 17. Nb6 Rc7 18. g4 Nd7 ( 18... Bxg4 $2
+{ This is not a good move, but we have to consider these
+moves. } 19. fxg4
+Nxe4+ 20. Kd3 $18 ) 19. h4 Rc6 20. Nd5 Bxd5 21. cxd5 Rxc1 22. Rxc1 Ne5 23. f4
+Nd7 24. g5 { The position is now completely
+winning for White. } 24... Ke8 (
+24... f6 25. Rc2 fxg5 26. hxg5 $18 ) 25. b4
+{ With the intention of securing control over all critical squares for
+the knight. }
+25... f6 26. Rc2 fxg5 27. hxg5 h5 28. gxh6 Bxh6 29. a4 $18
+{ Ultimately, I managed to win the game. } *
+

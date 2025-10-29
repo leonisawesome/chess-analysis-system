@@ -1,0 +1,38 @@
+[Event "?"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Kapnisis, Spyridon"]
+[Black "Kushko, Dmitriy"]
+[Result "1-0"]
+[ECO "B38"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "49"]
+
+1. c4 Nf6 2. Nc3 g6 3. d4 Bg7 4. e4 d6 5. h3 O-O 6. Nf3 c5 7. Be3 cxd4 8. Nxd4
+Nc6 9. Be2 Nxd4 10. Bxd4 Bd7 11. O-O Bc6
+{ Having a pawn on h3
+in the Maroczy setup means we should avoid playing f3, as it would create weaknesses on the dark squares. }
+12. Qc2 a5 13. Rad1 { White is
+threatening to push c5. } 13... Nd7 14. Bxg7
+Kxg7 15. Bg4 { White aims to take on d7 and then advance e5 or c5. } 15... Ne5
+( { Suppose Black plays } 15... b6 16. Bxd7 Bxd7 17. b3 Rc8 18. Qd3 Bc6 19.
+Rfe1 Kg8 ( 19... f5 20. exf5 { We are always going to capture here. } ) 20. Nd5
+{ is a strong strategic
+move. } (
+{ White’s position offers various plans, including the possibility of } 20. Qg3
+) ( { or } 20. Qe3 { with an attack on the king. } ) 20... Bxd5 21. exd5
+{ to open the e-file and put pressure on e7. } 21... Qd7 22. a4
+{ With this move, we do not allow Black to play b5. Black’s weaknesses
+on b6 and e7 are evident, and the king is fairly exposed. }
+22... Rfe8 23. Re4 Rc7 24. Rde1
+{ [%cal Rh3h4,Rh4h5,Rd3d4] At some point, Black has to
+push } 24... e5 25. dxe6
+Rxe6 26. Rxe6 fxe6 27. Qe3 $18 ) ( 15... Nc5 16. e5 $16 ) 16. c5 Nxg4 17. hxg4
+Qc8 18. cxd6 Qxg4 19. dxe7 Rfe8 20. Nd5 Bxd5 21. Qc3+ Kg8 22. exd5 Rxe7 23. d6
+Rd7 24. Rfe1 Qg5 25. Re5 $16
+{ White also benefits from a powerful passed pawn on the sixth rank. In such
+positions, it is essential not to exchange queens, as doing so would allow Black's king to activate. Keeping the queens on the board gives
+White the opportunity to launch an attack on the king and exploit Black's weaknesses. }
+1-0
+

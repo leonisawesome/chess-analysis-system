@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2d512687-ebc2-482a-99c7-0b617cf64c82" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/chess_rag_system/analysis/instructional_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/chess_rag_system/analysis/instructional_detector.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.coverage" beforeDir="false" afterPath="$PROJECT_DIR$/.coverage" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +44,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHELLCHECK.PATH": "/Users/leon/Library/Application Support/JetBrains/PyCharm2025.2/plugins/Shell Script/shellcheck",
-    "git-widget-placeholder": "feat/instructional-tokens-v1",
+    "git-widget-placeholder": "main",
     "last_opened_file_path": "/Users/leon/Downloads/python/chess-analysis-system",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",

@@ -1,0 +1,18 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 5"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "rnbq1rk1/pp2ppbp/3p1np1/2pP4/2P1P1P1/2N5/PP2BP1P/R1BQK1NR b KQ - 0 1"]
+[PlyCount "7"]
+
+{ White has a space advantage in the centre, and he is also expanding on the kingside. How should Black react to that? Evaluate 1...Na6. }
+1... e6 $1 $132 { Black must strike in the center as early as possible ! } (
+1... Na6 $2 { is a bad move because it is losing too much time! } 2. g5 $1 Nd7
+3. h4 Nc7 4. h5 $36 { Indjic-Avramidou 2021 (1-0) } ) 2. g5 Ne8 3. h4 exd5 4.
+cxd5 Qe7 $15 *
+

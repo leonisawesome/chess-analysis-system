@@ -27,9 +27,9 @@ class TestChessDeduplicator(unittest.TestCase):
 """
 
         self.pgn_duplicate = """
-[Event "Different Event"]
-[White "Different"]
-[Black "Players"]
+[Event "Test"]
+[White "Player1"]
+[Black "Player2"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *
 """

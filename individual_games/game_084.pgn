@@ -1,0 +1,47 @@
+[Event "Hotel Holiday Inn Thessalonik"]
+[Site "Hotel Holiday Inn Thessalonik"]
+[Date "2018.02.16"]
+[Round "2.6"]
+[White "Dorfanis, Ilarion"]
+[Black "Papagiannis, Asterios"]
+[Result "1-0"]
+[ECO "E11"]
+[WhiteElo "2169"]
+[BlackElo "1797"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "55"]
+[EventDate "2018.02.15"]
+[EventRounds "7"]
+[EventCountry "GRE"]
+
+1. d4 Nf6 2. c4 e6 3. Nf3 Bb4+ 4. Bd2 Qe7 5. g3 Bxd2+ 6. Qxd2 d6 ( 6... d5 $1
+{ is best in my opinion, although it leads to an entirely
+different kind of game. }
+) 7. Bg2 O-O 8. Nc3 e5 9. O-O c6 10. e4
+{ After other moves, Black obtains a good game with ...e5-e4. } (
+{ For
+example } 10. Rad1 e4 11. Ne1 d5 $13 ) 10... Bg4 11. d5 ( 11. Nh4 $5 ) (
+11. Ne1 $5 ) 11... Bxf3 12. Bxf3 { Black's position is passive, but
+solid. }
+12... c5 13. Rae1 g6 14. Bd1
+{ I like White's play - White prepares f4 by putting the bishop on d1 from where it can go to c2 (or a4 in
+some cases). }
+14... Ne8 15. f4
+{ The thematic move. If White's pawn was on g2 instead of g3, the right move would be to play g3, followed by f4! }
+15... Nd7 ( 15... exf4 16. gxf4 $16 ( 16. Qxf4 $2
+{ is of course a mistake, because it gives up the control over e5. } 16... Nd7
+$15 { [%csl Ge5][%cal
+Yd7e5] } ) ) 16. f5 $16
+{ Again this space gaining move - White secures a large space advantage on the kingside and will continue with g4-g5,
+etc. }
+16... Kg7 17. Rf2 Ndf6 18. g4 Ng8 ( 18... h6 19. g5 ( 19. h4 $5 ) 19... hxg5
+20. Qxg5 Rh8 21. h4 $16 ) 19. g5 f6 20. h4 $18
+{ White has a
+crushing space advantage. Next, he will strengthen his position and prepare a decisive breakthrough. }
+20... Nc7 21. Ref1 a6 22. Rg2
+{ White does
+not need to spend a tempo on preventing ...b5. } 22... Qe8 23. h5
+b5 24. hxg6 hxg6 25. Rff2 bxc4 26. fxg6 fxg5 ( 26... Nb5 27. Nxb5 axb5 28. Rh2
+$18 ) 27. Rf7+ Kxg6 ( 27... Rxf7 28. gxf7 Qxf7 29. Qxg5+ $18 ) 28. Bh5+ $1 (
+28. Bh5+ $1 Kxh5 29. Qxg5# ) 1-0
+

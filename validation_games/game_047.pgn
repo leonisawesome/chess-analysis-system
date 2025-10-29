@@ -1,0 +1,49 @@
+[Event "EU-ch 23rd"]
+[Site "Vrnjacka Banja"]
+[Date "2023.03.07"]
+[Round "5"]
+[White "Kourkoulos Arditis, Stamatis"]
+[Black "Svane, Rasmus"]
+[Result "1-0"]
+[ECO "E04"]
+[WhiteElo "2520"]
+[BlackElo "2620"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "137"]
+[EventDate "2023.03.03"]
+[EventType "swiss"]
+[EventRounds "11"]
+[EventCountry "SRB"]
+[SourceTitle "CBM 214 Extra"]
+[Source "ChessBase"]
+[SourceDate "2023.07.31"]
+[SourceVersion "1"]
+[SourceVersionDate "2023.07.31"]
+[SourceQuality "1"]
+
+1. d4 Nf6 2. c4 e6 3. Nf3 d5 4. g3 dxc4 5. Bg2 Bb4+ 6. Bd2 a5 7. Qc2 Bxd2+ 8.
+Qxd2 c6 9. a4 b5 10. axb5 cxb5 11. Qg5 O-O 12. Qxb5 Ba6 13. Qa4 Qb6 14. O-O
+Qxb2 15. Nbd2 Bb5 16. Nxc4 Bxa4 17. Nxb2 Bb5 18. Ne5 Ra7 19. Nbc4 Nfd7 20. Nxa5
+Bxe2 21. Rfe1 Bb5 22. Reb1 Nxe5 23. dxe5 Bd7
+{ In this example, I'd like to demonstrate the value of a spatial advantage in the endgame. After a long Catalan variation, White’s only
+winning chances are based on controlling more space. The key role in this is played by the pawn on e5. }
+24. Rc1 h6 25. f4 Bb5 26. Be4 Rd7 27. Rc3 Ra7 28. Rc5 Be2
+{ In these positions, an additional advantage for White is the ability to activate his king, which Black cannot do }
+29. Kf2 Nd7 30. Rcc1 Bg4 31. Nc6 Rxa1 32. Rxa1 Nc5 33. Bc2 Kh8 34. Ra5 Nd7 35.
+Ra7 Nb6 36. Be4 g6 37. Ke3 Kg7 38. Kd4 Rc8 39. Kc5
+{ White
+king is breaking into Black’s camp. Black is encountering difficulties due to the passivity of his pieces. }
+39... Nd5 40. Kd6 Nc3 41. Kd7 Rf8 42. Bg2 Bf5 43. Ra3 Be4 44. Rxc3 Bxg2 45. Nd8
+{ With perfect play, this is a draw. } 45... Be4 46. h4 h5 47. Ke7 Bd5 48. Rc8
+Rg8 49. Rb8 Rh8 50. Rb2 Rf8 51. Rb4 Bf3 52. Rb3 Be4 53. Rb8 Kg8 54. Nc6 Rxb8
+55. Nxb8
+{ According to the engine, the position is a draw, but in practice, it is almost
+impossible to hold. It involves corresponding squares. If White manages to reach the d6 or d8 square, White will be able to capture the f7
+pawn and thus win the game. }
+55... Kg7 56. Nd7 Bb7 57. Nb6 Ba6 58. Na4 Bb5 59. Nc5 Bc6 60. Nb3 Be4 61. Nd4
+g5 ( 61... Bd3 62. Nc6 $18 { [%cal
+Rc6d8] } ) 62. fxg5 Bd3 63. Nc6 Bc2 64. Nd8
+Bg6 65. Nb7 Be4 66. Nd6 Bg6 67. Ne8+ Kg8 68. Kf6 Kf8 69. Ng7
+{ White won the endgame because of his
+extra space. } 1-0
+

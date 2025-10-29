@@ -1,0 +1,22 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 3"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "r5k1/ppp2rbn/1P1P2n1/P3p2p/2N1Pp1q/2N2Ppb/4B1PP/R2Q1RBK w - - 0 1"]
+[PlyCount "5"]
+
+{ In this difficult position, Black is completely lost in the centre and on the queenside, and his only chance appears to lie in a desperate
+attack on the kingside where he has a huge space advantage! White to move - evaluate 1.gxh3 and 1.bxc7. }
+1. gxh3 $1 ( 1. bxc7 $4
+{ Ftacnik-Cvitan 1997, also appears to be winning for White, but there followed }
+1... Bxg2+ $1 2. Kxg2 Qh3+ $3 3. Kxh3 ( 3. Kh1 g2# ) 3... Ng5+ 4. Kg2 Nh4+ 5.
+Kh1 g2# ) 1... Qxh3 2. Rf2 $1 gxf2 ( 2... Nh4 3. Bf1 $18 ) 3. Bxf2 $18
+{ after stopping all the threats against his king, White has
+a winning advantage! }
+*
+

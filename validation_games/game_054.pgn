@@ -1,0 +1,44 @@
+[Event "POL-ch"]
+[Site "Warsaw"]
+[Date "2014.03.26"]
+[Round "2"]
+[White "Stachowiak, Kamil"]
+[Black "Gajewski, Grzegorz"]
+[Result "0-1"]
+[ECO "E20"]
+[WhiteElo "2442"]
+[BlackElo "2629"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "66"]
+[EventDate "2014.03.25"]
+[EventType "swiss"]
+[EventRounds "9"]
+[EventCountry "POL"]
+[SourceTitle "CBM 160"]
+[Source "ChessBase"]
+[SourceDate "2014.05.15"]
+[SourceVersion "1"]
+[SourceVersionDate "2014.05.15"]
+[SourceQuality "1"]
+
+1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. g3 O-O 5. Bg2 d6 6. Nf3 Bxc3+ 7. bxc3 Nbd7 8.
+O-O h6 9. Rb1 ( 9. Nd2 $5 ) 9... Re8 10. Nd2 Rb8 ( 10... e5 $5 11. Bxb7 $2 Bxb7
+12. Rxb7 Nb6 $19 ) 11. Qa4 a6 12. Ba3 e5
+{ This is a very important moment in the game. White must stop Black from playing
+e4, as it would give Black more space, trap the bishop on g2, and allow a kingside regrouping. }
+13. Rfe1 $2 ( 13. e4 { was the best. } ) 13... e4 14. e3
+{ Now, White has the weak f3 square to contend with. } (
+{ It would have been better if White had blocked the e-pawn with the knight. }
+14. Nf1 Nf8 15. Ne3 Bd7 16. Qc2 $15 ) 14... Nf8 $17 15. c5 d5 16. c4 Bd7 17.
+Qc2 Bc6 18. cxd5 Bxd5 19. Nc4 N6h7 { The knights are moving to
+the kingside. }
+( { It was possible to play } 19... N8h7 20. Ne5 Ng5 $17 ) 20. Rb2 Ng5 21. Bb4
+Ng6 22. Nd2 Qd7
+{ In order to win a chess game,
+simply gaining space is not sufficient. Other strategic factors are also critical. As we can observe, White is facing difficulties with the
+white squares, and the dark-squared bishop is out of play. }
+23. Nb1 Nf3+ 24. Bxf3 exf3 { Black has a huge advantage. } 25. Qd3 Re4 26. Qf1
+Qe6 27. Nd2 ( 27. Nc3 Bc4 $19 ) 27... Nh4 28. Rc2 Ng2 29. Nxf3 ( 29. Rec1 Nxe3
+30. fxe3 Rxe3 31. Rc3 Re8 32. Rxe3 Qxe3+ 33. Qf2 Qd3 $19 ) 29... Nxe1 30. Nxe1
+Re8 31. a3 Bc6 32. Bd2 Bb5 33. Qg2 Rxd4 0-1
+

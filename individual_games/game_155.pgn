@@ -1,0 +1,18 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 10"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "r2qr3/pb3pbk/1pnp1npp/2p1p3/B3P3/2PPBN1P/PP1Q1PP1/R3RNK1 w - - 0 1"]
+[PlyCount "8"]
+
+{ White to move - evaluate 1.c4. } 1. c4 $2
+{ It's a very bad move! Black will quickly gain space on the kingside with ...f5, and he will
+create a dangerous attack! }
+1... Rf8 $1 2. Bxc6 Bxc6 3. N3h2 Nh5 $1 4. f3 f5 $17
+{ Hansen-Hammer 2010  (0-1) } *
+

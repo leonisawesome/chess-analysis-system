@@ -1,0 +1,22 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 4"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "rnbqr1k1/1p3ppp/2pb1n2/p2pp3/4P3/P2P1NP1/1PPNQPBP/R1B2RK1 b - - 0 1"]
+[PlyCount "5"]
+[EventDate "2025.??.??"]
+
+{ A typical position from the Caro-Kann, 2.d3 Variation. What should Black play? }
+1... a4 $1 $17
+{ Black gains space and fixes the b2 pawn,
+which will inevitably become a weakness if White proceeds with Gainning space and fixing white's queenside! }
+2. b4 axb3 $1 3. cxb3 Bg4 $17
+{ Black creatively brought the rook into play, and now it’s eyeing the pawn on a3. With the central advantage and superior piece placement,
+Black is better. Ljubojevic-Karpov 1992 (0-1) }
+*
+

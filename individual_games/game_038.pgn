@@ -1,0 +1,19 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 8"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "2kr2r1/pq1ppp2/n5pb/2pPP2p/PpN4P/2PQ1N2/1P3PP1/3R1RK1 w - - 0 1"]
+[PlyCount "9"]
+[EventDate "2025.??.??"]
+
+{ White has a winning position. Find a convincing positional continuation to deny Black any counterplay! }
+1. d6 $1 { with a huge space
+advantage in the center ! } 1... e6 2. Ng5 $3 Bxg5
+3. hxg5 $18 { Black is left without any counter-play } 3... Rh8 4. Nd2 $1 Kb8
+5. Ne4 $18 { Martyrosian-Matsuo 2018 (1-0) } *
+

@@ -1,0 +1,41 @@
+[Event "Cetinje Open 2016"]
+[Site "Cetinje MNE"]
+[Date "2016.05.07"]
+[Round "5.4"]
+[White "Kovacevic, Aleksandar"]
+[Black "Vujacic, Borivoje"]
+[Result "1-0"]
+[ECO "B51"]
+[WhiteElo "2522"]
+[BlackElo "2253"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "73"]
+[EventDate "2016.05.04"]
+
+1. e4 c5 2. Nf3 d6 3. Bb5+ Nc6 4. O-O
+{ The Rosolimo Variation is an effective method for gaining a spatial advantage. }
+4... Bd7 5. Re1 Nf6 6. c3 a6 7. Bf1 Bg4 8. h3 Bxf3 9. Qxf3 g6 ( 9... e6
+{ This is a better move. } ) 10. d3 Bg7 11. Be3 Nd7 12. Nd2 O-O 13. Qd1 b5 14.
+Nf3 ( 14. a3 { is
+also a good option. } ) 14... Nb6 ( { Black needs to play }
+14... Nde5 { with the goal of exchanging another piece. } 15. Nh2 $5 $14 ( 15.
+Nd2 $5 ) ) 15. d4 cxd4 16. cxd4 d5 17. e5 $16 { White is ahead in space. }
+17... Qd7 ( 17... Nc4 18. Bc1 Rc8 19. b3 $18 ) 18. b3
+{ When knights are placed side by
+side on the same wing, such as on b6 and c6, or on g6 and f6 on the opposite wing, it's crucial to prevent their advance immediately. }
+18... Nd8 ( 18... Rac8 19. Qd2 $18 ( { There's no rush to play } 19. a3 ) ) (
+18... f6 19. Rc1 { The knight on b6 is left hanging in the end. } 19... Rac8 (
+19... fxe5 20. Nxe5 $18 ) ( 19... Rab8 20. exf6 ( 20. Bf4 ) 20... exf6 21. Qd2
+$16
+{ It's not only important to claim space, but to utilize all
+strategic elements. }
+) 20. Qd2 $18 ) 19. Qd2 a5 20. h4 Ne6 21. h5 Rfc8 22. g3 $18
+{ The bishop is now repositioning to h3. } 22... b4 23. Rec1 Rxc1 24. Rxc1 Rc8
+25. Bh3 Rxc1+ 26. Qxc1 Qc7 27. Bxe6
+{ The correct decision. White is entering a better endgame because the bishop is stuck on
+g7. }
+27... Qxc1+ 28. Bxc1 fxe6 29. hxg6 ( 29. h6
+{ is another move that leads to a win. } ) 29... hxg6 30. Kf1 Na8 ( 30... Kh7
+31. Ng5+ ) 31. a3 ( 31. Ne1 Kh7 32. g4 Bh6 33. g5 ) 31... Nc7 32. axb4 axb4 33.
+Bd2 Na6 34. Ke2 Bf8 35. Kd3 Nc7 36. Bxb4 Kf7 37. Ba5 1-0
+

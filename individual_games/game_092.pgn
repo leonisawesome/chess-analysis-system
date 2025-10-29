@@ -1,0 +1,40 @@
+[Event "Russian Rapid GP 2015"]
+[Site "Khanty-Mansiysk RUS"]
+[Date "2015.12.15"]
+[Round "12"]
+[White "Riazantsev, Alexander"]
+[Black "Ubiennykh, Ekaterina"]
+[Result "1-0"]
+[ECO "E73"]
+[WhiteElo "2646"]
+[BlackElo "2283"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "125"]
+[EventDate "2015.12.13"]
+
+1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 O-O 5. Be3 d6 6. Be2 e5 7. d5 a5 8. g4 Na6
+9. g5 $1 Nd7 10. h4 $16
+{ [%cal Yh4h5] Here, it's very tough
+for Black to create counterplay. } 10...
+f5 11. gxf6 Bxf6 12. Nf3 { Black kingside is weakened. } 12... Ndc5 13. h5 (
+13. Rg1 $5 $16 ) ( 13. Qd2 $1 $16 ) 13... g5 14. h6
+{ The pawn on h6 is very annoying for Black. The support for the pawn on g5 is cut off. }
+14... Kh8 ( 14... g4 15. Nh2 Bg5 ( 15... g3 16. Rg1 Bh4 17. Nf3 $18 ) 16. Nxg4
+Kh8 $14 ( 16... Bxg4 $2 17. Bxg4 Bxe3 18. fxe3 Kh8 19. Qe2 Qg5 ( 19... Qf6 20.
+Bf5 $18 ) 20. O-O-O $18 ) ) 15. Rg1 $2 ( 15. Qd2 $3 g4 ( 15... Nb4 $5 16. Nxg5
+( 16. O-O-O $4 Nxa2+ $17 ) 16... Nc2+ ( 16... Nbd3+ 17. Bxd3 Bxg5 18. Be2 Bxe3
+19. Qxe3 Qf6 20. f3 Bd7 21. O-O-O $14 ) 17. Qxc2 Bxg5 18. Qd2 Bxe3 19. Qxe3 Qf6
+20. f3 $14 ) 16. Nh2 Rg8 17. O-O-O Bg5 18. Rdg1 Bxe3 19. Qxe3 Qg5 20. Qxg5 Rxg5
+21. Kd2 $16 ) 15... Rg8 ( 15... g4 $1 16. Nh2 Bg5 $132 ) 16. Nh2 $1 $14 Qf8 17.
+Ng4 Bxg4 18. Bxg4
+{ White has regained control of the position and
+went on to win. } 18... Nb4
+19. Bxc5 dxc5 20. a3 Na6 21. Qb3 Be7 22. Bf5 a4 ( 22... Qxh6 23. O-O-O $18 )
+23. Nxa4 Nb8 24. Nc3 Ra6 25. Qxb7 Qd8 26. Qb3 Rxh6 27. O-O-O Nd7 28. Rh1 Rh4
+29. Nb5 Nb6 30. Kb1 Nc8 31. Qc3 Bd6 32. Qg3 Qf6 33. Be6 Rf8 34. Rdg1 Rxh1 35.
+Rxh1 Ne7 36. Nc3 Kg7 37. Ka2 Qf4 38. Qh3 Qh4 39. Qxh4 gxh4 40. Nd1 Kg6 41. Rxh4
+h5 42. a4 Kg5 43. Rh2 Kf4 44. Nc3 Rh8 45. Ka3 h4 46. a5 Kf3 47. Ka4 Rb8 48. Nb5
+Kxe4 49. Rxh4+ Kd3 50. a6 e4 51. a7 Rf8 52. Nxd6 cxd6 53. Kb5 Rxf2 54. b4 Ra2
+55. bxc5 Rxa7 56. cxd6 Ng6 57. Rh3+ Kd4 58. d7 Ra8 59. c5 Ne5 60. c6 Rb8+ 61.
+Ka6 Nd3 62. c7 Nc5+ 63. Ka7 1-0
+

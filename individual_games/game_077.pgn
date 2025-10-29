@@ -1,0 +1,26 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 7"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "r4rk1/pp1qbppn/2n1p2p/3pP3/3P1P1P/2N2N2/PP4P1/R1BQ1RK1 w - - 0 1"]
+[PlyCount "3"]
+[EventDate "2025.??.??"]
+
+{ The center is blocked, but White holds a space advantage. However, caution is needed. What’s the next move for White? How should White
+continue in this position ? }
+1. g4 $3
+{ White doesn't care about opening the king. His space advantage lets him play these moves. }
+( 1. Be3 $6 f5 $1 $132 ) ( 1. Qe2 $6 f5 $1 $132 ) 1... Rac8 ( 1... f5 2. g5 $1
+$16
+{ Thats the big difference when we play g4! ...now we can gain a lot of
+space with g5! }
+) 2. h5 $14
+{ As we've noted, the pawn structure of h5, g4, f4, e5 against h6, g7, f7, e6 usually favors White.
+Bulatov-Vorontsov 2009 (1-0) }
+( 2. Be3 $1 $16 { It is also a good choice. } ) *
+

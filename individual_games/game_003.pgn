@@ -1,0 +1,68 @@
+[Event "4th Tournament Triandrias"]
+[Site "Thessaloniki-Greece"]
+[Date "2011.04.30"]
+[Round "5"]
+[White "Papaioannou, Ioannis"]
+[Black "Palaskos, Ahileas"]
+[Result "1-0"]
+[ECO "E16"]
+[WhiteElo "2605"]
+[BlackElo "1774"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "79"]
+[EventDate "2011.??.??"]
+[EventType "swiss"]
+[EventRounds "7"]
+
+1. d4 Nf6 2. c4 e6 3. Nf3 Bb4+ 4. Nbd2 O-O 5. g3 b6 6. Bg2 Bb7 7. O-O
+{ In this position, Black has two continuations: 7...d5, transitioning
+into a Catalan-type structure, and 7...a5, aiming to gain space on the queenside. }
+7... Bxd2 $6 ( 7... d5 ) ( 7... a5 ) 8. Bxd2 d6 9. b4 $1
+{ After
+this move, White gains space on the queenside and aims to play a4 and a5. }
+9... Be4 ( { After } 9... Nbd7 10. a4 a5 11. bxa5 bxa5
+{ The a5 pawn is
+White's target of attack. } ) 10. Bc3 Nbd7 11. Re1 Qb8 12. Bf1
+{ Now, Black needs to take immediate action in the center to prevent White from
+executing the e4 break without any difficulty. The passive }
+( 12. Bh3 ) 12... Re8 $2
+{ allows White to proceed with their plan without real
+obstacles. Black had two continuations. }
+( 12... d5 ) ( { or } 12... Bb7 13. Nd2 d5 ( { Another possible move is } 13...
+e5 ) ) 13. Nd2 Bb7 14. e4
+{ White is clearly more comfortable here, with a big space advantage and the bishop pair on top of that. So, how should Black continue from
+here? Let’s take a look at some options: }
+14... e5 ( 14... c5 15. bxc5
+{ This is the best and simplest move. White maintains the space advantage,
+and in case the center becomes blocked, the bishops remain active. }
+15... bxc5 16. d5 exd5 17. cxd5 $18 ( 17. exd5 $18
+{ This is another favorable
+option for White. } ) ) ( 14... d5 15. cxd5 exd5
+16. e5 $18 (
+{ Let's say White has the Queen on c2, and Black has a pawn on a6. } 16. Qc2 a6
+{ Now
+the question arises whether White should push e5 or strengthen the center with f3. }
+17. e5 $18 { It is better again } ( { because after } 17. f3 dxe4 18. fxe4 $14
+) ) 16... Ne4 17. Bb2 ) 15. d5
+{ This is a great advantage for White. White can play on the kingside with the plan to push f4,
+or even on the queenside with a4 and a5. }
+15... Qd8 16. Bd3 ( 16. Bh3 Bc8
+{ It would be unnecessary to allow Black to exchange the bishop. } ) 16... Qe7
+17. f4 g6 { A good move in a bad position. } ( 17... exf4 18. gxf4 Nf8 19. e5
+N6d7 20. Qg4 $18 ) ( 17... Qf8 18. f5 ( { Maybe even play } 18. Qf3
+{ first, and then sooner or later play f5. } ) 18... a5 19. a3
+{ Enjoying a lead in space. } ( 19. b5
+{ In this way, White has taken control of
+the entire board. Now White can transfer the pieces to the kingside and gradually start an attack on that wing. Black does have a nice
+outpost for the knight on c5, but that is insufficient to save the game. }
+19... Nc5 20. Bc2 Bc8 21. Qf3 $18 ) ) 18. Qf3 Rf8 19. f5 Nh5 ( 19... a5 20.
+bxa5 ( 20. b5 Nc5 21. Bc2 $16 ) ( 20. a3 $16 ) 20... bxa5 21. g4 $16 ) 20. Nb3
+Ba6 21. Bd2 Ng7 ( 21... Rae8 22. Be2 Bc8 23. Qe3 Ng7 24. g4 $18 ) 22. g4 f6 23.
+a4 g5 24. h4 gxh4 ( 24... h6 25. a5 $18 ) 25. Bh6
+{ It’s a classic plan to halt the h-pawn. White’s job isn’t done until the
+queenside is blocked and, having captured the h4 pawn, makes a timely push with g5. }
+25... Kf7 26. Kh1 Rg8 27. Rg1 Ne8 28. Qh3 Nf8 ( 28... Rg5 29. Qxh4 $18 ) 29.
+Qxh4 Ng7 30. a5 Nd7 31. Rg2 Rab8 32. b5 Bc8 33. a6 Nc5 34. Bc2 Nxb3 35. Bxb3
+Bd7 36. Ra3 Rbc8 37. Ba4 Rcf8 38. Rag3 Ke8 39. Bc2 Kd8 40. g5
+{ At this point, resignation is inevitable. } 1-0
+

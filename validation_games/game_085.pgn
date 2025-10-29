@@ -1,0 +1,46 @@
+[Event "Buenos Aires consultation"]
+[Site "Buenos Aires"]
+[Date "1914.09.17"]
+[Round "?"]
+[White "Capablanca, Jose Raul"]
+[Black "Ruiz Molina, Gabriel"]
+[Result "1-0"]
+[ECO "C30"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "77"]
+[EventDate "1914.09.??"]
+[EventType "game"]
+[EventRounds "1"]
+[EventCountry "ARG"]
+[SourceTitle "Capablanca"]
+[Source "ChessBase"]
+[SourceDate "2002.11.25"]
+[SourceVersion "1"]
+[SourceVersionDate "2002.11.25"]
+[SourceQuality "1"]
+
+1. f4 e5 2. e4 Bc5 3. Nf3 d6 4. Nc3 Nc6 5. Na4 Bb6 6. Bb5 Bd7 7. Nxb6 axb6 8.
+d3 Nge7 9. O-O O-O 10. f5 $14
+{ White establishes a space
+advantage on the kingside. } 10... f6 11. Bc4+
+{ Capablanca prevents ...d5. } ( { After } 11. g4
+{ Black may get some counterchances with } 11... d5 $14 ) ( 11. c4 $5 ) 11...
+Kh8 12. a3 Be8 13. Be6 Bh5 ( 13... d5 $1 $14 ) 14. Qe1 Qe8 15. Qh4 $16 Nd8 16.
+Ba2 Bf7
+{ Now, Capablance played a strange-looking
+move, which however deserves attention: }
+17. c4 $5
+{ White doesn't want to alleviate Black's task (the f7-bishop takes away this square from
+the knigh) and prevents the exchange of the light-squared bishops, even at the cost of shutting in the c2-bishop. }
+( 17. g4 $16 { is the
+standard move. } ) 17... c5 $2 (
+{ Counterplay in the centre is too slow: } 17... c6 18. g4 d5 19. g5 $18 ) (
+17... b5 $1 $14 ) 18. g4 Ng8 19. Bd2 b5 20. g5
+{ White is about to create strong threats. } 20... fxg5 21. Nxg5 Nf6 22. Rf3
+bxc4 $6 23. Nxh7 $1 $16 { /+- White breaks through on the
+kingside. } 23...
+Nxh7 24. Rh3 Bg8 25. Bxc4 $1 { The bishop is revived! } 25... Rf7 26. Kh1 b5
+27. Bd5 Raa7 28. Rg1 Rf6 29. Bg5 Raf7 30. b3 Qf8 31. a4 bxa4 32. bxa4 Qe8 33.
+a5 Nc6 34. a6 Nb4 35. Bxf6 Nxd5 36. Bxg7+ Rxg7 37. Rxg7 Kxg7 38. Qh6+ Kh8 39.
+Qxd6 1-0
+

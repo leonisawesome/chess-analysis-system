@@ -1,0 +1,21 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.08.??"]
+[Round "?"]
+[White "SOLUTION 8"]
+[Black "?"]
+[Result "*"]
+[Annotator "GM Ioannis Papaioannou"]
+[SetUp "1"]
+[FEN "1r1q1rk1/2n2pbp/p2p2p1/PppPp3/4P1bN/1PP2PP1/2BB3P/RQ2R1K1 b - - 0 1"]
+[PlyCount "5"]
+
+{ It is Black to move 1. Evaluate this position. 2. How should the game continue? }
+1... Bh3 $1
+{ Black is better because he can go for ...f5!,
+while White cannot fight back on the queenside, which is safely locked! }
+2. Qd1 f5 3. c4 $2 ( 3. exf5 $5 gxf5 $15 ) 3... f4 $1 $17
+{ Of course,
+at the moment, Black is not afraid of cxb5 at all!  Tsekmes-Papakonstantinou D. 2018 (0-1) }
+*
+

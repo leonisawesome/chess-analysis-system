@@ -1,0 +1,49 @@
+[Event "RUS-ch Higher League 65th"]
+[Site "Tyumen"]
+[Date "2012.06.21"]
+[Round "6"]
+[White "Andreikin, Dmitry"]
+[Black "Popov, Ivan1"]
+[Result "1-0"]
+[ECO "B39"]
+[WhiteElo "2700"]
+[BlackElo "2609"]
+[Annotator "GM Ioannis Papaioannou"]
+[PlyCount "79"]
+[EventDate "2012.06.16"]
+[EventType "swiss"]
+[EventRounds "11"]
+[EventCountry "RUS"]
+[SourceTitle "CBM 149"]
+[Source "ChessBase"]
+[SourceDate "2012.07.17"]
+[SourceVersion "1"]
+[SourceVersionDate "2012.07.17"]
+[SourceQuality "1"]
+
+1. c4 c5 2. Nf3 g6 3. d4 cxd4 4. Nxd4 Bg7 5. e4 Nc6 6. Be3 Nf6 7. Nc3
+{ There are several ways to arrive at the Maroczy structure. } 7... Ng4
+{ Here, Black opts for a slightly more aggressive continuation. } 8. Qxg4 Nxd4
+9. Qd1 Ne6 10. Qd2 { White should not allow the move Bxc3. } 10... Qa5 ( 10...
+b6 11. Be2 Bb7 12. f3 Rc8 13. Rc1 O-O 14. O-O d6 15. b3
+{ White would try to keep their space advantage, and later on, there might be
+a chance to push the pawns and go for an attack. If Black plays, }
+15... f5
+{ As we said, White should capture and then line up along the e-file. } 16.
+exf5 gxf5 17. Rfe1 $14
+{ We've turned our space advantage into other weaknesses in Black’s position, and his king is still exposed in the
+long run. }
+) 11. Rc1 d6 12. Be2 Nc5 13. f3 Be6 14. b3 O-O 15. Nd5 Qxd2+ 16. Kxd2 Bxd5 17.
+cxd5 a5
+{ Black gives up a pawn in hopes of holding
+a draw in an opposite-colored bishop endgame. However, with the rooks still on the board, White retains good winning chances. }
+( 17... Rfc8 18. b4 $16 { White is clearly ahead here. } ) 18. Bxc5 dxc5 19.
+Rxc5 Rfc8 20. Rc4
+{ White keeps the rook on the c-file, as Rhc1 is not possible
+due to Bh6. }
+20... e6 21. dxe6 fxe6 22. Rd1 Kf8 23. Ke3 Ke7 24. f4 Rxc4 25. Bxc4 e5 26. f5
+Rd8 27. Bd5 $18 { White successfully converted the
+advantage. } 27... b5 28. g4
+Bh6+ 29. Kd3 gxf5 30. gxf5 Rc8 31. a3 b4 32. axb4 axb4 33. Ra1 Rc3+ 34. Ke2
+Rc2+ 35. Kf3 Rxh2 36. Ra6 Rh4 37. Kg3 Bg5 38. f6+ Kd7 39. Be6+ Kc7 40. f7 1-0
+
