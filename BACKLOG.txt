@@ -292,7 +292,7 @@ Approach:
   - Consider distributed Qdrant if single-node insufficient
 
 Notes:
-  - User mentioned latency concerns (~34s queries)
+  - User mentioned latency concerns (3+ minutes actual wait time)
   - Need to understand what contributes to latency
   - May discover scaling issues during planning
 
@@ -353,40 +353,65 @@ Status: NOT STARTED
 Priority: MEDIUM
 
 Description:
-  User mentioned queries take ~34s+ (possibly 3 minutes+)
-  Need to understand bottlenecks and optimize where possible.
+  User reports queries taking 3+ minutes via website (actual wait time).
+  Server-side logs show ~34s internal processing, suggesting significant
+  gap between internal timing and user experience.
   
-  Current Understanding:
-  - User suspects multiple OpenAI API calls dominate latency
-  - Synthesis pipeline (3 stages) likely slowest component
-  - Embedding + reranking also contribute
+  Need to investigate:
+  - What accounts for the 3+ minute total time?
+  - Is it OpenAI API calls? (user's hypothesis)
+  - Is it multiple synthesis stages?
+  - Is it network latency?
+  - Is it Qdrant search time?
+  - Is it diagram processing?
   
-  Investigation Needed:
-  - Profile query execution with detailed timing
-  - Identify bottleneck (API calls? Qdrant? Processing?)
-  - Determine if optimization possible without quality loss
+  Current understanding:
+  - Server logs: ~34s (embedding + search + rerank + synthesis + diagrams)
+  - User experience: 3+ minutes (180+ seconds)
+  - Gap: ~146+ seconds unaccounted for
+  
+  This is a CRITICAL UX problem - 3 minutes is unacceptable wait time.
 
-Potential Optimizations:
+Investigation Required:
+  - Add comprehensive timing instrumentation
+  - Track every component end-to-end:
+    * Request arrival to Flask
+    * Embedding generation time
+    * Qdrant search time
+    * GPT-5 reranking time (100 candidates)
+    * Stage 1 synthesis time
+    * Stage 2 synthesis time (per section)
+    * Stage 3 synthesis time
+    * Diagram marker extraction time
+    * Response serialization time
+    * Response transmission time
+  - Identify where the 146+ seconds is going
+  - Profile OpenAI API call latency specifically
+
+Potential Optimizations (after profiling):
   - Cache embeddings for repeated queries
   - Reduce GPT-5 reranking candidates (100 → 50?)
-  - Parallel section generation in stage2 (if beneficial)
-  - Reduce synthesis token usage (shorter prompts?)
+  - Parallel section generation in stage2
+  - Reduce synthesis token usage (shorter prompts)
   - Cache synthesis results for identical queries
+  - Stream response to user incrementally?
 
 Acceptance Criteria:
-  - Documented performance analysis with bottlenecks identified
-  - Implemented optimizations (if feasible)
-  - Query time reduction demonstrated
+  - Root cause of 3+ minute latency identified
+  - Documented performance analysis with timing breakdown
+  - Implemented optimizations (if feasible without quality loss)
+  - Demonstrated query time reduction
   - NO quality degradation (maintain 100% test pass rate)
-  - Cost impact analysis (fewer/shorter API calls = savings?)
+  - User-perceived latency measurably improved
 
 Dependencies: 
   - ITEM-015 (need stable baseline for comparison)
 
 Notes:
-  - May require partner consult if unclear how to optimize
-  - User's hypothesis about API calls may be correct
-  - Need actual measurements before optimizing
+  - May require partner consult if root cause unclear
+  - This is a critical UX issue, not just optimization
+  - User hypothesis about OpenAI API calls may be correct
+  - Need actual measurements before implementing changes
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -484,3 +509,4 @@ Current Branch: main
 Latest Commit: 6e48bc0 (README.md added)
 System Status: Refactored but NOT functionally tested yet (ITEM-012)
 Critical Gap: Middlegame solution never implemented (ITEM-014)
+Critical UX Issue: 3+ minute query latency (ITEM-018)
