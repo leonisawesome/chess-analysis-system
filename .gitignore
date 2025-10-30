@@ -7,8 +7,11 @@ __pycache__/
 
 # Output files
 *.csv
-*.txt
 analysis_output.txt
+
+# Documentation files (explicitly NOT ignored)
+!BACKLOG.txt
+!README.md
 
 # Virtual environment
 .venv/
