@@ -45,9 +45,40 @@ def extract_moves_from_description(description: str) -> str:
     return ""
 
 
+def is_fen_string(text: str) -> bool:
+    """
+    Check if a string is a FEN position.
+
+    Args:
+        text: String to check
+
+    Returns:
+        True if text looks like a FEN string
+    """
+    # FEN has 6 space-separated fields
+    parts = text.strip().split()
+    if len(parts) < 4:
+        return False
+
+    # First part should contain piece placement (letters and numbers with slashes)
+    piece_placement = parts[0]
+    if '/' not in piece_placement:
+        return False
+
+    # Should have 8 ranks (7 slashes)
+    if piece_placement.count('/') != 7:
+        return False
+
+    # Second part should be 'w' or 'b'
+    if parts[1] not in ['w', 'b']:
+        return False
+
+    return True
+
+
 def extract_diagram_markers(synthesized_text: str) -> list:
     """
-    Find all [DIAGRAM: ...] markers in text and extract move sequences.
+    Find all [DIAGRAM: ...] markers in text and extract move sequences or FENs.
 
     Args:
         synthesized_text: Text containing [DIAGRAM: ...] markers
@@ -123,41 +154,51 @@ def extract_diagram_markers(synthesized_text: str) -> list:
             if not description.endswith(('.', '!', '?')):
                 description += '.'
 
-        # Parse the move sequence from the marker
-        moves = extract_moves_from_description(match)
-        if moves:
-            # Try to parse moves to FEN
-            fen = parse_moves_to_fen(moves)
-            if fen:
-                try:
-                    board = chess.Board(fen)
-                    svg = chess.svg.board(board, size=350)
-                    lichess_url = create_lichess_url(fen)
-
-                    # Format: Variation Name > Moves > Description
-                    caption_parts = []
-                    if section_title:
-                        caption_parts.append(section_title)
-                    caption_parts.append(match)  # The moves
-                    if description:
-                        caption_parts.append(description)
-                    caption = '\n'.join(caption_parts)
-
-                    diagrams.append({
-                        'marker': f'[DIAGRAM: {match}]',
-                        'description': match,
-                        'fen': fen,
-                        'svg': svg,
-                        'lichess_url': lichess_url,
-                        'caption': caption
-                    })
-                    print(f"  ✅ Successfully parsed diagram {i+1}")
-                except Exception as e:
-                    print(f"  ❌ Failed to create board for diagram {i+1}: {e}")
-            else:
-                print(f"  ❌ Failed to parse moves for diagram {i+1}")
+        # Determine if marker contains FEN or move sequence
+        fen = None
+        if is_fen_string(match):
+            # Direct FEN string (for middlegame concepts)
+            print(f"  → Detected FEN string")
+            fen = match.strip()
         else:
-            print(f"  ❌ No moves extracted from diagram {i+1}")
+            # Move sequence (for openings)
+            print(f"  → Extracting moves from description")
+            moves = extract_moves_from_description(match)
+            if moves:
+                # Try to parse moves to FEN
+                fen = parse_moves_to_fen(moves)
+                if not fen:
+                    print(f"  ❌ Failed to parse moves for diagram {i+1}")
+            else:
+                print(f"  ❌ No moves extracted from diagram {i+1}")
+
+        # Create diagram if we have a valid FEN
+        if fen:
+            try:
+                board = chess.Board(fen)
+                svg = chess.svg.board(board, size=350)
+                lichess_url = create_lichess_url(fen)
+
+                # Format: Variation Name > Moves > Description
+                caption_parts = []
+                if section_title:
+                    caption_parts.append(section_title)
+                caption_parts.append(match)  # The moves or FEN
+                if description:
+                    caption_parts.append(description)
+                caption = '\n'.join(caption_parts)
+
+                diagrams.append({
+                    'marker': f'[DIAGRAM: {match}]',
+                    'description': match,
+                    'fen': fen,
+                    'svg': svg,
+                    'lichess_url': lichess_url,
+                    'caption': caption
+                })
+                print(f"  ✅ Successfully parsed diagram {i+1}")
+            except Exception as e:
+                print(f"  ❌ Failed to create board for diagram {i+1}: {e}")
 
     print(f"\n{'='*60}")
     print(f"Extracted {len(diagrams)} valid diagrams")
