@@ -68,6 +68,7 @@ except FileNotFoundError:
 
 import json
 
+@app.route('/')
 def index():
     """Main page."""
     return render_template('index.html')

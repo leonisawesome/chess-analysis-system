@@ -251,23 +251,42 @@ export COLLECTION_NAME='chess_production'
 \`\`\`
 
 ### Running the System
-\`\`\`bash
-# Start Flask
+```bash
+# Start Flask server
 python3 app.py
 
-# Or using flask command
-export FLASK_APP=app.py
-flask run --port=5001
+# Server will start on port 5001
+# ✅ You'll see: "Running on http://127.0.0.1:5001"
+```
 
-# Access at: http://localhost:5001
-\`\`\`
+### Accessing the Application
 
-### Testing a Query
-\`\`\`bash
-curl -X POST http://localhost:5001/query \\
-  -H "Content-Type: application/json" \\
-  -d '{"query": "Explain the Italian Game opening"}'
-\`\`\`
+**Option 1: Web Interface (Recommended)**
+```bash
+# Open your browser and visit:
+http://localhost:5001
+
+# Interactive UI with:
+# - Query input form
+# - Chess diagram visualization
+# - Source attribution
+# - Interactive Lichess boards
+```
+
+**Option 2: REST API (For programmatic access)**
+```bash
+# Query via curl
+curl -X POST http://localhost:5001/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Explain the Italian Game opening"}' \
+  | jq '.answer' -r
+
+# Response includes:
+# - answer: Synthesized article text
+# - diagram_positions: Array of chess diagrams with FENs & SVGs
+# - sources: Top 10 source chunks from RAG
+# - timing: Performance metrics
+```
 
 ---
 
