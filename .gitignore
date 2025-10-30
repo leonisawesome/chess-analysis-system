@@ -22,3 +22,15 @@ env/
 .tmp/
 htmlcov/
 scripts/__pycache__/
+
+# Database files
+*.db
+*.sqlite
+qdrant_*_db/
+
+# Large PGN files
+*.pgn
+test_output*/
+
+# Log files
+*.log
