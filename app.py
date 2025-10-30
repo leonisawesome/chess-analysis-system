@@ -22,7 +22,7 @@ import fen_validator
 import query_classifier
 
 from chess_positions import detect_fen, parse_moves_to_fen, extract_chess_positions, filter_relevant_positions, create_lichess_url
-from diagram_processor import extract_moves_from_description, extract_diagram_markers, replace_markers_with_ids
+from diagram_processor import extract_moves_from_description, extract_diagram_markers, replace_markers_with_ids, wrap_bare_fens
 from opening_validator import extract_contamination_details, generate_section_with_retry, validate_stage2_diagrams, validate_and_fix_diagrams
 from synthesis_pipeline import stage1_generate_outline, stage2_expand_sections, stage3_final_assembly, synthesize_answer
 from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction
@@ -157,6 +157,11 @@ def query():
 
         rag_timing['synthesis'] = round(time.time() - synthesis_start, 2)
         print(f"⏱  3-stage synthesis complete: {rag_timing['synthesis']}s")
+
+        # Step 6.4: POST-PROCESSING - Wrap any bare FEN strings
+        print(f"\n🔧 Post-processing: Wrapping bare FEN strings...")
+        synthesized_answer = wrap_bare_fens(synthesized_answer)
+        print(f"✅ Bare FEN post-processing complete")
 
         # Step 6.5: Extract and parse diagram markers from synthesized text
         print(f"\n⏱  Extracting diagram markers...")
