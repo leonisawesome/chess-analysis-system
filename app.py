@@ -106,6 +106,13 @@ def query():
         if canonical_fen:
             print(f"✓ Using canonical FEN: {canonical_fen}")
 
+        # Detect opening for ITEM-008 validation (Sicilian contamination prevention)
+        opening_name, expected_signature, _ = detect_opening(query_text)
+        if opening_name:
+            print(f"📋 Detected opening: {opening_name}")
+        if expected_signature:
+            print(f"✓ Expected signature: {expected_signature}")
+
         # Step 2-4: Execute RAG pipeline (embed → search → rerank)
         ranked_results, rag_timing = execute_rag_query(
             OPENAI_CLIENT,
@@ -135,11 +142,16 @@ def query():
         # Prepare context with canonical FEN if available
         context_chunks = prepare_synthesis_context(results, canonical_fen, top_n=8)
 
-        # Call the 3-stage synthesis function
+        # Call the 3-stage synthesis function with full ITEM-008 validation
         synthesized_answer = synthesize_answer(
             OPENAI_CLIENT,
             query_text,
-            "\n\n".join(context_chunks, canonical_fen=canonical_fen)
+            "\n\n".join(context_chunks),  # Join context properly
+            opening_name=opening_name,
+            expected_signature=expected_signature,
+            validate_stage2_diagrams_func=validate_stage2_diagrams,
+            generate_section_with_retry_func=generate_section_with_retry,
+            canonical_fen=canonical_fen
         )
 
         rag_timing['synthesis'] = round(time.time() - synthesis_start, 2)
