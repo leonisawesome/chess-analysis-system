@@ -2,6 +2,7 @@
 Chess Opening Data with ECO Codes
 Phase 1: Top 20 most common openings
 """
+from typing import Optional, Tuple
 
 opening_eco_map = {
     # Italian Game and variants
@@ -76,7 +77,7 @@ opening_eco_map = {
 }
 
 
-def detect_opening(query: str) -> tuple[str | None, str | None, str | None]:
+def detect_opening(query: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Detect chess opening from query using ECO-based lookup.
 
