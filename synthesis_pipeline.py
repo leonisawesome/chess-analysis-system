@@ -84,7 +84,8 @@ def stage2_expand_sections(openai_client: OpenAI, sections: list, query: str,
                           context: str, opening_name: str = None,
                           expected_signature: str = None,
                           validate_stage2_diagrams_func = None,
-                          generate_section_with_retry_func = None) -> list:
+                          generate_section_with_retry_func = None,
+                          canonical_fen: str = None) -> list:
     """
     Stage 2: Expand each section with detailed content and diagram markers.
 
@@ -106,14 +107,25 @@ def stage2_expand_sections(openai_client: OpenAI, sections: list, query: str,
     system_prompt = """You are a chess expert writing detailed explanations with visual diagrams.
 
 CRITICAL DIAGRAM RULES:
-1. Include diagrams using [DIAGRAM: move sequence] format
+1. Include diagrams using [DIAGRAM: move sequence OR FEN] format
 2. Use standard chess notation: 1.e4 e5 2.Nf3 Nc6 3.Bc4
-3. Each diagram shows 3-6 moves from the starting position
-4. Diagrams must match the opening being discussed
-5. Include 2-4 diagrams per section to illustrate key positions
+3. For openings: diagrams show 3-6 moves from the starting position
+4. For middlegame concepts: use the provided canonical FEN position
+5. Diagrams must match the opening/concept being discussed
+6. Include 2-4 diagrams per section to illustrate key positions
 
-Example:
+CANONICAL POSITION USAGE:
+If a [CANONICAL POSITION: FEN] is provided in the context below:
+- You MUST generate diagrams based on this position
+- Use [DIAGRAM: FEN_STRING] format with the canonical FEN or variations
+- Do NOT use opening move sequences for middlegame concepts
+- The canonical position represents the KEY position for this concept
+
+Example (opening):
 "The Italian Game begins with [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4] where White develops quickly..."
+
+Example (middlegame with canonical FEN):
+"In this position [DIAGRAM: r1bq1rk1/pp2bppp/2n1pn2/2pp4/2PP4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 9], White launches the minority attack..."
 
 Write 2-3 detailed paragraphs per section with diagrams."""
 
@@ -127,6 +139,17 @@ Context:
 {context[:3000]}
 
 Write detailed content for this section. Include 2-4 diagram markers showing key positions."""
+
+        # Add canonical FEN context if provided (for middlegame concepts)
+        if canonical_fen:
+            section_prompt += f"""
+
+[CANONICAL POSITION: {canonical_fen}]
+
+CRITICAL: This is the KEY position for understanding this concept.
+Generate diagrams using this FEN position and variations from it.
+Use [DIAGRAM: {canonical_fen}] or variations of this position.
+Do NOT use opening move sequences - focus on middlegame positions."""
 
         if opening_name:
             section_prompt += f"\n\nNote: This is about the {opening_name} opening."
@@ -247,7 +270,8 @@ Create a cohesive article that flows naturally. Maintain all diagram markers."""
 def synthesize_answer(openai_client: OpenAI, query: str, context: str,
                      opening_name: str = None, expected_signature: str = None,
                      validate_stage2_diagrams_func = None,
-                     generate_section_with_retry_func = None) -> str:
+                     generate_section_with_retry_func = None,
+                     canonical_fen: str = None) -> str:
     """
     Main synthesis pipeline: orchestrates all 3 stages.
 
@@ -280,7 +304,8 @@ def synthesize_answer(openai_client: OpenAI, query: str, context: str,
         opening_name,
         expected_signature,
         validate_stage2_diagrams_func,
-        generate_section_with_retry_func
+        generate_section_with_retry_func,
+        canonical_fen
     )
     print(f"    ✓ Expanded {len(expanded)} sections")
 
