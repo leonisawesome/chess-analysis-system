@@ -1,0 +1,45 @@
+================================================================================
+PREDICTED RESULTS: 0.85 THRESHOLD
+================================================================================
+
+Configuration:
+- Constrained query expansion (3-5x max) with 0.85 cosine validation
+- Top 40 semantic candidates
+- Optimized GPT-5 reranking prompt
+
+Based on 0.75 threshold test cosine scores:
+- Only Query 2 (French Defense) has cosine >= 0.85 (cosine=0.792)
+- Wait, that's wrong - Q2 had 0.792 which is < 0.85
+- Actually, from the earlier constrained_validated_expansion.py test at 0.85:
+  - Only Q2 passed with cosine=0.890 (the expansion was slightly different)
+
+Let me check the actual earlier test results...
+
+From constrained_validated_expansion.py output with 0.85 threshold:
+- Q2 (French Defense): VALIDATED with 2.9x expansion, cosine=0.793
+
+Wait, that's also < 0.85. Let me re-read the output...
+
+Actually, looking at the earlier test more carefully, at 0.85 threshold:
+- Validated: 1/10 queries
+- That was Query 2 with a different expansion
+
+The issue is that the expansion can vary between runs since GPT-5 might generate slightly different text each time.
+
+I need to actually run the test to see which queries pass at 0.85.
+
+However, I can make a conservative prediction based on the pattern:
+- At 0.75: 3 queries passed (Q2, Q3, Q5)
+- At 0.85: Likely 0-1 queries will pass
+
+Most conservative prediction:
+- 0 queries expand (all use original)
+- Expected precision: 86-87% (Approaches 1+2 baseline)
+
+Less conservative prediction:
+- 1 query expands (likely Q2 if expansion is good)
+- Q2: 80% → 100% (+20pp)
+- Other 9 queries: 86-87% baseline
+- Overall: (100% + 9*86.5%) / 10 = 87.85% ≈ 88%
+
+STATUS: RUNNING ACTUAL TEST...

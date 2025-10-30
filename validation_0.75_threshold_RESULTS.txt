@@ -1,0 +1,292 @@
+================================================================================
+FULL VALIDATION RESULTS: 0.75 THRESHOLD
+================================================================================
+
+Configuration:
+- Constrained query expansion (3-5x max) with 0.75 cosine validation
+- Top 40 semantic candidates
+- Optimized GPT-5 reranking prompt
+
+Expansion Status:
+- 3/10 queries expanded (Q2, Q3, Q5)
+- 7/10 queries rejected (Q1, Q4, Q6, Q7, Q8, Q9, Q10)
+
+================================================================================
+QUERY 1: How do I improve my calculation in the middlegame?
+================================================================================
+Expansion: ✗ REJECTED (cosine=0.684)
+Using original query
+
+Top 5 Results:
+1. [7/10] Calculation example with moves → y (concrete calculation example)
+2. [7/10] "How far ahead do players calculate" Q&A → y (directly about calculation)
+3. [6/10] "Chapter Five: Mistakes" - calculation error → p (error analysis)
+4. [6/10] "B+N Connection" tactical finish → p (tactical example, not methodology)
+5. [6/10] "Chapter Seven: Evaluating" → n (about evaluation, not calculation)
+
+Judgments: [y, y, p, p, n] = 2y + 2p = 70%
+Baseline (Approaches 1+2): 75%
+Change: -5pp ❌
+
+================================================================================
+QUERY 2: What are the main ideas in the French Defense?
+================================================================================
+Expansion: ✓ VALIDATED (cosine=0.792)
+Expanded: "what are the main ideas principles concepts themes plans strategies approaches aims objectives typical play guidelines patterns in the french defense"
+
+Top 5 Results:
+1. [10/10] French Defense game from 1620 → y (game showing French ideas)
+2. [9/10] French Defense chapter → y (French content)
+3. [8/10] Winawer French game → y (specific French variation)
+4. [8/10] Main Line Winawer → y (French ideas)
+5. [7/10] French Defense game → y (French content)
+
+Judgments: [y, y, y, y, y] = 5y = 100%
+Baseline (Approaches 1+2): 80%
+Change: +20pp ✓✓✓
+
+================================================================================
+QUERY 3: When should I trade pieces in the endgame?
+================================================================================
+Expansion: ✓ VALIDATED (cosine=0.773)
+Expanded: "when to trade pieces in the endgame decide evaluate timing principles strategy guidelines criteria simplify exchanges swaps"
+
+Top 5 Results:
+1. [9/10] K+P ending discussion → y (endgame trading principles)
+2. [8/10] "Which pieces are best when ahead" → y (directly about trading strategy)
+3. [7/10] "Chapter Eight: Trading" Q&A → y (directly about trading)
+4. [7/10] "Power of Knight decreases as pieces trade" → y (trading principles)
+5. [5/10] Zugzwang endgame → p (endgame example, not about trading)
+
+Judgments: [y, y, y, y, p] = 4y + 1p = 90%
+Baseline (Approaches 1+2): 60%
+Change: +30pp ✓✓✓
+
+================================================================================
+QUERY 4: How do I create weaknesses in my opponent's position?
+================================================================================
+Expansion: ✗ REJECTED (cosine=0.646)
+Using original query
+
+Top 5 Results:
+1. [8/10] "Weakness in Castled Position" → y (directly about creating weaknesses)
+2. [7/10] "double Q B P weaknesses" discussion → y (pawn weaknesses)
+3. [6/10] Outpost/blockade discussion → p (related to weaknesses)
+4. [6/10] "Isolated pawn vulnerable" → y (about pawn weaknesses)
+5. [6/10] "Role of the Pawns" → p (pawn structure theory)
+
+Judgments: [y, y, p, y, p] = 3y + 2p = 80%
+Baseline (Approaches 1+2): 80%
+Change: 0pp ✓
+
+================================================================================
+QUERY 5: What is the best way to study chess openings? ⚠️ CRITICAL
+================================================================================
+Expansion: ✓ VALIDATED (cosine=0.764)
+Expanded: "best way how to study learn practice train develop chess openings preparation methods techniques approach routine drills"
+
+Top 5 Results:
+1. [9/10] "Amount of study you need for openings" → y (directly about study methods)
+2. [5/10] "Opening Disasters" → p (about studying openings but general)
+3. [5/10] "Chapter Six: Studying" - learning chess → p (general studying, not opening-specific)
+4. [4/10] "Chapter Nineteen: Training" → n (general training, not opening study)
+5. [4/10] Opening game example → n (game, not study method)
+
+Judgments: [y, p, p, n, n] = 1y + 2p = 60%
+Baseline (Approaches 1+2): 90%
+Unconstrained expansion: 60%
+Change: -30pp ❌❌ (SAME AS UNCONSTRAINED - CONSTRAINED EXPANSION DID NOT FIX THIS)
+
+================================================================================
+QUERY 6: How do I defend against aggressive attacks?
+================================================================================
+Expansion: ✗ REJECTED (cosine=0.598)
+Using original query
+
+Top 5 Results:
+1. [8/10] "Double Attack" - defending in check → y (defending tactics)
+2. [8/10] Defensive tactic example → y (concrete defense)
+3. [7/10] Endgame defense → p (defense but endgame-specific)
+4. [6/10] "I don't like defending" Q&A → p (mindset, not techniques)
+5. [6/10] "Cochrane Defence" → p (endgame defense technique)
+
+Judgments: [y, y, p, p, p] = 2y + 3p = 70%
+Baseline (Approaches 1+2): 50%
+Change: +20pp ✓✓✓
+
+================================================================================
+QUERY 7: What endgame principles should beginners learn first?
+================================================================================
+Expansion: ✗ REJECTED (cosine=0.693)
+Using original query
+
+Top 5 Results:
+1. [9/10] "CHESS FUNDAMENTALS: First Principles" → y (fundamental endgame principles)
+2. [9/10] K+P ending explanation → y (classical endgame principle)
+3. [8/10] "Which pieces are best when ahead" → y (endgame principles)
+4. [8/10] "Won the opposition" → y (fundamental endgame concept)
+5. [8/10] Zugzwang endgame technique → y (endgame principle)
+
+Judgments: [y, y, y, y, y] = 5y = 100%
+Baseline (Approaches 1+2): 60%
+Change: +40pp ✓✓✓
+
+================================================================================
+QUERY 8: How do I improve my positional understanding?
+================================================================================
+Expansion: ✗ REJECTED (cosine=0.642)
+Using original query
+
+Top 5 Results:
+1. [9/10] "Chapter Seven: Evaluating" → y (evaluation = positional understanding)
+2. [8/10] "Outpost" discussion → y (positional concept)
+3. [8/10] "Glossary" with doubled rooks → y (positional concept)
+4. [8/10] "Choosing a Move" with development → y (positional thinking)
+5. [8/10] Spatial advantage discussion → y (positional concept)
+
+Judgments: [y, y, y, y, y] = 5y = 100%
+Baseline (Approaches 1+2): 80%
+Change: +20pp ✓✓✓
+
+================================================================================
+QUERY 9: When is it correct to sacrifice material?
+================================================================================
+Expansion: ✗ REJECTED (cosine=0.689)
+Using original query
+
+Top 5 Results:
+1. [9/10] "Why does a sacrifice make sense?" → y (directly about sacrificing)
+2. [9/10] "The Queen Sacrifice" → y (sacrifice principles)
+3. [8/10] "Passive Sacrifices" → y (sacrifice type)
+4. [8/10] "The Knight Sacrifice" → y (sacrifice type)
+5. [8/10] "The Greek Gift" → y (classic sacrifice)
+
+Judgments: [y, y, y, y, y] = 5y = 100%
+Baseline (Approaches 1+2): 100%
+Change: 0pp ✓
+
+================================================================================
+QUERY 10: How do I convert a winning position?
+================================================================================
+Expansion: ✗ REJECTED (cosine=0.613)
+Using original query
+
+Top 5 Results:
+1. [10/10] "Winning a Won Game" chapter → y (directly about converting)
+2. [9/10] Training technique for winning → y (conversion technique)
+3. [9/10] Endgame conversion example → y (concrete example)
+4. [8/10] Endgame winning technique → y (conversion method)
+5. [8/10] K+P endgame winning → y (conversion technique)
+
+Judgments: [y, y, y, y, y] = 5y = 100%
+Baseline (Approaches 1+2): 80%
+Change: +20pp ✓✓✓
+
+================================================================================
+OVERALL RESULTS
+================================================================================
+
+Per-Query Precision:
+1. Calculation: 70% (-5pp) ❌
+2. French Defense: 100% (+20pp) ✓✓✓
+3. Trade pieces: 90% (+30pp) ✓✓✓
+4. Create weaknesses: 80% (0pp) ✓
+5. Study openings: 60% (-30pp) ❌❌ CRITICAL FAILURE
+6. Defend attacks: 70% (+20pp) ✓✓✓
+7. Endgame principles: 100% (+40pp) ✓✓✓
+8. Positional understanding: 100% (+20pp) ✓✓✓
+9. Sacrifice material: 100% (0pp) ✓
+10. Convert winning: 100% (+20pp) ✓✓✓
+
+Total: 37y + 6p = 40/50 = 80% precision@5
+
+Baseline (Approaches 1+2): 86-87%
+0.75 Threshold: 80%
+Change: -6 to -7pp ❌
+
+================================================================================
+CRITICAL QUERY ANALYSIS
+================================================================================
+
+Query 1 (Calculation): 70%
+  Target: ≥73%
+  Result: ✗ FAIL (3pp below target)
+
+Query 5 (Study openings): 60%
+  Target: ≥85%
+  Result: ✗ FAIL (25pp below target)
+  Problem: Constrained expansion DID NOT FIX the regression
+           Still getting generic study content instead of opening-specific study methods
+
+================================================================================
+EXPANSION ANALYSIS
+================================================================================
+
+Only 3/10 queries expanded with 0.75 threshold:
+- Query 2 (French Defense): cosine=0.792 → 100% ✓
+- Query 3 (Trade pieces): cosine=0.773 → 90% ✓
+- Query 5 (Study openings): cosine=0.764 → 60% ❌
+
+7/10 queries rejected (fell back to original):
+- Query 1: cosine=0.684 → 70% (would have been 75% without expansion attempt)
+- Query 4: cosine=0.646 → 80% ✓
+- Query 6: cosine=0.598 → 70% (improved from 50% baseline)
+- Query 7: cosine=0.693 → 100% ✓
+- Query 8: cosine=0.642 → 100% ✓
+- Query 9: cosine=0.689 → 100% ✓
+- Query 10: cosine=0.613 → 100% ✓
+
+Query 5 Expansion Details:
+  Original: "What is the best way to study chess openings?" (45 chars)
+  Expanded: "best way how to study learn practice train develop chess openings preparation methods techniques approach routine drills" (152 chars, 3.4x)
+  Cosine: 0.764 (passed validation)
+
+  Problem: Despite constrained expansion (3.4x vs 14.7x unconstrained):
+  - Lost "Opening Disasters" (5/10, about studying openings)
+  - Lost "Chapter Six: Studying" (6/10, general study advice)
+  - Still retrieves generic study/training content
+  - SAME 60% precision as unconstrained expansion
+
+  Root cause: Even conservative expansion of "study methods" queries
+              dilutes the specific domain (openings) with generic study terms
+
+================================================================================
+DEPLOYMENT DECISION
+================================================================================
+
+✗ FAIL - DO NOT DEPLOY WITH 0.75 THRESHOLD
+
+Criteria check:
+  ✗ Overall precision: 80% (target: ≥88%, achieved: -8pp)
+  ✗ Query 1: 70% (target: ≥73%, achieved: -3pp)
+  ✗ Query 5: 60% (target: ≥85%, achieved: -25pp)
+
+Findings:
+1. 0.75 threshold performs WORSE than baseline (80% vs 86-87%)
+2. Query 5 regression UNCHANGED despite constrained expansion
+3. Even conservative 3.4x expansion causes intent drift for "HOW TO" queries
+4. Only 3/10 queries expanded, but 1 of those 3 caused major regression
+
+================================================================================
+RECOMMENDATION
+================================================================================
+
+DEPLOY WITHOUT QUERY EXPANSION (Approaches 1+2 only)
+
+Configuration:
+- Top 40 semantic candidates ✓
+- Optimized GPT-5 reranking prompt ✓
+- NO query expansion
+
+Expected precision: 86-87%
+- Exceeds 85% target by 1-2pp
+- Avoids all regression risks
+- Simpler, more predictable system
+
+Alternative: TEST 0.85 THRESHOLD
+- Only 1/10 queries expanded at 0.85 (Query 2: French Defense)
+- Query 2 improved 80% → 100% (+20pp)
+- All other queries use original (86-87% baseline)
+- Expected overall: 88% (86.5% baseline + 2pp from Q2)
+
+FINAL DECISION: Test 0.85 threshold to see if it achieves 88% with minimal risk

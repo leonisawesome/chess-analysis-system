@@ -1,0 +1,25 @@
+
+CHESS FILE RENAMING REPORT
+Generated: 2025-09-11 19:57:59
+
+PROCESSING STATISTICS:
+- Files Discovered: 1
+- Files Analyzed: 1
+- Files Renamed: 0
+- Files Failed: 1
+- Files Skipped: 0
+
+QUALITY DISTRIBUTION:
+- High Quality (EVS ≥ 80): 0
+- Medium Quality (EVS 60-79): 0
+- Basic Quality (EVS < 60): 1
+- No PGN Content: 1
+
+CONFIGURATION:
+- Source Directory: /tmp/one_pgn
+- Output Directory: /tmp/chessrag_eval_single
+- Dry Run: True
+- Backup Enabled: False
+- Directory Organization: False
+- Max Workers: 1
+- Batch Size: 1

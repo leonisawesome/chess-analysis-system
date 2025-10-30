@@ -1,0 +1,62 @@
+═══════════════════════════════════════════════════════
+CHESS RAG SYSTEM - AUTOMATED TEST REPORT (GPT-4-TURBO)
+Test Date: Tue Oct 28 19:36:51 -05 2025
+Model: gpt-4-turbo
+═══════════════════════════════════════════════════════
+
+QUERY 1: tell me about the Italian Game
+Phase: Phase1 | Result: PASS | Diagrams: 15
+
+QUERY 2: tell me about the Ruy Lopez
+Phase: Phase1 | Result: FAIL | Diagrams: 16
+
+QUERY 3: tell me about the King's Indian Defense
+Phase: Phase1 | Result: FAIL | Diagrams: 17
+
+QUERY 4: tell me about the Caro-Kann Defense
+Phase: Phase1 | Result: FAIL | Diagrams: 27
+
+QUERY 5: tell me about the Sicilian Defense
+Phase: Phase2 | Result: PASS | Diagrams: 22
+
+QUERY 6: explain the Najdorf variation of the Sicilian Defense
+Phase: Phase2 | Result: PASS | Diagrams: 21
+
+QUERY 7: compare the Najdorf and Dragon variations
+Phase: Phase2 | Result: PASS | Diagrams: 24
+
+QUERY 8: compare the Queen's Gambit Accepted and Declined
+Phase: Phase2 | Result: PASS | Diagrams: 29
+
+QUERY 9: explain the Winawer variation of the French Defense
+Phase: Phase2 | Result: PASS | Diagrams: 15
+
+QUERY 10: tell me about the French Defense
+Phase: Phase2 | Result: PASS | Diagrams: 19
+
+═══════════════════════════════════════════════════════
+TEST SUMMARY
+═══════════════════════════════════════════════════════
+Phase 1: 1/4 (25%)
+Phase 2: 6/6 (100%)
+Overall: 7/10 (70%)
+
+SUCCESS CRITERIA:
+- Overall ≥90% (9/10): NOT MET ❌
+- Phase 1 ≥75% (3/4): NOT MET ❌
+- Phase 2 =100% (6/6): MET ✅
+
+═══════════════════════════════════════════════════════
+COMPARISON WITH GPT-4o BASELINE
+═══════════════════════════════════════════════════════
+GPT-4o Baseline:
+  - Phase 1: 0/4 (0%)
+  - Phase 2: 6/6 (100%)
+  - Overall: 6/10 (60%)
+
+GPT-4-Turbo Results:
+  - Phase 1: 1/4 (25%)
+  - Phase 2: 6/6 (100%)
+  - Overall: 7/10 (70%)
+
+Improvement: 10% (from 60% to 70%)

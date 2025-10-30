@@ -1,0 +1,210 @@
+================================================================================
+LLM FILTERING TEST - MANUAL EVALUATION RESULTS
+================================================================================
+
+Methodology: Strict evaluation standards (same as Week 3 baseline test)
+- y = relevant (1.0)
+- p = partial (0.5)
+- n = not relevant (0.0)
+
+================================================================================
+QUERY 1: How do I improve my calculation in the middlegame?
+================================================================================
+1. [LLM: 10/10] "Understanding Chess Middlegames" book → p (book rec)
+2. [LLM: 8/10] "How to Calculate Chess Tactics" book → y (directly relevant)
+3. [LLM: 5/10] "How far ahead do players calculate" → y (Q&A about calculation)
+4. [LLM: 5/10] "What is an outpost" (pawns) → n (not about calculation)
+5. [LLM: 2/10] Calculation example with moves → p (example, unclear context)
+
+Judgments: [p, y, y, n, p] = 2y + 2p = 70%
+
+================================================================================
+QUERY 2: What are the main ideas in the French Defense?
+================================================================================
+1. [LLM: 10/10] "Exchange Variation" chapter → y (French Defense content)
+2. [LLM: 8/10] "Winawer French" game → y (French variation)
+3. [LLM: 7/10] "What makes a French player?" → y (overview)
+4. [LLM: 5/10] "Bibliography" → n (just book list)
+5. [LLM: 5/10] "Chess Explained: The French" → p (book description)
+
+Judgments: [y, y, y, n, p] = 3y + 1p = 70%
+
+================================================================================
+QUERY 3: When should I trade pieces in the endgame?
+================================================================================
+1. [LLM: 7/10] "End-Game Strategy" chapter → y (endgame strategy)
+2. [LLM: 7/10] "Which pieces are best when" → p (piece values)
+3. [LLM: 7/10] Game with trading → p (example, not principles)
+4. [LLM: 5/10] "Why should I trade them?" → y (Q&A about trading)
+5. [LLM: 5/10] "When does endgame start?" → n (definition only)
+
+Judgments: [y, p, p, y, n] = 2y + 2p = 60%
+
+================================================================================
+QUERY 4: How do I create weaknesses in my opponent's position?
+================================================================================
+1. [LLM: 10/10] "this move weakens f2" → y (example of creating weakness)
+2. [LLM: 8/10] "Weakness in the Castled Position" → y (directly about weaknesses)
+3. [LLM: 7/10] "Material, Endings, Zugzwang" → p (evaluation, tangential)
+4. [LLM: 6/10] "Double Attack" → n (tactics, not weaknesses)
+5. [LLM: 5/10] "Secrets of Positional Chess" → p (weak squares)
+
+Judgments: [y, y, p, n, p] = 2y + 2p = 60%
+
+COMPARISON TO BASELINE:
+- Baseline Query 4: [y, n, n, n, n] = 20% ❌
+- LLM Filtered: [y, y, p, n, p] = 60% ✓
+- IMPROVEMENT: +40 percentage points
+
+================================================================================
+QUERY 5: What is the best way to study chess openings?
+================================================================================
+1. [LLM: 10/10] "How to Build Your Opening Repertoire" → y
+2. [LLM: 10/10] "FCO: Fundamental Chess Openings" → y
+3. [LLM: 10/10] "Opening Books: General" → y
+4. [LLM: 10/10] "Mastering the Chess Openings Vol 2" → y
+5. [LLM: 10/10] "Mastering the Chess Openings Vol 1" → y
+
+Judgments: [y, y, y, y, y] = 5y = 100% ✓✓✓
+
+================================================================================
+QUERY 6: How do I defend against aggressive attacks?
+================================================================================
+1. [LLM: 10/10] "Secrets of Chess Defence" → y
+2. [LLM: 8/10] Defensive combination example → y
+3. [LLM: 7/10] "Double Attack" when in check → p
+4. [LLM: 5/10] "I don't like defending" Q&A → p
+5. [LLM: 5/10] "Attacking the Castled Position" → n
+
+Judgments: [y, y, p, p, n] = 2y + 3p = 70%
+
+================================================================================
+QUERY 7: What endgame principles should beginners learn first?
+================================================================================
+1. [LLM: 10/10] "Endgames, Studies and Problems" books → y
+2. [LLM: 8/10] "CHESS FUNDAMENTALS: Endings" → y
+3. [LLM: 7/10] "How much book knowledge needed?" → y
+4. [LLM: 7/10] "Which pieces are best when" → p
+5. [LLM: 6/10] "Train technique against computer" → p
+
+Judgments: [y, y, y, p, p] = 3y + 2p = 80% ✓
+
+================================================================================
+QUERY 8: How do I improve my positional understanding?
+================================================================================
+1. [LLM: 10/10] "Secrets of Positional Chess" → y
+2. [LLM: 8/10] "Improve Your Positional Chess" → y
+3. [LLM: 7/10] Training for practical play → p
+4. [LLM: 7/10] "Why evaluate a position?" → p
+5. [LLM: 7/10] "What is chess training?" → n
+
+Judgments: [y, y, p, p, n] = 2y + 2p = 60%
+
+================================================================================
+QUERY 9: When is it correct to sacrifice material?
+================================================================================
+1. [LLM: 10/10] "Why does sacrifice make sense?" → y
+2. [LLM: 9/10] "Passive Sacrifices" → y
+3. [LLM: 9/10] "The Exchange Sacrifice" → y
+4. [LLM: 9/10] "Other Bishop Sacrifices" → y
+5. [LLM: 9/10] Bishop sacrifice example → y
+
+Judgments: [y, y, y, y, y] = 5y = 100% ✓✓✓
+
+COMPARISON TO BASELINE:
+- Baseline Query 9: [y, y, y, y, y] = 100% (same)
+- LLM performed equally well
+
+================================================================================
+QUERY 10: How do I convert a winning position?
+================================================================================
+1. [LLM: 10/10] "Winning a Won Game" → y
+2. [LLM: 10/10] Winning sequence example → y
+3. [LLM: 8/10] "Train your technique" → y
+4. [LLM: 7/10] "Fortress and Blockade" → p
+5. [LLM: 7/10] King maneuvering in endgame → p
+
+Judgments: [y, y, y, p, p] = 3y + 2p = 80% ✓
+
+================================================================================
+OVERALL RESULTS
+================================================================================
+
+Per-Query Precision:
+1. Calculation: 70%
+2. French Defense: 70%
+3. Trade pieces: 60%
+4. Create weaknesses: 60% (was 20% in baseline) ⬆
+5. Study openings: 100% ✓✓✓
+6. Defend attacks: 70%
+7. Endgame principles: 80% ✓
+8. Positional understanding: 60%
+9. Sacrifice material: 100% ✓✓✓
+10. Convert winning: 80% ✓
+
+Total: 27y + 18p = 36/50 = 72% precision@5
+
+================================================================================
+COMPARISON TO BASELINE
+================================================================================
+
+BASELINE (Pure Semantic): 51% precision@5
+LLM FILTERING: 72% precision@5
+
+IMPROVEMENT: +21 percentage points (+41% relative improvement)
+
+================================================================================
+KEY FINDINGS
+================================================================================
+
+1. ✓ LLM filtering WORKS - significant improvement from 51% → 72%
+
+2. ✓ Biggest improvements on problematic queries:
+   - Query 4 (weaknesses): 20% → 60% (+40pp)
+   - Successfully filtered out "defending" irrelevant content
+
+3. ✓ Maintains 100% on already-good queries:
+   - Query 5 (openings): 100% (maintained)
+   - Query 9 (sacrifice): 100% (maintained)
+
+4. ⚠ Still not at 80%+ target:
+   - 72% is good but below 80% threshold for domain experts
+   - Some queries (3, 4, 8) still at 60%
+
+5. 💰 Cost-effective:
+   - $0.20 per query × 10 queries = $2.00 total
+   - At scale: $0.20 × thousands of queries = expensive
+   - Need to replace GPT-4 with faster/cheaper filtering
+
+================================================================================
+CONCLUSION & RECOMMENDATION
+================================================================================
+
+✓ LLM filtering VALIDATED as effective approach
+✓ Proves that reranking by relevance can boost precision
+
+NEXT STEPS:
+Option A: Implement lightweight tagging (Grok's Option 3)
+  - Replace expensive GPT-4 with rule-based tags + classifier
+  - Target: 75-80% precision (close to 72% LLM achieved)
+  - Timeline: 1 week
+  - Cost: Minimal
+
+Option B: Continue with GPT-4 but optimize
+  - Use GPT-4o-mini instead of GPT-4 (cheaper, faster)
+  - Cache frequent queries
+  - Target: 75-80% precision
+  - Timeline: 3 days
+  - Cost: Lower but ongoing
+
+Option C: Fine-tune embeddings (deeper fix)
+  - Address root cause (embedding quality)
+  - Target: 80-85% precision
+  - Timeline: 2-3 weeks
+  - Cost: GPU + labeling effort
+
+RECOMMENDED: Option A (Tagging)
+- Proven concept (LLM filtering works)
+- Sustainable cost
+- Good precision (75-80% expected)
+- Fits 9-week timeline

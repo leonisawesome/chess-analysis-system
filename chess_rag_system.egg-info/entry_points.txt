@@ -1,0 +1,2 @@
+[console_scripts]
+chess-rag-system = chess_rag_system.cli.main:main

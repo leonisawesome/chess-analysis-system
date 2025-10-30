@@ -1,0 +1,1946 @@
+================================================================================
+OPTIMIZED SYSTEM A - VALIDATION RESULTS FOR MANUAL REVIEW
+================================================================================
+
+INSTRUCTIONS:
+Review each result and mark as:
+  y = relevant (directly answers the query)
+  p = partially relevant (related but not direct)
+  n = not relevant (off-topic)
+
+Add your judgment on the line after 'JUDGMENT: '
+================================================================================
+
+
+================================================================================
+QUERY 1: How do I improve my calculation in the middlegame?
+================================================================================
+
+--- RESULT 1 ---
+Score: 0.7442
+  Semantic: 0.635 | BM25: 1.000
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Eleven:Calculating
+
+Text:
+They would quickly see that 37
+Q
+e8+ wins.
+
+The rest is 37…
+K
+g7 38
+R
+e7+
+K
+h6 39
+Q
+f8+
+K
+h5 40
+R
+xh7 mate.
+
+There are very few branches and none that requires much evaluation.
+
+For example, 38…
+K
+f6 is mated by 39
+Q
+f7.
+
+But in the game White played
+37 g3??
+
+and lost.
+
+247.
+
+When can I stop calculating a move?
+
+Is it after I see two moves ahead?
+
+After three?
+
+You can stop when there are no significant replies by your opponent.
+
+In the last example, once White sees 37
+Q
+e8+, he would continue until he was stopped by 40
+R
+xh7 mate.
+
+Clearly, there is nothing more to look at.
+
+Computer programm
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 2 ---
+Score: 0.7008
+  Semantic: 0.592 | BM25: 0.956
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Eleven:Calculating
+
+Text:
+Chapter Eleven:
+Calculating
+237.
+
+How far ahead do average players see before they make a move?
+
+Two moves is more than most players can see.
+
+Three moves is about the maximum for serious tournament players.
+
+238.
+
+But masters must calculate much further?
+
+Yes, when they believe they need to calculate.
+
+But they make most of their moves without that much look-ahead.
+
+Even elite players are not calculating machines.
+
+“Normally I would calculate three to five moves,” Garry Kasparov said.
+
+“You don’t need more.”
+239.
+
+Aren’t there positions in which they look 10 moves into the future?
+
+Yes, but a
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 3 ---
+Score: 0.6904
+  Semantic: 0.596 | BM25: 0.911
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: Chapter 139
+
+Text:
+How to Calculate Chess Tactics
+Valeri Beim
+Thinking methods are at the heart of the chess struggle, yet most players devote little conscious effort to improving their calculating ability. Much of the previous literature on the subject has presented idealized models that have limited relevance to the hurly-burly of practical chess, or else provide little more than
+ad hoc
+suggestions. Here, experienced trainer Valeri Beim strikes a balance by explaining how to use intuition and logic together to solve tactical problems in a methodical way. He also offers advice on when it is best to calculate ‘l
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 4 ---
+Score: 0.5075
+  Semantic: 0.503 | BM25: 0.518
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Five:Mistakes
+
+Text:
+Louis 2018
+White to move
+White should win gradually, beginning with 54
+R
+g1 and the threat of 55
+R
+h8 mate.
+
+He played
+54
+R
+e7??.
+
+He visualized 54…
+Q
+xe7 55
+N
+xf5+ and
+N
+xe7.
+
+But when he saw that 55
+N
+xf5+ was illegal he resigned.
+
+There are several versions of this kind of error.
+
+These are tricks your mind plays on you, such as a retained image.
+
+92.
+
+What is that?
+
+It is when you think that certain characteristics of the position in front of you will remain true after a series of moves.
+
+You retain the image that turns out to be false.
+
+Benko – Kavalek
+Wijk aan Zee 1969
+White to move
+Whit
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 5 ---
+Score: 0.5000
+  Semantic: 0.479 | BM25: 0.550
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Fifteen:Defending
+
+Text:
+If he keeps two extra pawns he should win without much difficulty.
+
+The game later became double-edged, and a critical position arose when the winning chances were equal.
+
+Black made the mistake of capturing the pawn that had protected him.
+
+Black to move
+White was desperate to open lines.
+
+For example, 25…dxe5?
+
+26
+R
+d8!
+
+and wins.
+
+Black played
+25…
+K
+xh7??
+
+and was lost after
+26
+Q
+d3+!
+
+and
+27 exd6
+.
+
+330.
+
+Seems like a lot of calculating for a defender.
+
+That is the norm.
+
+The defender typically needs to calculate
+more
+than the attacker.
+
+331.
+
+Why?
+
+Attackers cite all sorts of ten-move var
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+================================================================================
+QUERY 2: What are the main ideas in the French Defense?
+================================================================================
+
+--- RESULT 1 ---
+Score: 0.6671
+  Semantic: 0.582 | BM25: 0.865
+  Quality: 1.0x (MEDIUM)
+  Book: french_defense
+  Chapter: Chapter 3
+
+Text:
+Bibliography
+A Ferocious Opening Repertoire
+, Cyrus Lakdawala (Everyman Chess 2010)
+Beating the French
+, Gary Lane (Batsford 1994)
+Chess Explained: The French
+, Viacheslav Eingorn & Valentin Bogdanov (Gambit 2008)
+Dangerous Weapons The French
+, John Watson (Everyman Chess 2007)
+French Classical
+, Byron Jacobs (Everyman Chess 2001)
+French Defence
+, Lev Psakhis, (Batsford 2003)
+French Defense New and Forgotten Ideas
+, Nikolay Minev (Thinker’s Press 1988)
+How To Play Against 1 e4
+, Neil McDonald (Everyman Chess 2008)
+Korchnoi: Move by Move
+, Cyrus Lakdawala (Everyman Chess 2013)
+Mastering the Fre
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 2 ---
+Score: 0.6500
+  Semantic: 0.500 | BM25: 1.000
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Fifteen:Defending
+
+Text:
+Chapter Fifteen:
+Defending
+322.
+
+I don’t like defending.
+
+How can I avoid it?
+
+You can’t.
+
+Some positions demand it.
+
+Either you defend or you lose.
+
+You are no different from most people who play this game: We attack because we like to.
+
+We defend because we have to, as Fred Reinfeld put it.
+
+323.
+
+Isn’t good defense just common sense and general principles?
+
+That is somewhat true of attacking but not defending.
+
+Good defense is often illogical and requires strange-looking moves.
+
+Svidler – Kramnik
+Khanty-Mansyisk 2014
+Black to move
+The logical move is 45…
+Q
+xe5.
+
+But it would lose to a combi
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 3 ---
+Score: 0.6218
+  Semantic: 0.530 | BM25: 0.835
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Fifteen:Defending
+
+Text:
+If he keeps two extra pawns he should win without much difficulty.
+
+The game later became double-edged, and a critical position arose when the winning chances were equal.
+
+Black made the mistake of capturing the pawn that had protected him.
+
+Black to move
+White was desperate to open lines.
+
+For example, 25…dxe5?
+
+26
+R
+d8!
+
+and wins.
+
+Black played
+25…
+K
+xh7??
+
+and was lost after
+26
+Q
+d3+!
+
+and
+27 exd6
+.
+
+330.
+
+Seems like a lot of calculating for a defender.
+
+That is the norm.
+
+The defender typically needs to calculate
+more
+than the attacker.
+
+331.
+
+Why?
+
+Attackers cite all sorts of ten-move var
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 4 ---
+Score: 0.6020
+  Semantic: 0.545 | BM25: 0.734
+  Quality: 1.0x (MEDIUM)
+  Book: 100_endgames
+  Chapter: Chapter 16
+
+Text:
+Moreover, during a Spanish Team Championship years ago (Ponferrada 1992), a game
+Celaya-
+San Claudio was adjourned and then some grandmasters tried unsuccessfully to replay the winning sequence.
+
+That is why I consider a summary of the main ideas necessary.
+
+If we fix these ideas and we have enough time and concentration, we will be able to find the right moves on the board.
+
+Summary of main ideas:
+The best ranks for defence are the 2nd and the 1st (from Black’s side of the board, the 7th and 8th ranks)
+The best one is the second rank, as the checking square for the rook is the opposite colour
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 5 ---
+Score: 0.5880
+  Semantic: 0.570 | BM25: 0.629
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: Chapter 101
+
+Text:
+Chess Explained: The French
+Viacheslav Eingorn and Valentin Bogdanov
+The French appeals to a wide range of chess temperaments: it is solid yet uncompromising, and with a variety of chaotic variations to appeal to the most bloodthirsty of players, but also offering more tranquil lines to those seeking a quieter existence. Chess Explained books provide an understanding of an opening and the middlegames to which it leads, enabling you to find the right moves and plans in your own games.
+Also available on
+Chess Studio
+.
+“...if you are considering utilizing the French as a weapon against 1 e4, then
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+================================================================================
+QUERY 3: When should I trade pieces in the endgame?
+================================================================================
+
+--- RESULT 1 ---
+Score: 0.7182
+  Semantic: 0.597 | BM25: 1.000
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Thirteen:Endgames
+
+Text:
+Then
+61
+B
+d3 f3 62
+K
+e3 f2 63
+B
+c4
+B
+d5 64
+B
+f1
+B
+c6
+created zugzwang.
+
+White to move
+White resigned because the Black king gets to g1, e.g.
+
+65
+B
+c4
+K
+g2 66
+B
+d3
+K
+g1.
+
+Then another basic technique, deflection, completes the job: 67
+B
+c4
+B
+g2 68
+B
+d3
+B
+f1!
+
+69
+B
+f5
+B
+a6 70
+B
+h3
+B
+c8!
+
+and queens.
+
+299.
+
+Are there simple endgame tips I should remember?
+
+Too many to name all of them.
+
+Here are a few:
+Rooks should try to occupy the seventh rank.
+
+In queen endgames, a passed pawn is more important than an extra pawn.
+
+Take the opposition in a king and pawn ending.
+
+A knight endgame is a pawn endg
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 2 ---
+Score: 0.6906
+  Semantic: 0.584 | BM25: 0.939
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Thirteen:Endgames
+
+Text:
+Chapter Thirteen:
+Endgames
+267.
+
+When does the endgame start?
+
+That’s a simple question and there should be a simple answer.
+
+But we don’t have one.
+
+Among the definitions that have been suggested are:
+a) When the kings can safely take part in play,
+b) When neither player has more than the equivalent of a queen and a minor piece left, and
+c) When the main goal of the players is promoting a pawn.
+
+But one or more of these definitions fail to describe many positions we would definitely call endgames.
+
+268.
+
+Isn’t it always an endgame after the queens are traded?
+
+Not if there is a lot of other m
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 3 ---
+Score: 0.6616
+  Semantic: 0.640 | BM25: 0.712
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Eight:Trading
+
+Text:
+Chapter Eight:
+Trading
+155.
+
+I can’t attack without my queen and other pieces.
+
+Why should I want to trade them?
+
+Attacking is one of the three basic ways of winning a chess game.
+
+The other two are amassing a material edge and accumulating positional assets.
+
+A good trade can improve your chances of success in all three ways.
+
+156.
+
+But trades are just trades.
+
+How do they help me win?
+
+There is often a subtle difference between the traded pieces.
+
+If you swap a passive knight for a well-posted knight, this is a plus.
+
+So is trading a “bad” bishop for a good one.
+
+From the opening to the endg
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 4 ---
+Score: 0.5941
+  Semantic: 0.534 | BM25: 0.734
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Thirteen:Endgames
+
+Text:
+Then comes endgames with bishops of the same color.
+
+After that, K+N+P-versus-K+B.
+
+The last is K+B+P-versus-K+B of opposite color.
+
+There are very few winning chances.
+
+306.
+
+Which pieces are best when the pawns are on one wing?
+
+The greatest winning chances are in pure pawn endings – that is, with no pieces besides kings.
+
+The next most-likely win is if there is one knight for each side.
+
+The total number of pawns matters, as we saw in
+Question 275
+.
+
+In order of declining winnability, the next endgames are K+N-versus-K+B and K+Q-versus-K+Q (a 50-50 chance of winning).
+
+It is less than 50 pe
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 5 ---
+Score: 0.5609
+  Semantic: 0.504 | BM25: 0.694
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Thirteen:Endgames
+
+Text:
+Muzychuk – Ju Wenjun
+Ningbo 2009
+Black to move
+Black tried to win with a logical move,
+51…g5
+.
+
+Then 52 hxg5 fxg5 and …h4 would give her a passed pawn.
+
+White can stop that pawn but would lose on the queenside (53
+K
+f3
+K
+d4!
+
+and …
+K
+c3).
+
+But 51…g5??
+
+was a blunder because
+52 g4
+!
+
+is a breakthrough.
+
+It created a passed h-pawn.
+
+White won after
+52…hxg4 53 h5 f5 54 h6
+.
+
+Black to move
+She can create a second passed pawn 54…
+K
+f6 55 b4!
+
+(and eventually c4-c5).
+
+Breakthrough is an important technique in pawn endings.
+
+It occurs infrequently when there are other pieces.
+
+But some more sophistic
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+================================================================================
+QUERY 4: How do I create weaknesses in my opponent's position?
+================================================================================
+
+--- RESULT 1 ---
+Score: 0.6862
+  Semantic: 0.616 | BM25: 0.850
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: 4.1: Weakness in the Castled Position
+
+Text:
+4.1: Weakness in the Castled Position
+The castled position is weakened when any of the pawns that form the protective barrier in front of the king – namely the f-, g- and h-pawns – have advanced.
+
+It is more weakening to advance a pawn two squares than one, and even more weakening when more than one pawn has been advanced.
+
+Other types of structural weakness occur when one of the pawns is either lost or doubled.
+
+A lack of support for the castled king by its own pieces (for instance, the absence of the usual knight from f6 or f3, or, especially, of a fianchettoed bishop from g7 or g2) can cons
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 2 ---
+Score: 0.6062
+  Semantic: 0.518 | BM25: 0.812
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Eighteen:Winning a Won Game
+
+Text:
+Chapter Eighteen:
+Winning a Won Game
+381.
+
+Why do masters say, “Nothing is harder than winning a won game”?
+
+Winning “technique,” as it is called, is difficult to master because it requires skills very different from those used in the other phases of a game.
+
+Instead of accumulating advantages, you need to exploit them.
+
+A bizarre case of that:
+Deep Junior – Deep Fritz
+Cafaques 2001
+White to move
+White chose
+70
+R
+c6+!
+
+for a reason that makes perfect sense to a computer.
+
+If Black captures the rook, the simplified position could be found in databases, which contain the best moves in all positi
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 3 ---
+Score: 0.5839
+  Semantic: 0.519 | BM25: 0.736
+  Quality: 1.0x (MEDIUM)
+  Book: chess_fundamentals
+  Chapter: Chapter 5
+
+Text:
+Such a course is highly risky until a wide experience of actual master-play has developed a sufficient insight into all the possibilities of a position.
+
+This game, which won the brilliancy prize at St.
+
+Petersburg in 1914, continued as follows:—
+21.
+
+B - R 4
+Q - Q 2
+22.
+
+Kt × B
+Q × R
+23.
+
+Q - Q 8 ch
+Q - K 1
+If K - B 2; 24 Kt - Q 6 ch, King moves; 25 mate.
+
+24.
+
+B - K 7 ch
+K - B 2
+25.
+
+Kt - Q 6 ch
+K - Kt 3
+26.
+
+Kt - R 4 ch
+K - R 4
+If 26...K - R 3; 27 Kt (Q 6) - B 5 ch, K - R 4; 28 Kt × P ch, K - R 3; 29 Kt (R 4) - B 5 ch, K - Kt 3; 30 Q - Q 6 ch and mate next move.
+
+27.
+
+Kt × Q
+R × Q
+28.
+
+Kt ×
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 4 ---
+Score: 0.3732
+  Semantic: 0.533 | BM25: 0.000
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Fifteen:Defending
+
+Text:
+Chapter Fifteen:
+Defending
+322.
+
+I don’t like defending.
+
+How can I avoid it?
+
+You can’t.
+
+Some positions demand it.
+
+Either you defend or you lose.
+
+You are no different from most people who play this game: We attack because we like to.
+
+We defend because we have to, as Fred Reinfeld put it.
+
+323.
+
+Isn’t good defense just common sense and general principles?
+
+That is somewhat true of attacking but not defending.
+
+Good defense is often illogical and requires strange-looking moves.
+
+Svidler – Kramnik
+Khanty-Mansyisk 2014
+Black to move
+The logical move is 45…
+Q
+xe5.
+
+But it would lose to a combi
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 5 ---
+Score: 0.3698
+  Semantic: 0.528 | BM25: 0.000
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: 5.4: Fortress and Blockade
+
+Text:
+5.4: Fortress and Blockade
+There are many positions in which the difference in material would normally be sufficient to win, but the defender manages to bring about a situation where there is no way for the opponent to win. This kind of invulnerable position is called a
+fortress
+. There are also other cases where the stronger side’s inability to make progress is due to the closed or blocked nature of the position.
+The first example is a well-known study in which, despite the spectacular result of the manoeuvre, the initial position is not so far-fetched, since the deployment of the pieces and 
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+================================================================================
+QUERY 5: What is the best way to study chess openings?
+================================================================================
+
+--- RESULT 1 ---
+Score: 0.6808
+  Semantic: 0.544 | BM25: 1.000
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: Chapter 78
+
+Text:
+A Killer Chess Opening Repertoire (new enlarged edition)
+Aaron Summerscale and Sverre Johnsen
+Bored with the same old openings? Worried about having to learn too much theory? Then this book – a set of exceptionally dangerous opening weapons for White – will come as a godsend. The queen’s pawn repertoire is based on rapid piece development, and includes many lethal attacking ideas and traps.
+Also available on
+Chess Studio
+.
+“Johnsen has chosen to build on the first edition, addressing the areas where theory has substantially changed or Summerscale’s original coverage needed expanding. Offers a 
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 2 ---
+Score: 0.6742
+  Semantic: 0.609 | BM25: 0.825
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: Chapter 72
+
+Text:
+A Cunning Chess Opening Repertoire for White
+Graham Burgess
+A good opening repertoire need not require an enormous amount of study to be highly effective. A cunning choice of lines and move-orders can steer the game to positions that we like and deny the opponent his preferred strategies. The main cornerstones of this repertoire are carefully chosen Queen’s Gambit lines, the Torre Attack (vs ...e6), and a variety of fianchetto options against the King’s Indian and related set-ups. White’s position is kept highly flexible, with many possible transpositions to a wide variety of systems that the 
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 3 ---
+Score: 0.6686
+  Semantic: 0.628 | BM25: 0.763
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Nine:Openings
+
+Text:
+After that comes maximizing the mobility and coordination of your pieces.
+
+In the early days of computer chess, programmers built this into rules of thumb called heuristics.
+
+But they found it difficult to add other guidelines, such as “Don’t develop a piece on a bad or vulnerable square.”
+176.
+
+Why?
+
+For the same reason that plagues humans: There are too many variables in chess.
+
+Guidelines are bound to contradict one another.
+
+For instance, after
+1 e4 e5 2 d4 exd4 3
+Q
+xd4
+the queen is developed and controls all of the center squares.
+
+That should be good.
+
+But the queen comes under immediate
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 4 ---
+Score: 0.6649
+  Semantic: 0.646 | BM25: 0.710
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: Chapter 91
+
+Text:
+How to Build Your Chess Opening Repertoire
+Steve Giddins
+Whether a novice or a master, every player needs to select an opening repertoire. In this book, the first to focus on these issues, Steve Giddins provides common-sense guidance on one of the perennial problems facing chess-players. He tackles questions such as: whether to play main lines, offbeat openings or ‘universal’ systems; how to avoid being ‘move-ordered’; how to use computers; and if and when to depart from or change your repertoire.
+Also available on
+Chess Studio
+.
+Also available as a German-language Kindle edition.
+“I can recom
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 5 ---
+Score: 0.6465
+  Semantic: 0.614 | BM25: 0.722
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Nine:Openings
+
+Text:
+The amount of study you need to play an opening in competition.
+
+Maintenance keeps your opening knowledge up to date.
+
+High-maintenance openings are trendy.
+
+New moves change the “theory” periodically in the Najdorf Variation and Dragon Variation of the Sicilian Defense, for instance.
+
+Low-maintenance openings don’t take much to learn and their theory changes slowly.
+
+Once you know these openings you don’t have to keep up on what the latest grandmaster games have to say about them.
+
+Among the lower-maintenance openings for Black are the Sicilian variation that begins
+1 e4 c5 2
+N
+f3
+N
+c6 3 d4 c
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+================================================================================
+QUERY 6: How do I defend against aggressive attacks?
+================================================================================
+
+--- RESULT 1 ---
+Score: 0.6135
+  Semantic: 0.448 | BM25: 1.000
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: 4: Attacking the Castled Position
+
+Text:
+4: Attacking the Castled Position
+The rules of warfare are five: measurements, assessments, calculations, comparisons and victories. The terrain gives rise to the measurements; these give rise to the assessments, the assessments to the calculations; these give rise to the comparisons and the comparisons to the wins.
+S
+UN
+T
+ZU
+,
+The Art of War
+In
+FCM
+I devoted the whole fourth part of the book to the study of the attack on the castled king, that is to say 106 large pages – almost a whole book in its own right. However, my focus there was on
+mating
+combinations, with certain checkmate patterns c
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 2 ---
+Score: 0.5512
+  Semantic: 0.451 | BM25: 0.786
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Fifteen:Defending
+
+Text:
+Chapter Fifteen:
+Defending
+322.
+
+I don’t like defending.
+
+How can I avoid it?
+
+You can’t.
+
+Some positions demand it.
+
+Either you defend or you lose.
+
+You are no different from most people who play this game: We attack because we like to.
+
+We defend because we have to, as Fred Reinfeld put it.
+
+323.
+
+Isn’t good defense just common sense and general principles?
+
+That is somewhat true of attacking but not defending.
+
+Good defense is often illogical and requires strange-looking moves.
+
+Svidler – Kramnik
+Khanty-Mansyisk 2014
+Black to move
+The logical move is 45…
+Q
+xe5.
+
+But it would lose to a combi
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 3 ---
+Score: 0.4857
+  Semantic: 0.432 | BM25: 0.612
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: Chapter 79
+
+Text:
+Attack with Black
+Valery Aveskulov
+Need a reliable way to fight for the initiative when White plays 1 d4? Grandmaster Aveskulov presents a sound but ultra-aggressive repertoire based on gambits that have proved their worth in grandmaster play over many years. The Benko Gambit offers Black very active piece-play and intense positional pressure. If White dodges the Benko, we hit him with the Blumenfeld, sacrificing a pawn to set up a strong pawn-centre. Aveskulov examines all of White’s options and move-orders after 1 d4 Nf6.
+Also available on
+Chess Studio
+.
+“This isn’t like previous books on th
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 4 ---
+Score: 0.3201
+  Semantic: 0.457 | BM25: 0.000
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Fifteen:Defending
+
+Text:
+If he keeps two extra pawns he should win without much difficulty.
+
+The game later became double-edged, and a critical position arose when the winning chances were equal.
+
+Black made the mistake of capturing the pawn that had protected him.
+
+Black to move
+White was desperate to open lines.
+
+For example, 25…dxe5?
+
+26
+R
+d8!
+
+and wins.
+
+Black played
+25…
+K
+xh7??
+
+and was lost after
+26
+Q
+d3+!
+
+and
+27 exd6
+.
+
+330.
+
+Seems like a lot of calculating for a defender.
+
+That is the norm.
+
+The defender typically needs to calculate
+more
+than the attacker.
+
+331.
+
+Why?
+
+Attackers cite all sorts of ten-move var
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 5 ---
+Score: 0.3186
+  Semantic: 0.455 | BM25: 0.000
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: Chapter 121
+
+Text:
+Secrets of Attacking Chess
+Mihail Marin
+What are the premises for a successful attack? Marin discusses the traditional concept that a player with the advantage is obliged to attack, and also the value of notions of logic and justice in deciding whether to attack. If we believe an attack is justified, but cannot back it up with concrete variations, how do we decide whether to trust our intuition? Marin surveys typical attacking scenarios, such an attack on two wings, with a queenside attack as a prelude for a swift strike on the other wing, and all-out attacks against apparently well-defended p
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+================================================================================
+QUERY 7: What endgame principles should beginners learn first?
+================================================================================
+
+--- RESULT 1 ---
+Score: 0.6820
+  Semantic: 0.609 | BM25: 0.852
+  Quality: 1.0x (MEDIUM)
+  Book: 100_endgames
+  Chapter: Chapter 3
+
+Text:
+Introduction
+The relative importance of the endgame
+In my first years in the world of chess, I used to read a lot about the importance of a good knowledge of endgames and the futility of studying openings.
+
+I used to find this kind of statement not only in
+Capablanca’s works, but also in many articles from magazines of that time: sentences like ‘Grandmasters’ greater understanding is most clearly noticeable in the endgame’ and similar things.
+
+Strategy used to receive the same, or similar, treatment when compared to tactics.
+
+You could read sentences like ‘Grandmasters spend much more time in 
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 2 ---
+Score: 0.6788
+  Semantic: 0.600 | BM25: 0.862
+  Quality: 1.0x (MEDIUM)
+  Book: 100_endgames
+  Chapter: Chapter 3
+
+Text:
+In this book, this would amount to Chapter 1 and
+Endings 41, 42, 44, 45, 46, 65, 79, 80, 82, 86, 89, 90, 91 and 92.
+
+Almost any amateur who is willing to put in a small amount of work, is able to achieve this (though unfortunately, for some people it takes too many years) and actually that is enough until the moment one reaches, say, a FIDE rating of around 1900-2000.
+
+Beyond that point, greater endgame skill is a must.
+
+At this stage, problems usually arise, but the upside is that this extension of a player’s endgame skill will usually be enough at least until he becomes an International Mast
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 3 ---
+Score: 0.6730
+  Semantic: 0.603 | BM25: 0.837
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Thirteen:Endgames
+
+Text:
+You can find some of these positions in endgame textbooks.
+
+276.
+
+That leads me to my next question.
+
+How much book knowledge do I need?
+
+Some authors claim you must master 100 or more “book” positions to play endgames well.
+
+This is not true.
+
+All you really need to know are some of the positions with relatively little material, such as with fewer than six pieces and pawns.
+
+Don’t worry about the more complex endgames.
+
+Until you are a better than average player, most of your endgames will be pretty one-sided.
+
+Either you or your opponent will probably be a minor piece or several pawns ahead.
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 4 ---
+Score: 0.6642
+  Semantic: 0.577 | BM25: 0.869
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: Endgames, Studies and Problems
+
+Text:
+Endgames, Studies and Problems
+Fundamental Chess Endings
+–
+Karsten Müller and Frank Lamprecht
+Understanding Chess Endgames
+–
+John Nunn
+Nunn’s Chess Endings Volume 1
+–
+John Nunn
+Nunn’s Chess Endings Volume 2
+–
+John Nunn
+Endgame Challenge
+–
+John Nunn
+How to Play Chess Endgames
+–
+Karsten Müller and Wolfgang Pajeken
+Secrets of Pawn Endings
+–
+Karsten Müller and Frank Lamprecht
+Secrets of Rook Endings
+–
+John Nunn
+Secrets of Pawnless Endings
+–
+John Nunn
+The Survival Guide to Rook Endings
+–
+John Emms
+Chess Endgames for Kids
+–
+Karsten Müller
+Problem Chess: Art and Magic on the Chessboard
+–
+Göran Forslu
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 5 ---
+Score: 0.6229
+  Semantic: 0.557 | BM25: 0.777
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Thirteen:Endgames
+
+Text:
+Chapter Thirteen:
+Endgames
+267.
+
+When does the endgame start?
+
+That’s a simple question and there should be a simple answer.
+
+But we don’t have one.
+
+Among the definitions that have been suggested are:
+a) When the kings can safely take part in play,
+b) When neither player has more than the equivalent of a queen and a minor piece left, and
+c) When the main goal of the players is promoting a pawn.
+
+But one or more of these definitions fail to describe many positions we would definitely call endgames.
+
+268.
+
+Isn’t it always an endgame after the queens are traded?
+
+Not if there is a lot of other m
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+================================================================================
+QUERY 8: How do I improve my positional understanding?
+================================================================================
+
+--- RESULT 1 ---
+Score: 0.7043
+  Semantic: 0.578 | BM25: 1.000
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: Chapter 176
+
+Text:
+Improve Your Positional Chess
+Carsten Hansen
+Throughout a game of chess, we must constantly make judgements and decisions that cannot be determined simply by calculation. We must then rely on our positional judgement. Good positional skills are primarily developed by experience, but they can also be learnt. In this book, Carsten Hansen provides a wealth of advice and ideas that will help give readers a helping-hand up to new levels of positional understanding. Paramount in this discussion is the player’s need to weigh up positional elements at the board, and decide which are most important for
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 2 ---
+Score: 0.5466
+  Semantic: 0.471 | BM25: 0.722
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Five:Mistakes
+
+Text:
+Louis 2018
+White to move
+White should win gradually, beginning with 54
+R
+g1 and the threat of 55
+R
+h8 mate.
+
+He played
+54
+R
+e7??.
+
+He visualized 54…
+Q
+xe7 55
+N
+xf5+ and
+N
+xe7.
+
+But when he saw that 55
+N
+xf5+ was illegal he resigned.
+
+There are several versions of this kind of error.
+
+These are tricks your mind plays on you, such as a retained image.
+
+92.
+
+What is that?
+
+It is when you think that certain characteristics of the position in front of you will remain true after a series of moves.
+
+You retain the image that turns out to be false.
+
+Benko – Kavalek
+Wijk aan Zee 1969
+White to move
+Whit
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 3 ---
+Score: 0.5201
+  Semantic: 0.462 | BM25: 0.655
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Ten:Pawns
+
+Text:
+If the c-pawn is at c3, not c4, Black might get the upper hand by establishing a blockade with pieces on c4 and d5.
+
+The c4 square can be an ideal outpost for a knight.
+
+234.
+
+What is an outpost?
+
+One player’s pawn hole is his opponent’s potential outpost.
+
+Black’s move in the next diagram is a positional blunder because it hands White an outpost square.
+
+Nimzovich – Levenfish
+Carlsbad 1911
+Black to move
+Black recaptured
+9…
+N
+xf6?
+
+.
+
+He was worse after
+10
+N
+e5
+B
+d6 11 dxc5
+B
+xc5 12
+B
+g5
+and eventually lost.
+
+Black knew that 9…gxf6!
+
+was positionally correct.
+
+But he had an unfounded fear of 1
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 4 ---
+Score: 0.4667
+  Semantic: 0.437 | BM25: 0.536
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Six:Studying
+
+Text:
+He had “won the opposition.” We’ll get to that in
+Question 279
+but for the time being, you can see how the game could end in stalemate.
+
+That is 58
+K
+c5
+K
+c7 59 b5
+K
+b7 60 b6
+K
+b8!
+
+61
+K
+c6
+K
+c8 62 b7+
+K
+b8
+It was quickly pointed out to Fischer after the game that he should have lost in the diagram position.
+
+White could have played 53
+R
+c7+!
+
+and then 53…
+K
+d8 54
+R
+c5!and
+K
+xb5.
+
+Fischer didn’t believe it was a win:
+“I stayed up all night analyzing, finally convincing myself and, incidentally, learning a lot about rook and pawn endings.”
+What did he learn?
+
+He didn’t elaborate.
+
+But 53…
+K
+d6!
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 5 ---
+Score: 0.3244
+  Semantic: 0.463 | BM25: 0.000
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Eighteen:Winning a Won Game
+
+Text:
+One of the best ways to train your technique is to play against a computer.
+
+Set up an endgame with what should be a winning material edge, such as with the three extra pawns in
+Question 387
+.
+
+Play it out against the best resistance the computer can muster.
+
+Once you can do that comfortably, try it with two extra pawns.
+
+A more advanced method is to start at the very end of a master game.
+
+Take the final positions from games won by your favorite player.
+
+After his opponent resigned, continue the game, letting the computer play the moves of the player who resigned.
+
+Try to finish the game, end
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+================================================================================
+QUERY 9: When is it correct to sacrifice material?
+================================================================================
+
+--- RESULT 1 ---
+Score: 0.6911
+  Semantic: 0.559 | BM25: 1.000
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Twelve:Sacrificing
+
+Text:
+White got more than enough compensation after
+11…cxd2 12
+B
+xd2
+N
+b8 13 bxa6
+.
+
+Black to move
+Black’s problems are illustrated by 13…
+N
+f6 and then 14
+B
+b5+
+B
+d7 15
+B
+a5!
+
+Q
+c8 16
+B
+b4 and a capture on e7.
+
+The game ended with
+13…
+B
+xa6 14
+B
+b5+
+K
+f8 15
+N
+e5
+Q
+d6 16
+Q
+h5 g6 17
+B
+h6+
+N
+xh6 18
+Q
+xh6+
+K
+g8 19
+B
+e8 resigns.
+
+263.
+
+Why do masters sacrifice the Exchange so often?
+
+There are two reasons.
+
+First, a rook is often much less useful than a minor piece in a middlegame.
+
+It grows in value as the game approaches an ending, as we saw in
+Question 25
+.
+
+The sacrificer expects that the impact of 
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 2 ---
+Score: 0.6764
+  Semantic: 0.592 | BM25: 0.873
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Twelve:Sacrificing
+
+Text:
+Chapter Twelve:
+Sacrificing
+253.
+
+Why does a sacrifice make sense?
+
+It means you have less material to attack with.
+
+But not at the area of the board you are attacking.
+
+Compare it with war: A more skillful army may win when it concentrates its forces at an area where a larger army is spread thin.
+
+By giving up some of his material, the sacrificer hopes to generate greater force at that point of attack.
+
+A sacrifice turns “matter into energy,” as a great attacking player of the past, Rudolf Spielmann, put it.
+
+254.
+
+Are there different ways of doing that?
+
+Yes, and you may hear terms such as k
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 3 ---
+Score: 0.5489
+  Semantic: 0.416 | BM25: 0.859
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: 4.7: The Exchange Sacrifice
+
+Text:
+4.7: The Exchange Sacrifice
+The ‘exchange’ is the name we give to the difference in value between a rook and a minor piece.
+
+Hence we frequently find in chess books and magazines the expressions “win the exchange”, “sacrificing the exchange”, “the exchange up”, etc.
+
+An exchange sacrifice – giving up a rook for a bishop or a knight – can be an extraordinarily effective way to change the course of a game.
+
+This is partly because players subconsciously regard a well-protected minor piece as immune to the threat of capture by a rook.
+
+This is a vast subject, especially when long-term positional e
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 4 ---
+Score: 0.5365
+  Semantic: 0.406 | BM25: 0.842
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: 4.6: The Knight Sacrifice
+
+Text:
+4.6: The Knight Sacrifice
+In
+FCM
+a whole chapter was devoted to the various types of knight sacrifice against the opponent’s castled position, with a focus on sacrifices leading to mate.
+
+Here the combinations and their associated finesses expand the field of study to other sacrifices or attacks, with a variety of objectives.
+
+Here it is not a question of all-out mating attacks, but rather of any type of advantage that justifies the combination.
+
+We shall structure the material as follows:
+Sacrifices on f6
+Sacrifices on f5
+Sacrifices on Other Squares
+Sacrifices on f6
+Let us imagine a black cas
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 5 ---
+Score: 0.5188
+  Semantic: 0.458 | BM25: 0.660
+  Quality: 1.0x (MEDIUM)
+  Book: fundamental_tactics
+  Chapter: 3.5: Passive Sacrifices
+
+Text:
+3.5: Passive Sacrifices
+The sacrifice of a pawn, sometimes even an important one, can be the very key needed to unlock the enemy position. Many masters have appreciated the effectiveness of this method, even some who are particularly anxious to preserve their material and customarily prefer to win by technical means.
+By the term
+passive
+pawn sacrifice is meant the voluntary abandonment of a pawn – it is simply left to be taken. The reader might not encounter this terminology in the standard chess literature, and it is perhaps not totally accurate, since by the simple fact of offering the pawn 
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+================================================================================
+QUERY 10: How do I convert a winning position?
+================================================================================
+
+--- RESULT 1 ---
+Score: 0.6391
+  Semantic: 0.563 | BM25: 0.816
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Eighteen:Winning a Won Game
+
+Text:
+Chapter Eighteen:
+Winning a Won Game
+381.
+
+Why do masters say, “Nothing is harder than winning a won game”?
+
+Winning “technique,” as it is called, is difficult to master because it requires skills very different from those used in the other phases of a game.
+
+Instead of accumulating advantages, you need to exploit them.
+
+A bizarre case of that:
+Deep Junior – Deep Fritz
+Cafaques 2001
+White to move
+White chose
+70
+R
+c6+!
+
+for a reason that makes perfect sense to a computer.
+
+If Black captures the rook, the simplified position could be found in databases, which contain the best moves in all positi
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 2 ---
+Score: 0.6097
+  Semantic: 0.550 | BM25: 0.750
+  Quality: 1.0x (MEDIUM)
+  Book: 500_questions
+  Chapter: Chapter Eighteen:Winning a Won Game
+
+Text:
+One of the best ways to train your technique is to play against a computer.
+
+Set up an endgame with what should be a winning material edge, such as with the three extra pawns in
+Question 387
+.
+
+Play it out against the best resistance the computer can muster.
+
+Once you can do that comfortably, try it with two extra pawns.
+
+A more advanced method is to start at the very end of a master game.
+
+Take the final positions from games won by your favorite player.
+
+After his opponent resigned, continue the game, letting the computer play the moves of the player who resigned.
+
+Try to finish the game, end
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 3 ---
+Score: 0.3467
+  Semantic: 0.495 | BM25: 0.000
+  Quality: 1.0x (MEDIUM)
+  Book: 100_endgames
+  Chapter: Chapter 5
+
+Text:
+Exercise
+2.18
+White to move.
+
+Can he win?
+
+Solution
+2.18
+1.Kf2!
+
+is the only way to reach the key squares.
+
+1…Kd7 2.Kg3 Ke6 3.Kh4 Kf6 4.Kh5 Kg7 5.Kg5 Kf7 6.Kh6+–.
+
+Exercise
+2.19
+White to move.
+
+What is the correct result?
+
+Solution
+2.19
+Draw.
+
+1.g8Q+ Kf1!
+
+(1…Kf2 2.Qa2+ Kf1 3.Qb1+ Kg2 4.Qc2+ Kh3 5.Qd3+ Kg2 6.Qe2+ Kg1 7.Kg3+–) 2.Qc4+ Kg1!
+
+3.Qc1+ Kh2!=.
+
+Exercise
+2.20
+White to move.
+
+Can he win?
+
+Solution
+2.20
+Yes, by cutting the king off: 1.Rh5!.
+
+See
+Ending 62
+(1.Rc1 Kd5= see
+Ending 59
+).
+
+Exercise
+2.21
+White to move.
+
+What is the correct result?
+
+Solution
+2.21
+Draw.
+
+1.Ke1!= Ke4 2.Ke2.
+
+Exer
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 4 ---
+Score: 0.3452
+  Semantic: 0.493 | BM25: 0.000
+  Quality: 1.0x (MEDIUM)
+  Book: chess_fundamentals
+  Chapter: Chapter 4
+
+Text:
+The Rook can only go to a White square, otherwise the first check with the Queen will win it.
+
+Therefore
+3.
+
+........
+
+R - Kt 6
+4.
+
+Q - K 5 ch
+K - R 1 best
+5.
+
+Q - R 8 ch
+K - R 2
+6.
+
+Q - Kt 7 ch
+K - R 1
+7.
+
+Q - Kt 8 ch
+R - Kt 1
+8.
+
+Q - R 2 mate
+(The student should find out by himself how to win when 3...R - Kt 8; 4 Q - K 5 ch, K - R 2.)
+Example 41.
+
+—The procedure here is very similar.
+
+The things to bear in mind are that the Rook must be prevented from interposing at Kt 1 because of an immediate mate, and in the same way the King must be prevented from going either to R 3 or B 1.
+
+Example 42.
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
+
+
+--- RESULT 5 ---
+Score: 0.3414
+  Semantic: 0.488 | BM25: 0.000
+  Quality: 1.0x (MEDIUM)
+  Book: chess_fundamentals
+  Chapter: Chapter 3
+
+Text:
+Q × Q
+K × Q
+This brings the game to a position which is won by Black, and which constitutes one of the classical endings of King and Pawns.
+
+I shall try to explain the guiding idea of it to those not familiar with it.
+
+10.
+
+A CLASSICAL ENDING
+Example 23.
+
+—In this position White's best line of defence consists in keeping his Pawn where it stands at R 2.
+
+As soon as the Pawn is advanced it becomes easier for Black to win.
+
+On the other hand, Black's plan to win (supposing that White does not advance his Pawn) may be divided into three parts.
+
+The first part will be to get his King to K R 6, at 
+[... truncated ...]
+
+JUDGMENT: _____  (enter y/p/n)
