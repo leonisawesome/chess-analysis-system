@@ -147,9 +147,20 @@ Write detailed content for this section. Include 2-4 diagram markers showing key
 [CANONICAL POSITION: {canonical_fen}]
 
 CRITICAL: This is the KEY position for understanding this concept.
-Generate diagrams using this FEN position and variations from it.
-Use [DIAGRAM: {canonical_fen}] or variations of this position.
-Do NOT use opening move sequences - focus on middlegame positions."""
+
+DIAGRAM GENERATION REQUIREMENTS:
+1. Generate 3-5 DIFFERENT diagrams showing variations from this position
+2. Show the canonical position ONCE as the main example
+3. Then show VARIATIONS: positions 1-2 moves after this position
+4. Each diagram must have a DIFFERENT FEN (not the same FEN repeated)
+5. Variations should illustrate key ideas: pawn advances, piece repositioning, etc.
+
+Example:
+- Diagram 1: [DIAGRAM: {canonical_fen}] (canonical position)
+- Diagram 2: [DIAGRAM: <fen after king move>] (showing king advance)
+- Diagram 3: [DIAGRAM: <fen after pawn push>] (showing pawn breakthrough)
+
+Do NOT repeat the same FEN multiple times. Show PROGRESSION and VARIATIONS."""
 
         if opening_name:
             section_prompt += f"\n\nNote: This is about the {opening_name} opening."
