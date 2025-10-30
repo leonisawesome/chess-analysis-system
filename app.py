@@ -139,7 +139,7 @@ def query():
         synthesized_answer = synthesize_answer(
             OPENAI_CLIENT,
             query_text,
-            "\n\n".join(context_chunks)
+            "\n\n".join(context_chunks, canonical_fen=canonical_fen)
         )
 
         rag_timing['synthesis'] = round(time.time() - synthesis_start, 2)
