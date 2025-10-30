@@ -62,7 +62,7 @@ Create an outline that directly answers this question."""
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_completion_tokens=1000
+            max_completion_tokens=2000
         )
 
         import json
@@ -113,6 +113,9 @@ CRITICAL DIAGRAM RULES:
 4. For middlegame concepts: use the provided canonical FEN position
 5. Diagrams must match the opening/concept being discussed
 6. Include 2-4 diagrams per section to illustrate key positions
+
+IMPORTANT: ALWAYS wrap diagrams in [DIAGRAM: ...] brackets
+NEVER output bare FEN strings directly in the text without brackets
 
 CANONICAL POSITION USAGE:
 If a [CANONICAL POSITION: FEN] is provided in the context below:
@@ -192,7 +195,7 @@ Do NOT repeat the same FEN multiple times. Show PROGRESSION and VARIATIONS."""
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": section_prompt}
                     ],
-                    max_completion_tokens=2000
+                    max_completion_tokens=3000
                 )
 
                 content = response.choices[0].message.content
@@ -264,7 +267,7 @@ Create a cohesive article that flows naturally. Maintain all diagram markers."""
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": assembly_prompt}
             ],
-            max_completion_tokens=4000
+            max_completion_tokens=6000
         )
 
         return response.choices[0].message.content
