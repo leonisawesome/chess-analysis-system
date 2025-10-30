@@ -25,6 +25,7 @@ from chess_positions import detect_fen, parse_moves_to_fen, extract_chess_positi
 from diagram_processor import extract_moves_from_description, extract_diagram_markers, replace_markers_with_ids
 from opening_validator import extract_contamination_details, generate_section_with_retry, validate_stage2_diagrams, validate_and_fix_diagrams
 from synthesis_pipeline import stage1_generate_outline, stage2_expand_sections, stage3_final_assembly, synthesize_answer
+from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
@@ -105,104 +106,44 @@ def query():
         if canonical_fen:
             print(f"✓ Using canonical FEN: {canonical_fen}")
 
-        # Step 2: Generate embedding
-        query_vector = embed_query(OPENAI_CLIENT, query_text)
-        t2 = time.time()
-        print(f"⏱  Embedding: {t2-t1:.2f}s")
-
-        # Step 3: Search Qdrant
-        candidates = semantic_search(QDRANT_CLIENT, query_vector, top_k=TOP_K)
-        t3 = time.time()
-        print(f"⏱  Qdrant search: {t3-t2:.2f}s")
-
-        # Step 4: Rerank with GPT-5
-        ranked_results = gpt5_rerank(OPENAI_CLIENT, query_text, candidates, top_k=TOP_N)
-        t4 = time.time()
-        print(f"⏱  GPT-5 reranking: {t4-t3:.2f}s")
+        # Step 2-4: Execute RAG pipeline (embed → search → rerank)
+        ranked_results, rag_timing = execute_rag_query(
+            OPENAI_CLIENT,
+            QDRANT_CLIENT,
+            query_text,
+            COLLECTION_NAME,
+            top_k=TOP_K,
+            top_n=TOP_N,
+            embed_func=embed_query,
+            search_func=semantic_search,
+            rerank_func=gpt5_rerank
+        )
 
         # Step 5: Format results for web display
-        results = []
-        for candidate, score in ranked_results:
-            payload = candidate.payload
+        format_start = time.time()
+        results = format_rag_results(ranked_results, query_text, extract_positions=True)
+        rag_timing['formatting'] = round(time.time() - format_start, 2)
+        print(f"⏱  Response formatting: {rag_timing['formatting']}s")
 
-            # Extract metadata
-            book_name = payload.get('book_name', 'Unknown')
-            if book_name.endswith('.epub') or book_name.endswith('.mobi'):
-                book_name = book_name[:-5]
+        # DEBUG: Position extraction
+        debug_position_extraction(results)
 
-            text = payload.get('text', '')
-            chapter = payload.get('chapter_title', '')
-
-            # Extract chess positions from text (pass query for relevance filtering)
-            positions = extract_chess_positions(text, query=query_text)
-
-            # Format result
-            result = {
-                'score': round(score, 1),
-                'book_name': book_name,
-                'book': book_name,  # Keep for backwards compatibility
-                'chapter_title': chapter,
-                'chapter': chapter,  # Keep for backwards compatibility
-                'text': text,
-                'positions': positions,
-                'has_positions': len(positions) > 0
-            }
-            results.append(result)
-
-        t5 = time.time()
-        print(f"⏱  Response formatting: {t5-t4:.2f}s")
-
-        # DEBUG: Check position extraction
-        print("\n=== POSITION EXTRACTION DEBUG ===")
-        for i, result in enumerate(results[:5]):
-            chunk_text = result.get('text', '')
-            print(f"\nSource {i+1}:")
-            print(f"  Book: {result.get('book_name', 'unknown')}")
-            print(f"  Text preview: {chunk_text[:100]}...")
-
-            # Check what position data exists
-            if 'positions' in result:
-                print(f"  ✅ Positions array length: {len(result['positions'])}")
-                if len(result['positions']) > 0:
-                    print(f"     First position: {result['positions'][0]}")
-            else:
-                print(f"  ❌ No 'positions' key")
-
-            if 'has_positions' in result:
-                print(f"  has_positions flag: {result['has_positions']}")
-            else:
-                print(f"  ❌ No 'has_positions' key")
-
-            # Try to detect patterns in text
-            import re
-            fen_pattern = r'[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}'
-            moves_pattern = r'1\.\s*e4\s+c5'
-
-            if re.search(fen_pattern, chunk_text):
-                print(f"  📋 FEN detected in text")
-            if re.search(moves_pattern, chunk_text, re.IGNORECASE):
-                print(f"  ♟ Moves '1.e4 c5' detected in text")
-        print("=== END POSITION DEBUG ===\n")
-
-        # Step 6: Synthesize coherent answer using 3-stage pipeline
+        # Step 6: Synthesize coherent answer using 3-stage synthesis pipeline
         print(f"⏱  Starting 3-stage synthesis pipeline...")
         synthesis_start = time.time()
 
         # Prepare context with canonical FEN if available
-        context_chunks = [r['text'] for r in results[:8]]
-        if canonical_fen:
-            context_chunks.insert(0, f"[CANONICAL POSITION: {canonical_fen}]")
-            print(f"📋 Injected canonical FEN into synthesis context")
+        context_chunks = prepare_synthesis_context(results, canonical_fen, top_n=8)
 
-        # Call the new 3-stage synthesis function
+        # Call the 3-stage synthesis function
         synthesized_answer = synthesize_answer(
             OPENAI_CLIENT,
             query_text,
-            context_chunks
+            "\n\n".join(context_chunks)
         )
 
-        t6 = time.time()
-        print(f"⏱  3-stage synthesis complete: {t6-synthesis_start:.2f}s")
+        rag_timing['synthesis'] = round(time.time() - synthesis_start, 2)
+        print(f"⏱  3-stage synthesis complete: {rag_timing['synthesis']}s")
 
         # Step 6.5: Extract and parse diagram markers from synthesized text
         print(f"\n⏱  Extracting diagram markers...")
@@ -211,8 +152,8 @@ def query():
         diagram_positions = extract_diagram_markers(synthesized_answer)
         synthesized_answer = replace_markers_with_ids(synthesized_answer, diagram_positions)
 
-        diagram_time = time.time() - diagram_start
-        print(f"⏱  Diagram extraction complete: {diagram_time:.2f}s")
+        rag_timing['diagrams'] = round(time.time() - diagram_start, 2)
+        print(f"⏱  Diagram extraction complete: {rag_timing['diagrams']}s")
         print(f"📋 Extracted {len(diagram_positions)} diagram positions from synthesis")
 
         total = time.time() - start
@@ -247,18 +188,7 @@ def query():
         print("="*60 + "\n")
 
         # Collect positions from top sources for answer section
-        synthesized_positions = []
-        for result in results[:5]:
-            if result.get('has_positions') and result.get('positions'):
-                for pos in result['positions']:
-                    # Avoid duplicates (same FEN)
-                    if not any(p['fen'] == pos['fen'] for p in synthesized_positions):
-                        synthesized_positions.append(pos)
-                        if len(synthesized_positions) >= 2:  # Max 2 boards in answer
-                            break
-            if len(synthesized_positions) >= 2:
-                break
-
+        synthesized_positions = collect_answer_positions(results, max_positions=2)
         print(f"📋 Collected {len(synthesized_positions)} positions for answer section")
 
         # Prepare response
@@ -271,12 +201,7 @@ def query():
             'sources': results[:5],
             'results': results,  # Keep for backwards compatibility
             'timing': {
-                'embedding': round(t2 - t1, 2),
-                'search': round(t3 - t2, 2),
-                'reranking': round(t4 - t3, 2),
-                'formatting': round(t5 - t4, 2),
-                'synthesis': round(t6 - synthesis_start, 2),
-                'diagrams': round(diagram_time, 2),
+                **rag_timing,
                 'total': round(total, 2)
             }
         }
