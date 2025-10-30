@@ -57,7 +57,7 @@ Create an outline that directly answers this question."""
 
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-chatgpt-4o-latest-20250514",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -176,7 +176,7 @@ Do NOT use opening move sequences - focus on middlegame positions."""
             else:
                 # Standard generation without retry
                 response = openai_client.chat.completions.create(
-                    model="gpt-chatgpt-4o-latest-20250514",
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": section_prompt}
@@ -248,7 +248,7 @@ Create a cohesive article that flows naturally. Maintain all diagram markers."""
 
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-chatgpt-4o-latest-20250514",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": assembly_prompt}
