@@ -60,11 +60,20 @@ def wrap_bare_fens(text):
     Catches FENs that aren't already in [DIAGRAM: ...] brackets.
     """
     # FEN pattern: 8 ranks separated by /, followed by color, castling, etc.
-    fen_pattern = r'(?<!\[DIAGRAM:\s)(?<!\[DIAGRAM:\s.{0,100})([rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}\s+[wb]\s+[-KQkq]+\s+[-a-h0-8]+\s+\d+\s+\d+)'
-    
+    # Simple pattern without problematic variable-width lookbehind
+    fen_pattern = r'([rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}/[rnbqkpRNBQKP1-8]{1,8}\s+[wb]\s+[-KQkq]+\s+[-a-h0-8]+\s+\d+\s+\d+)'
+
     def wrap_match(match):
         fen = match.group(1)
-        return f'[DIAGRAM: {fen}]'
-    
+        # Check if already wrapped by looking at preceding text
+        start_pos = match.start()
+        # Get preceding 20 characters
+        preceding = text[max(0, start_pos - 20):start_pos]
+        # If we find [DIAGRAM: in the preceding text, don't wrap again
+        if '[DIAGRAM:' in preceding:
+            return fen  # Return unchanged
+        else:
+            return f'[DIAGRAM: {fen}]'  # Wrap it
+
     return re.sub(fen_pattern, wrap_match, text)
 
