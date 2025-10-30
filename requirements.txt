@@ -8,8 +8,8 @@ flask==3.0.0
 # OpenAI API (use latest for compatibility)
 openai>=1.50.0
 
-# Vector Database
-qdrant-client==1.7.0
+# Vector Database (must match version used to create database)
+qdrant-client==1.15.1
 
 # Chess Library
 python-chess==1.999
