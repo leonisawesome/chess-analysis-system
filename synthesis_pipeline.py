@@ -9,7 +9,76 @@ Handles:
 """
 
 import re
+import json
 from openai import OpenAI
+
+# Global variable to hold canonical library prompt
+CANONICAL_POSITIONS_PROMPT = None
+
+def build_canonical_positions_prompt():
+    """
+    Build a dynamic prompt section from canonical_positions.json.
+
+    Returns:
+        str: Formatted prompt section listing available canonical positions
+    """
+    try:
+        with open('canonical_positions.json', 'r') as f:
+            library = json.load(f)
+
+        prompt_lines = [
+            "",
+            "CANONICAL POSITIONS LIBRARY:",
+            "You can reference verified positions using @canonical/category/id format.",
+            "",
+            "Available positions:"
+        ]
+
+        # Build a compact listing
+        for category, positions in library.items():
+            prompt_lines.append(f"\n{category}:")
+            for pos_id, pos_data in positions.items():
+                caption = pos_data.get('caption', 'No caption')
+                # Truncate long captions
+                if len(caption) > 60:
+                    caption = caption[:57] + "..."
+                prompt_lines.append(f"  - @canonical/{category}/{pos_id}")
+                prompt_lines.append(f"    {caption}")
+
+        prompt_lines.append("")
+        prompt_lines.append("USAGE EXAMPLES:")
+        prompt_lines.append("- [DIAGRAM: @canonical/forks/knight_fork_queen_rook | Caption: Classic knight fork pattern]")
+        prompt_lines.append("- [DIAGRAM: @canonical/pawn_structures/isolated_queen_pawn | Caption: The isolated queen pawn structure]")
+        prompt_lines.append("")
+        prompt_lines.append("ERROR HANDLING:")
+        prompt_lines.append("- If specific ID not found → fallback to any position in that category")
+        prompt_lines.append("- If category not found → silent skip (no diagram rendered)")
+        prompt_lines.append("- Use canonical positions for tactical/structural concepts")
+        prompt_lines.append("- Use move sequences (1.e4 e5...) for opening lines")
+        prompt_lines.append("")
+
+        return "\n".join(prompt_lines)
+
+    except FileNotFoundError:
+        return "\nCANONICAL POSITIONS LIBRARY: Not available\n"
+    except Exception as e:
+        return f"\nCANONICAL POSITIONS LIBRARY: Error loading ({str(e)})\n"
+
+def initialize_canonical_prompt():
+    """
+    Initialize the global canonical positions prompt.
+    Call this once at application startup.
+    """
+    global CANONICAL_POSITIONS_PROMPT
+    CANONICAL_POSITIONS_PROMPT = build_canonical_positions_prompt()
+    print(f"✓ Initialized canonical positions prompt ({len(CANONICAL_POSITIONS_PROMPT)} chars)")
+
+def get_canonical_prompt():
+    """Get the canonical positions prompt section."""
+    global CANONICAL_POSITIONS_PROMPT
+    if CANONICAL_POSITIONS_PROMPT is None:
+        initialize_canonical_prompt()
+    return CANONICAL_POSITIONS_PROMPT
 
 
 def stage1_generate_outline(openai_client: OpenAI, query: str, context: str,
@@ -104,20 +173,24 @@ def stage2_expand_sections(openai_client: OpenAI, sections: list, query: str,
     """
     expanded = []
 
-    system_prompt = """You are a chess expert writing detailed explanations with visual diagrams.
+    # Get canonical positions listing
+    canonical_prompt = get_canonical_prompt()
+
+    system_prompt = f"""You are a chess expert writing detailed explanations with visual diagrams.
 
 CRITICAL DIAGRAM RULES:
 1. Include diagrams using [DIAGRAM: <position> | Caption: <description>] format
-2. <position> can be: move sequence (1.e4 e5 2.Nf3 Nc6 3.Bc4) OR FEN string
+2. <position> can be: move sequence (1.e4 e5 2.Nf3 Nc6 3.Bc4) OR FEN string OR @canonical reference
 3. <description> is a DESCRIPTIVE caption explaining what the position shows
 4. For openings: diagrams show 3-6 moves from the starting position
-5. For middlegame concepts: use the provided canonical FEN position
+5. For middlegame concepts: use @canonical/ references or provided canonical FEN
 6. Diagrams must match the opening/concept being discussed
 7. Include 2-4 diagrams per section to illustrate key positions
 
 DIAGRAM FORMAT (with optional TACTIC field):
 - [DIAGRAM: <position> | Caption: <description>]
 - [DIAGRAM: <position> | Caption: <description> | TACTIC: <type>]
+- [DIAGRAM: @canonical/category/id | Caption: <description>]
 
 The TACTIC field is OPTIONAL but helpful for validation. Use it when diagrams illustrate tactical concepts:
 - fork (piece attacks 2+ opponent pieces)
@@ -128,8 +201,8 @@ The TACTIC field is OPTIONAL but helpful for validation. Use it when diagrams il
 EXAMPLES:
 - [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position with White's bishop on c4 | TACTIC: development]
 - [DIAGRAM: 1.d4 d5 2.c4 | Caption: Queen's Gambit - White offers the c-pawn to gain central control | TACTIC: development]
-- [DIAGRAM: r3k3/8/8/3N4/8/8/8/4K3 w - - 0 1 | Caption: Knight forks Black's queen and rook | TACTIC: fork]
-- [DIAGRAM: rnbqkb1r/pppp1ppp/5n2/4p3/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - | Caption: Bishop pins knight to king | TACTIC: pin]
+- [DIAGRAM: @canonical/forks/knight_fork_queen_rook | Caption: Classic knight fork pattern | TACTIC: fork]
+- [DIAGRAM: @canonical/pins/bishop_pin_knight | Caption: Bishop pins knight to king | TACTIC: pin]
 
 CAPTION GUIDELINES:
 - Be concise (5-15 words)
@@ -140,6 +213,8 @@ CAPTION GUIDELINES:
 
 IMPORTANT: ALWAYS wrap diagrams in [DIAGRAM: ... | Caption: ...] brackets
 NEVER output bare FEN strings directly in the text without brackets
+
+{canonical_prompt}
 
 CANONICAL POSITION USAGE:
 If a [CANONICAL POSITION: FEN] is provided in the context below:
@@ -153,6 +228,9 @@ Example (opening):
 
 Example (middlegame with canonical FEN):
 "In this position [DIAGRAM: r1bq1rk1/pp2bppp/2n1pn2/2pp4/2PP4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 9], White launches the minority attack..."
+
+Example (using canonical reference):
+"The knight fork is a powerful tactic [DIAGRAM: @canonical/forks/knight_fork_queen_rook] where the knight attacks multiple pieces..."
 
 Write 2-3 detailed paragraphs per section with diagrams."""
 

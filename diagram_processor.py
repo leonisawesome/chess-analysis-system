@@ -74,6 +74,60 @@ def generate_svg_from_fen(fen):
         print(f"Warning: Could not generate SVG for FEN '{fen}': {e}")
         return None
 
+def parse_canonical_reference(reference):
+    """
+    Parse @canonical/category/id references.
+
+    Format: @canonical/category/id
+    Example: @canonical/forks/knight_fork_queen_rook
+
+    Returns:
+        tuple: (category, id) or (None, None) if not a valid reference
+    """
+    if not reference.startswith('@canonical/'):
+        return None, None
+
+    # Remove @canonical/ prefix
+    path = reference[11:]  # len('@canonical/') = 11
+
+    # Split into category/id
+    parts = path.split('/', 1)
+    if len(parts) != 2:
+        logger.warning(f"Invalid canonical reference format: {reference}")
+        return None, None
+
+    category, position_id = parts
+    return category, position_id
+
+def lookup_canonical_position(category, position_id):
+    """
+    Look up a position in the canonical library by category and ID.
+
+    Args:
+        category: The category name (e.g., 'forks', 'pins')
+        position_id: The position ID within the category
+
+    Returns:
+        dict: Position data or None if not found
+    """
+    if not CANONICAL_LIBRARY:
+        logger.warning("Canonical library not loaded")
+        return None
+
+    if category not in CANONICAL_LIBRARY:
+        logger.warning(f"Category '{category}' not found in canonical library")
+        logger.info(f"Available categories: {list(CANONICAL_LIBRARY.keys())}")
+        return None
+
+    positions = CANONICAL_LIBRARY[category]
+    if position_id not in positions:
+        logger.warning(f"Position '{position_id}' not found in category '{category}'")
+        logger.info(f"Available positions: {list(positions.keys())}")
+        return None
+
+    logger.info(f"✓ Found canonical position: {category}/{position_id}")
+    return positions[position_id]
+
 def find_canonical_fallback(search_term):
     """Find a canonical position matching the search term."""
     if not CANONICAL_LIBRARY:
@@ -134,30 +188,54 @@ def extract_diagram_markers(text):
                     tactic = tactic_part
                 logger.info(f"[extract_diagram_markers] Found tactic: {tactic}")
 
-        # Strategy 1: Try to extract FEN string directly from position part
-        fen = extract_fen_from_marker(position_part)
-
-        if fen:
-            # FEN found - use extracted caption, or fallback to moves
-            if not caption:
-                moves = extract_moves_from_description(position_part)
-                caption = moves if moves else f"Position: {fen[:20]}..."
+        # Strategy 0: Check for @canonical/ reference first
+        category, position_id = parse_canonical_reference(position_part.strip())
+        if category and position_id:
+            # This is a canonical reference - look it up
+            canonical_pos = lookup_canonical_position(category, position_id)
+            if canonical_pos:
+                fen = canonical_pos['fen']
+                # Use provided caption if available, otherwise use canonical caption
+                if not caption:
+                    caption = canonical_pos['caption']
+                # Use canonical tactic if not provided
+                if not tactic:
+                    tactic = canonical_pos.get('tactic')
+                logger.info(f"✓ Loaded canonical position: {category}/{position_id}")
+            else:
+                logger.warning(f"✗ Canonical position not found: {category}/{position_id}")
+                # Try fallback by category
+                fallback = find_canonical_fallback(category)
+                if fallback:
+                    fen = fallback['fen']
+                    caption = fallback['caption']
+                    tactic = fallback.get('tactic')
+                    logger.info(f"✓ Using category fallback from {category}")
         else:
-            # Strategy 2: No FEN, try to extract and parse move sequence
-            moves = extract_moves_from_description(position_part)
+            # Strategy 1: Try to extract FEN string directly from position part
+            fen = extract_fen_from_marker(position_part)
 
-            if moves:
-                # Try to convert moves to FEN
-                logger.info(f"[extract_diagram_markers] Parsing moves: {moves}")
-                fen = parse_moves_to_fen(moves)
+            if fen:
+                # FEN found - use extracted caption, or fallback to moves
+                if not caption:
+                    moves = extract_moves_from_description(position_part)
+                    caption = moves if moves else f"Position: {fen[:20]}..."
+            else:
+                # Strategy 2: No FEN, try to extract and parse move sequence
+                moves = extract_moves_from_description(position_part)
 
-                if fen:
-                    # Use extracted caption, or fallback to moves
-                    if not caption:
-                        caption = moves
-                    logger.info(f"[extract_diagram_markers] Successfully parsed moves to FEN")
-                else:
-                    logger.warning(f"[extract_diagram_markers] Failed to parse moves: {moves}")
+                if moves:
+                    # Try to convert moves to FEN
+                    logger.info(f"[extract_diagram_markers] Parsing moves: {moves}")
+                    fen = parse_moves_to_fen(moves)
+
+                    if fen:
+                        # Use extracted caption, or fallback to moves
+                        if not caption:
+                            caption = moves
+                        logger.info(f"[extract_diagram_markers] Successfully parsed moves to FEN")
+                    else:
+                        logger.warning(f"[extract_diagram_markers] Failed to parse moves: {moves}")
 
         # If we got a FEN (from either strategy), validate and potentially generate SVG
         if fen:

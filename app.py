@@ -62,6 +62,11 @@ try:
 except FileNotFoundError:
     print("⚠️  canonical_fens.json not found - middlegame queries will use RAG only")
 
+# Initialize canonical positions prompt for synthesis
+print("Initializing canonical positions prompt...")
+from synthesis_pipeline import initialize_canonical_prompt
+initialize_canonical_prompt()
+
 # ============================================================================
 # MULTI-STAGE SYNTHESIS PIPELINE
 # ============================================================================

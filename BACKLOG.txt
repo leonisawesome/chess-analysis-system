@@ -824,3 +824,48 @@ def generate_knight_fork(targets=['king', 'rook'], side='white'):
 
 ---
 
+### ITEM-024: Structured Diagram Requests (@canonical/) [COMPLETE]
+**Status:** COMPLETED - October 31, 2025
+**Priority:** HIGH
+**Result:** Full Phase 3 implementation with @canonical/ syntax
+
+**Implementation Details:**
+
+1. **Canonical Reference Parsing** (diagram_processor.py):
+   - Added `parse_canonical_reference()` - Parses @canonical/category/id format
+   - Added `lookup_canonical_position()` - Looks up positions in library by ID
+   - Modified `extract_diagram_markers()` - Strategy 0: Check for @canonical/ first
+   - Error handling: Category fallback → silent skip
+
+2. **Dynamic Prompt Generation** (synthesis_pipeline.py):
+   - Added `build_canonical_positions_prompt()` - Generates listing from JSON
+   - Added `initialize_canonical_prompt()` - One-time startup initialization
+   - Added `get_canonical_prompt()` - Retrieves prompt section
+   - Modified Stage 2 prompt - Injects 73-position library listing
+
+3. **Application Initialization** (app.py):
+   - Added `initialize_canonical_prompt()` call at startup
+   - Loads alongside spaCy and canonical FENs
+
+**Syntax Examples:**
+```
+[DIAGRAM: @canonical/forks/knight_fork_queen_rook | Caption: Classic knight fork]
+[DIAGRAM: @canonical/pins/bishop_pin_knight | Caption: Bishop pins knight to king]
+[DIAGRAM: @canonical/pawn_structures/isolated_queen_pawn | Caption: IQP structure]
+```
+
+**Error Handling:**
+- Specific ID not found → Fallback to any position in category
+- Category not found → Silent skip (no diagram rendered)
+- Graceful degradation maintains system stability
+
+**Benefits:**
+- GPT-5 can reference exact verified positions
+- No position ambiguity (direct lookup vs fuzzy search)
+- Scales with library (73 positions available)
+- Reduces token usage (compact @canonical/ vs full FEN)
+
+**Git Checkpoint:** backup-before-phase3-20251031-*
+
+---
+
