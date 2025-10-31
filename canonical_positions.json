@@ -7,7 +7,7 @@
       "description": "Classic knight fork targeting king and rook"
     },
     "knight_fork_queen_rook": {
-      "fen": "r2q4/8/8/3N4/8/8/8/4K3 w - - 0 1",
+      "fen": "r2q2k1/8/8/3N4/8/8/8/4K3 w - - 0 1",
       "caption": "White's knight on d5 forks Black's queen and rook",
       "tactic": "fork",
       "description": "Knight fork attacking queen and rook simultaneously"
@@ -53,16 +53,118 @@
   },
   "skewers": {
     "rook_skewer_king_rook": {
-      "fen": "4k3/8/8/8/8/8/4R3/4K3 w - - 0 1",
-      "caption": "White's rook skewers Black's king, winning material after the king moves",
+      "fen": "1r2k3/8/8/8/8/8/8/3RK3 w - - 0 1",
+      "caption": "White plays Rd8+ skewering Black's king and rook",
       "tactic": "skewer",
-      "description": "Reverse pin - more valuable piece forced to move"
+      "description": "Rook skewer winning the back rank rook"
     },
     "bishop_skewer_queen_rook": {
-      "fen": "r3q3/8/8/2B5/8/8/8/4K3 w - - 0 1",
+      "fen": "r3q1k1/8/8/2B5/8/8/8/4K3 w - - 0 1",
       "caption": "White's bishop skewers Black's queen and rook on the diagonal",
       "tactic": "skewer",
       "description": "Bishop skewer forcing queen to move, winning rook"
+    }
+  },
+  "discovered_attacks": {
+    "knight_discovered_check": {
+      "fen": "4k3/8/8/3B4/3N4/8/8/4K3 w - - 0 1",
+      "caption": "White's knight can move with discovered check from the bishop",
+      "tactic": "discovered_attack",
+      "description": "Knight move reveals bishop check, winning tempo"
+    },
+    "bishop_discovered_attack_queen": {
+      "fen": "r2q2k1/8/3B4/3N4/8/8/8/4K3 w - - 0 1",
+      "caption": "Knight moves with discovered attack on Black's queen from the bishop",
+      "tactic": "discovered_attack",
+      "description": "Discovered attack combining two pieces for tactical blow"
+    },
+    "rook_discovered_attack": {
+      "fen": "4k3/4r3/8/3N4/3R4/8/8/4K3 w - - 0 1",
+      "caption": "Knight move reveals rook attack on Black's rook",
+      "tactic": "discovered_attack",
+      "description": "Discovered attack winning the exchange"
+    },
+    "pawn_discovered_check": {
+      "fen": "4k3/8/8/8/3P4/3B4/8/4K3 w - - 0 1",
+      "caption": "Pawn advance with discovered check from bishop",
+      "tactic": "discovered_attack",
+      "description": "Pawn push reveals diagonal attack with check"
+    }
+  },
+  "deflection": {
+    "deflect_defender_queen": {
+      "fen": "r4rk1/5ppp/8/8/8/8/5PPP/R3QRK1 w - - 0 1",
+      "caption": "White deflects Black's rook from defending f8 with Rxf8+",
+      "tactic": "deflection",
+      "description": "Sacrifice deflects key defender, winning material"
+    },
+    "deflect_king_from_pawn": {
+      "fen": "6k1/5ppp/8/8/8/8/R4PPP/6K1 w - - 0 1",
+      "caption": "White deflects Black's king with Ra8+ to promote the pawn",
+      "tactic": "deflection",
+      "description": "Deflection enables pawn promotion"
+    },
+    "deflect_piece_tactical": {
+      "fen": "r1bq1rk1/pp3ppp/2n5/3p4/3P4/2NB4/PP3PPP/R2Q1RK1 w - - 0 1",
+      "caption": "White deflects Black's knight with tactical blow",
+      "tactic": "deflection",
+      "description": "Deflection removes key defensive piece"
+    }
+  },
+  "removal_of_defender": {
+    "capture_defender_knight": {
+      "fen": "r1bq1rk1/pp2ppbp/2np1np1/8/3NP3/2N1B3/PPP2PPP/R2QKB1R w KQ - 0 1",
+      "caption": "White removes the defender on f6 with Nxf6+ winning material",
+      "tactic": "removal_of_defender",
+      "description": "Capture removes key defender, winning the queen"
+    },
+    "eliminate_guard_bishop": {
+      "fen": "r2q1rk1/pp2ppbp/3p1np1/8/3NP3/2N1B3/PPP2PPP/R2QKB1R w KQ - 0 1",
+      "caption": "Remove the bishop defender to win Black's queen",
+      "tactic": "removal_of_defender",
+      "description": "Elimination of defender leads to material gain"
+    }
+  },
+  "interference": {
+    "block_defense_line": {
+      "fen": "r3k2r/8/8/3B4/8/8/8/R3K2R w KQkq - 0 1",
+      "caption": "White interferes with Black's rook defense",
+      "tactic": "interference",
+      "description": "Piece blocks critical defensive line"
+    },
+    "cut_communication": {
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 1",
+      "caption": "White cuts Black's piece coordination with d5",
+      "tactic": "interference",
+      "description": "Pawn advance disrupts opponent's coordination"
+    }
+  },
+  "decoy": {
+    "lure_king_checkmate": {
+      "fen": "6k1/5ppp/8/8/8/8/5PPP/R5K1 w - - 0 1",
+      "caption": "White lures Black's king into mating net with Ra8+",
+      "tactic": "decoy",
+      "description": "Decoy sacrifice sets up checkmate"
+    },
+    "decoy_to_weak_square": {
+      "fen": "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1",
+      "caption": "White decoys Black's king to vulnerable square",
+      "tactic": "decoy",
+      "description": "Forcing king to weak position for tactical blow"
+    }
+  },
+  "clearance": {
+    "clear_file_for_rook": {
+      "fen": "r3k2r/8/8/3P4/3R4/8/8/4K3 w - - 0 1",
+      "caption": "Pawn clears the d-file for rook to deliver check",
+      "tactic": "clearance",
+      "description": "Clearance sacrifice opens critical line"
+    },
+    "clear_diagonal": {
+      "fen": "r2qkb1r/pp3ppp/2n1pn2/3p4/3P4/2N1PN2/PP3PPP/R1BQKB1R w KQkq - 0 1",
+      "caption": "Piece moves to clear diagonal for bishop attack",
+      "tactic": "clearance",
+      "description": "Clearance opens diagonal for tactical strike"
     }
   },
   "development": {
@@ -95,6 +197,272 @@
       "caption": "Sicilian Dragon position with both sides developing aggressively",
       "tactic": "development",
       "description": "Both sides control center and develop pieces rapidly"
+    }
+  },
+  "opening_variations": {
+    "giuoco_piano": {
+      "fen": "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R b KQkq - 0 5",
+      "caption": "Giuoco Piano with d3 setup - solid development",
+      "tactic": "opening",
+      "description": "Italian Game variation with quiet center play"
+    },
+    "evans_gambit": {
+      "fen": "r1bqk2r/pppp1ppp/2n2n2/2b1p3/1PB1P3/5N2/P1PP1PPP/RNBQK2R b KQkq - 0 4",
+      "caption": "Evans Gambit - White sacrifices pawn for rapid development",
+      "tactic": "opening",
+      "description": "Aggressive gambit for initiative and attacking chances"
+    },
+    "ruy_lopez_exchange": {
+      "fen": "r1bqkbnr/1ppp1ppp/p1B5/4p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 0 4",
+      "caption": "Ruy Lopez Exchange Variation - doubled Black pawns",
+      "tactic": "opening",
+      "description": "Strategic exchange creating pawn structure imbalance"
+    },
+    "ruy_lopez_morphy": {
+      "fen": "r1bqkb1r/2pp1ppp/p1n2n2/1p2p3/4P3/1B3N2/PPPP1PPP/RNBQ1RK1 w kq - 0 6",
+      "caption": "Ruy Lopez Morphy Defense - main line position",
+      "tactic": "opening",
+      "description": "Classical continuation with castled king"
+    },
+    "sicilian_najdorf": {
+      "fen": "rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6",
+      "caption": "Sicilian Najdorf - sharp tactical opening",
+      "tactic": "opening",
+      "description": "Most popular Sicilian variation with a6 move"
+    },
+    "sicilian_najdorf_english_attack": {
+      "fen": "rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N1B3/PPP1QPPP/R3KB1R b KQkq - 4 7",
+      "caption": "Najdorf English Attack - aggressive white setup",
+      "tactic": "opening",
+      "description": "Modern attacking system against Najdorf"
+    },
+    "french_winawer": {
+      "fen": "rnbqk1nr/ppp2ppp/4p3/3p4/1b1PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4",
+      "caption": "French Winawer - sharp counterattacking line",
+      "tactic": "opening",
+      "description": "Black attacks White's center with Bb4"
+    },
+    "french_classical": {
+      "fen": "rnbqk2r/ppp2ppp/4pn2/3p4/1b1PP3/2N2N2/PPP2PPP/R1BQKB1R b KQkq - 3 5",
+      "caption": "French Classical Variation - solid development",
+      "tactic": "opening",
+      "description": "Main line with knights developed"
+    },
+    "qg_accepted": {
+      "fen": "rnbqkb1r/ppp1pppp/5n2/8/2pP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 1 4",
+      "caption": "Queen's Gambit Accepted - Black takes the pawn",
+      "tactic": "opening",
+      "description": "Black accepts gambit for central counterplay"
+    },
+    "qg_declined_orthodox": {
+      "fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R b KQkq - 3 4",
+      "caption": "Queen's Gambit Declined Orthodox - e6 setup",
+      "tactic": "opening",
+      "description": "Solid defensive system with e6"
+    },
+    "caro_kann_advance": {
+      "fen": "rnbqkb1r/pp2pppp/2p2n2/3pP3/3P4/5N2/PPP2PPP/RNBQKB1R b KQkq - 1 4",
+      "caption": "Caro-Kann Advance Variation - space advantage",
+      "tactic": "opening",
+      "description": "White gains space with e5 advance"
+    },
+    "kings_indian_classical": {
+      "fen": "rnbq1rk1/ppp1ppbp/3p1np1/8/2PPP3/2N2N2/PP2BPPP/R1BQK2R b KQ - 5 6",
+      "caption": "King's Indian Classical - fianchetto setup",
+      "tactic": "opening",
+      "description": "Black's kingside fianchetto against d4"
+    },
+    "nimzo_indian": {
+      "fen": "rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 2 4",
+      "caption": "Nimzo-Indian Defense - pin on c3 knight",
+      "tactic": "opening",
+      "description": "Strategic pin controlling e4 square"
+    }
+  },
+  "pawn_structures": {
+    "isolated_queen_pawn": {
+      "fen": "r1bq1rk1/pp2bppp/2n1pn2/2pp4/2PP4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 9",
+      "caption": "Isolated Queen Pawn position - dynamic piece play for White",
+      "tactic": "pawn_structure",
+      "description": "IQP structure with active piece placement"
+    },
+    "hanging_pawns": {
+      "fen": "r1bq1rk1/pp3ppp/2n1pn2/2pp4/2PP4/2N1PN2/PP3PPP/R1BQK2R w KQ - 0 9",
+      "caption": "Hanging pawns on c4 and d4 - strength and weakness",
+      "tactic": "pawn_structure",
+      "description": "Advanced central pawns controlling key squares"
+    },
+    "pawn_chain_french": {
+      "fen": "rnbqk2r/ppp2ppp/4pn2/3p4/1b1PP3/2N2N2/PPP2PPP/R1BQKB1R b KQkq - 3 5",
+      "caption": "French Defense pawn chain - e5-d4 vs d5-e6",
+      "tactic": "pawn_structure",
+      "description": "Locked pawn chains dictate piece placement"
+    },
+    "backward_pawn": {
+      "fen": "r1bqk2r/pp3ppp/2nbpn2/2pp4/3P4/2NBPN2/PP3PPP/R1BQK2R w KQkq - 0 9",
+      "caption": "Backward e6 pawn under pressure",
+      "tactic": "pawn_structure",
+      "description": "Backward pawn creates weakness on e6"
+    },
+    "passed_pawn_endgame": {
+      "fen": "8/4kp2/8/2K1P3/8/8/8/8 w - - 0 1",
+      "caption": "White's passed e-pawn races toward promotion",
+      "tactic": "pawn_structure",
+      "description": "Advanced passed pawn in king and pawn endgame"
+    },
+    "doubled_pawns_weakness": {
+      "fen": "r1bqkb1r/1pp2ppp/p1np1n2/4p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 0 6",
+      "caption": "Doubled c-pawns weaken Black's queenside",
+      "tactic": "pawn_structure",
+      "description": "Structural weakness from doubled pawns"
+    },
+    "pawn_majority_queenside": {
+      "fen": "r1bq1rk1/pp3ppp/2n1pn2/2pp4/2PP4/2N1PN2/PP3PPP/R1BQK2R w KQ - 0 9",
+      "caption": "Queenside pawn majority creates strategic plan",
+      "tactic": "pawn_structure",
+      "description": "Pawn majority aims for passed pawn creation"
+    },
+    "weak_squares_kingside": {
+      "fen": "r2q1rk1/pp3pbp/2n1pnp1/2pp4/2PP4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 9",
+      "caption": "Weakened dark squares around Black's king",
+      "tactic": "pawn_structure",
+      "description": "Pawn moves create color complex weaknesses"
+    },
+    "maroczy_bind": {
+      "fen": "r1bqkb1r/pp3ppp/2n1pn2/2pp4/2P5/2N1PN2/PP3PPP/R1BQKB1R w KQkq - 0 7",
+      "caption": "Maroczy Bind - White controls d5 with c4-e4 pawns",
+      "tactic": "pawn_structure",
+      "description": "Restricting pawn structure limits Black's counterplay"
+    },
+    "central_pawn_tension": {
+      "fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq - 0 4",
+      "caption": "Central tension with d4-d5 and e4-e5 pawns",
+      "tactic": "pawn_structure",
+      "description": "Maintained tension creates strategic options"
+    }
+  },
+  "piece_coordination": {
+    "rook_doubling_file": {
+      "fen": "r4rk1/pp3ppp/2n5/2pp4/2P5/2N1P3/PP3PPP/2RR2K1 w - - 0 1",
+      "caption": "White's doubled rooks dominate the d-file",
+      "tactic": "piece_coordination",
+      "description": "Rook doubling creates powerful battery"
+    },
+    "bishop_pair_advantage": {
+      "fen": "r1bq1rk1/pp3ppp/2n1pn2/2pp4/2PP4/2N1PN2/PP2BPPP/R1BQK2R w KQ - 0 9",
+      "caption": "White's bishop pair controls long diagonals",
+      "tactic": "piece_coordination",
+      "description": "Two bishops coordinate for spatial control"
+    },
+    "knight_outpost": {
+      "fen": "r1bq1rk1/pp3ppp/2n1pn2/2ppN3/2P5/2N1P3/PP3PPP/R1BQK2R w KQ - 0 1",
+      "caption": "White's knight on e5 is a powerful outpost",
+      "tactic": "piece_coordination",
+      "description": "Centralized knight cannot be challenged by pawns"
+    },
+    "queen_rook_battery": {
+      "fen": "r4rk1/pp3ppp/2n5/2pp4/2P5/2N1PQ2/PP3PPP/2R3K1 w - - 0 1",
+      "caption": "White's queen and rook coordinate on the c-file",
+      "tactic": "piece_coordination",
+      "description": "Major pieces create powerful battery"
+    },
+    "piece_harmony_attack": {
+      "fen": "r1bq1rk1/pp2npbp/2n1p1p1/2ppP3/2P2P2/2NBBN2/PP2Q1PP/R4RK1 w - - 0 1",
+      "caption": "All White pieces coordinate for kingside attack",
+      "tactic": "piece_coordination",
+      "description": "Harmonious piece placement creates threats"
+    },
+    "fianchetto_bishop_control": {
+      "fen": "rnbq1rk1/ppp1ppbp/3p1np1/8/2PPP3/2N2N2/PP2BPPP/R1BQK2R b KQ - 0 6",
+      "caption": "Black's fianchettoed bishop controls long diagonal",
+      "tactic": "piece_coordination",
+      "description": "Bishop from g7 pressures center and queenside"
+    },
+    "rook_seventh_rank": {
+      "fen": "r4rk1/pp1R1ppp/2n5/2pp4/2P5/2N1P3/PP3PPP/5RK1 w - - 0 1",
+      "caption": "White's rook on the seventh rank attacks pawns",
+      "tactic": "piece_coordination",
+      "description": "Seventh rank rook creates devastating threats"
+    },
+    "connected_rooks": {
+      "fen": "4r1k1/pp3ppp/2n5/2pp4/2P5/2N1P3/PP3PPP/4RRK1 w - - 0 1",
+      "caption": "White's connected rooks on the back rank",
+      "tactic": "piece_coordination",
+      "description": "Rooks protect each other for flexibility"
+    },
+    "centralized_pieces": {
+      "fen": "r1bq1rk1/pp3ppp/2nbpn2/2pp4/2PPNB2/2N1P3/PP3PPP/R2QK2R w KQ - 0 1",
+      "caption": "White's centralized pieces control key squares",
+      "tactic": "piece_coordination",
+      "description": "Central domination with knights and bishop"
+    },
+    "battery_diagonal": {
+      "fen": "r1bq1rk1/pp3ppp/2n1pn2/2pp4/2PP4/2N1PN2/PP1BBPPP/R2Q1RK1 w - - 0 1",
+      "caption": "White's bishops form battery on the long diagonal",
+      "tactic": "piece_coordination",
+      "description": "Double bishop pressure creates tactical chances"
+    }
+  },
+  "endgame_patterns": {
+    "lucena_position": {
+      "fen": "1K6/1P6/8/8/8/2k5/r7/1R6 w - - 0 1",
+      "caption": "Lucena position - rook endgame winning technique",
+      "tactic": "endgame",
+      "description": "Building bridge technique for pawn promotion"
+    },
+    "philidor_position": {
+      "fen": "3k4/R7/3K4/8/8/8/r7/8 b - - 0 1",
+      "caption": "Philidor position - defensive rook endgame draw",
+      "tactic": "endgame",
+      "description": "Third rank defense holds the draw"
+    },
+    "opposition_king_pawn": {
+      "fen": "8/8/8/3k4/8/3K4/3P4/8 w - - 0 1",
+      "caption": "White has opposition - key to pawn endgame victory",
+      "tactic": "endgame",
+      "description": "King opposition determines pawn endgame outcome"
+    },
+    "distant_opposition": {
+      "fen": "8/8/8/8/3k4/8/8/3K4 w - - 0 1",
+      "caption": "Distant opposition with three squares between kings",
+      "tactic": "endgame",
+      "description": "Long-range opposition controls key squares"
+    },
+    "triangulation": {
+      "fen": "8/8/8/3k4/3p4/3K4/8/8 w - - 0 1",
+      "caption": "White uses triangulation to lose a tempo",
+      "tactic": "endgame",
+      "description": "Maneuvering technique to gain opposition"
+    },
+    "opposite_bishops_endgame": {
+      "fen": "8/5k2/4b3/3B4/8/8/8/5K2 w - - 0 1",
+      "caption": "Opposite-colored bishops often lead to draws",
+      "tactic": "endgame",
+      "description": "Different colored bishops create drawing chances"
+    },
+    "queen_vs_pawn_seventh": {
+      "fen": "8/1k6/8/8/8/8/1p6/1K1Q4 b - - 0 1",
+      "caption": "Queen vs pawn on 7th rank - careful defense needed",
+      "tactic": "endgame",
+      "description": "Critical defensive technique against promoted pawn"
+    },
+    "rook_vs_pawn_cutting": {
+      "fen": "8/8/8/8/8/1k6/1p6/1KR5 w - - 0 1",
+      "caption": "Rook cuts off king from supporting the pawn",
+      "tactic": "endgame",
+      "description": "Cutting king technique stops pawn advance"
+    },
+    "zugzwang_position": {
+      "fen": "8/8/8/3k4/2p5/8/3K4/8 b - - 0 1",
+      "caption": "Zugzwang - any move worsens Black's position",
+      "tactic": "endgame",
+      "description": "Compulsion to move leads to disadvantage"
+    },
+    "outside_passed_pawn": {
+      "fen": "8/5k2/8/p7/P7/1P3K2/8/8 w - - 0 1",
+      "caption": "Outside passed pawn diverts Black's king",
+      "tactic": "endgame",
+      "description": "Distant passed pawn creates winning plan"
     }
   }
 }
