@@ -481,104 +481,22 @@ Context for New Claude Instances:
 - Review recent git commits for latest changes
 
 Current Branch: main
-Latest Commit: 7a70ad0 (Qdrant version fix 1.7.0 → 1.15.1)
+Latest Commit: 9c61f99 (Fix regex error in wrap_bare_fens)
 System Status: Refactored and VALIDATED - system working correctly (ITEM-012 ✅)
 Critical Gap: Middlegame solution never implemented (ITEM-014)
 Critical UX Issue: 3+ minute query latency (ITEM-018)
 
-## ============================================================================
-## COMPLETED ITEMS - 2025-10-30
-## ============================================================================
-
-### ✅ DIAGRAM FIXES - COMPLETE (Commits: 006b68c, be69551)
-
-**Issue:** Bare FEN strings bleeding into text + text truncation mid-sentence
-
-**Solution Implemented:**
-- Multi-layer defense strategy:
-  1. Prevention: Enhanced synthesis prompts
-  2. Capacity: Increased token limits (Stage 1: 2000, Stage 2: 3000, Stage 3: 6000)
-  3. Post-Processing: wrap_bare_fens() safety net
-  4. Non-Destructive: Refactored diagram_processor.py (277 → 62 lines, 77% reduction)
-
-**Test Results:**
-- Query: "tell me about IQPs"
-- ✅ 7 diagrams generated properly
-- ✅ No bare FEN bleeding detected
-- ✅ No truncation
-- ✅ Full synthesis pipeline operational
-
-**Status:** Production-ready
+**For Active Work Status:** See PROJECT_STATUS.md
+**For Future Work:** See items below
 
 ---
 
-## ============================================================================
-## NEW BACKLOG ITEMS
-## ============================================================================
+## RECOMMENDED PRIORITY ORDER
 
-### ITEM-017: Content Quality & Engagement Enhancement
-**Priority:** Medium
-**Status:** Backlog
-
-**Issue:** 
-Synthesized answers are comprehensive (1,200-1,500 words, 10+ diagrams) but dense/academic compared to ChatGPT's conversational, scannable style.
-
-**Observations:**
-- ✅ Content depth is excellent
-- ✅ Diagram quantity is good
-- ❌ Dense prose paragraphs (harder to scan)
-- ❌ Academic tone vs conversational
-- ✅ 357,957 chunks is sufficient (not a corpus issue)
-
-**Potential Solutions:**
-1. Adjust synthesis prompts for more conversational tone
-2. Add section headers for better scannability
-3. Use bullet points for key concepts
-4. Balance prose with structured elements
-5. A/B test different writing styles
-
-**Notes:**
-- Not urgent - system is functional
-- Explore after core functionality stable
-- May want user feedback on current style first
-
----
-
-### ITEM-018: Increase Source Citation Count
-**Priority:** Medium
-**Status:** Backlog
-
-**Current State:**
-- Citations shown at bottom: 5 books
-- User wants MORE citations visible
-
-**Potential Approaches:**
-1. Increase number of sources shown (5 → 10 or 15)
-2. Show inline citations within answer text
-3. Link specific paragraphs to source books
-4. Add "Read more in [Book Title]" callouts
-5. Expand source excerpts section
-
-**Questions to Answer:**
-- How many citations is ideal? (User preference)
-- Inline vs bottom-of-page?
-- Should citations link to specific page numbers?
-- Trade-off: More citations = more tokens/cost
-
-**Notes:**
-- User explicitly likes citations
-- Easy win for user satisfaction
-- Low complexity implementation
-
----
-
-## NEXT PRIORITIES
-
-Based on README.md ITEM-014: Middlegame concepts remain the ORIGINAL critical issue that started this project.
-
-**Recommended Order:**
-1. ITEM-014: Middlegame implementation (HIGH - original problem)
-2. ITEM-018: Citation increase (MEDIUM - quick win, user-requested)
-3. ITEM-017: Content quality (MEDIUM - polish, not critical)
-4. ITEM-016: Scaling to 5M chunks (LOW - future infrastructure)
+1. **ITEM-014:** Middlegame implementation (P0 - CRITICAL - original problem)
+2. **ITEM-013:** Automated testing infrastructure (P0 - CRITICAL - enables efficient iteration)
+3. **ITEM-015:** Comprehensive regression testing (P1 - HIGH - validate stability)
+4. **ITEM-018:** Increase citation count (P2 - MEDIUM - quick win, user-requested)
+5. **ITEM-017:** Content quality enhancement (P2 - MEDIUM - polish, not critical)
+6. **ITEM-016:** Scale to 5M chunks planning (P1 - HIGH - future infrastructure)
 
