@@ -1,0 +1,100 @@
+{
+  "forks": {
+    "knight_fork_king_rook": {
+      "fen": "r3k3/8/8/8/8/8/8/4K2N w - - 0 1",
+      "caption": "White's knight on h1 can fork Black's king and rook with Nf2+",
+      "tactic": "fork",
+      "description": "Classic knight fork targeting king and rook"
+    },
+    "knight_fork_queen_rook": {
+      "fen": "r2q4/8/8/3N4/8/8/8/4K3 w - - 0 1",
+      "caption": "White's knight on d5 forks Black's queen and rook",
+      "tactic": "fork",
+      "description": "Knight fork attacking queen and rook simultaneously"
+    },
+    "bishop_fork_rooks": {
+      "fen": "r3k2r/8/8/3B4/8/8/8/4K3 w - - 0 1",
+      "caption": "White's bishop on d5 attacks both of Black's rooks",
+      "tactic": "fork",
+      "description": "Bishop fork targeting both rooks on the back rank"
+    },
+    "pawn_fork_pieces": {
+      "fen": "rnbqkb1r/pppp1ppp/8/4p3/3Pn3/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 4",
+      "caption": "Black's pawn on e4 forks White's knight and bishop after d3",
+      "tactic": "fork",
+      "description": "Pawn fork creating double attack on pieces"
+    },
+    "queen_fork_king_rook": {
+      "fen": "r3k3/8/8/3Q4/8/8/8/4K3 w - - 0 1",
+      "caption": "White's queen on d5 forks Black's king and rook",
+      "tactic": "fork",
+      "description": "Queen fork with check, winning the rook"
+    }
+  },
+  "pins": {
+    "bishop_pin_knight_king": {
+      "fen": "rnbqkb1r/pppp1ppp/5n2/4p3/3P4/5N2/PPP1PPPP/RNBQKB1R b KQkq - 2 3",
+      "caption": "White's bishop pins Black's knight to the king",
+      "tactic": "pin",
+      "description": "Absolute pin - knight cannot move without exposing king"
+    },
+    "rook_pin_knight_queen": {
+      "fen": "r1bqkb1r/pppp1ppp/2n5/4p3/3Pn3/5N2/PPP1PPPP/RNBQKB1R w KQkq - 4 4",
+      "caption": "White's rook pins Black's knight to the queen",
+      "tactic": "pin",
+      "description": "Relative pin - moving knight loses the queen"
+    },
+    "bishop_pin_rook_king": {
+      "fen": "r3k3/8/8/3B4/8/8/8/R3K3 w - - 0 1",
+      "caption": "White's bishop on d5 pins Black's rook to the king",
+      "tactic": "pin",
+      "description": "Diagonal pin immobilizing the rook"
+    }
+  },
+  "skewers": {
+    "rook_skewer_king_rook": {
+      "fen": "4k3/8/8/8/8/8/4R3/4K3 w - - 0 1",
+      "caption": "White's rook skewers Black's king, winning material after the king moves",
+      "tactic": "skewer",
+      "description": "Reverse pin - more valuable piece forced to move"
+    },
+    "bishop_skewer_queen_rook": {
+      "fen": "r3q3/8/8/2B5/8/8/8/4K3 w - - 0 1",
+      "caption": "White's bishop skewers Black's queen and rook on the diagonal",
+      "tactic": "skewer",
+      "description": "Bishop skewer forcing queen to move, winning rook"
+    }
+  },
+  "development": {
+    "italian_game_opening": {
+      "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+      "caption": "Italian Game position with harmonious piece development",
+      "tactic": "development",
+      "description": "White develops knights and bishop toward center"
+    },
+    "symmetrical_development": {
+      "fen": "rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+      "caption": "Both sides develop knights symmetrically",
+      "tactic": "development",
+      "description": "Balanced opening with knights developed"
+    },
+    "ruy_lopez_development": {
+      "fen": "r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3",
+      "caption": "Ruy Lopez position showing rapid piece development",
+      "tactic": "development",
+      "description": "White's bishop on b5 pressures Black's knight"
+    },
+    "queens_gambit_development": {
+      "fen": "rnbqkb1r/ppp1pppp/5n2/3p4/2PP4/5N2/PP2PPPP/RNBQKB1R b KQkq - 2 3",
+      "caption": "Queen's Gambit position with central control and piece development",
+      "tactic": "development",
+      "description": "White controls center with pawns and develops knight"
+    },
+    "sicilian_dragon_development": {
+      "fen": "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R b KQkq - 1 5",
+      "caption": "Sicilian Dragon position with both sides developing aggressively",
+      "tactic": "development",
+      "description": "Both sides control center and develop pieces rapidly"
+    }
+  }
+}

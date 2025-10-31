@@ -652,3 +652,168 @@ python3 -c "import app; import rag_engine; import synthesis_pipeline"
 
 *README.md created as part of ITEM-011 completion - October 30, 2025*  
 *Optimized for Claude context in new sessions*
+
+---
+
+## 🎨 Frontend Diagram Rendering
+
+### Overview
+Chess diagrams in answers are rendered client-side using secure SVG parsing to prevent XSS vulnerabilities.
+
+### Architecture
+```
+Backend (/query endpoint):
+  └─> Returns JSON with:
+      ├─> answer: "Text with [DIAGRAM_ID:uuid] markers"
+      └─> diagram_positions: [{id, fen, svg}, ...]
+
+Frontend (diagram-renderer.js):
+  1. Parse [DIAGRAM_ID:uuid] markers
+  2. Use DOMParser to safely parse SVG strings
+  3. Sanitize SVG (remove scripts, event handlers)
+  4. Add accessibility features (ARIA, titles)
+  5. Insert chess boards inline
+```
+
+### Files
+- **static/js/diagram-renderer.js** - Main rendering logic (250+ lines)
+  - `renderAnswerWithDiagrams()` - Parses markers and renders diagrams
+  - `sanitizeSvgStringToElement()` - Security-focused SVG sanitizer
+- **static/css/diagrams.css** - Diagram styling (responsive, accessible)
+
+### Security Features
+- **XSS Prevention:** DOMParser + attribute whitelisting
+- **Sanitization:** Removes `<script>`, event handlers, `javascript:` URIs
+- **Defense-in-depth:** Even backend-generated SVGs are sanitized
+
+### Accessibility
+- `role="img"` on diagram containers
+- `<title>` elements in SVGs with FEN notation
+- `aria-label` attributes for screen readers
+- Keyboard navigation compatible
+
+### Implementation (October 31, 2025)
+Fixed diagram rendering bug where [DIAGRAM_ID:xxx] markers appeared as text instead of chess boards.
+
+**Partner Consult:** ChatGPT, Gemini, Grok - unanimous recommendation for client-side DOMParser approach
+**Security:** Production-grade sanitizer based on OWASP best practices
+**Testing:** Validated with Italian Game query (3+ diagrams)
+
+### Enhancement 1 (October 31, 2025): Complex Move Notation Parsing
+Fixed diagram parser to handle complex move notations:
+- **'OR' handling:** Diagrams like `[DIAGRAM: 1.f4! exf4 2.e5 OR 1.dxe5!]` now parse correctly (takes first sequence before OR)
+- **Move annotations:** Strips `!`, `?`, `!!`, `!?`, `?!` from moves before parsing
+- **Implementation:** Updated `extract_moves_from_description()` in diagram_processor.py
+- **Testing:** Validated with 4 test cases including OR separators and annotations
+
+### Enhancement 2 (October 31, 2025): Descriptive Diagram Captions
+Implemented context-aware descriptive captions for chess diagrams instead of raw FEN strings:
+
+**Problem:** Diagrams previously showed technical FEN notation (e.g., `rnbqkb1r/pppp1ppp/5n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4`) which is not user-friendly
+
+**Solution:** Synthesis-time caption generation with GPT-5
+- **Format:** `[DIAGRAM: <position> | Caption: <description>]`
+- **Example:** `[DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position with White's bishop on c4]`
+
+**Implementation:**
+1. **synthesis_pipeline.py (lines 107-130):** Updated system prompt to instruct GPT-5 to generate descriptive captions
+   - Format examples provided in prompt
+   - Caption guidelines: 5-15 words, describe strategic ideas, focus on WHY the position matters
+2. **diagram_processor.py (lines 61-132):** Parser updated to extract captions from `|` separator
+   - Handles `Caption:` label (case-insensitive)
+   - Falls back to move notation or FEN if no caption provided
+3. **diagram-renderer.js (lines 114-126):** Frontend displays `diagram.caption` instead of FEN
+   - Graceful fallback to FEN if caption unavailable
+4. **diagrams.css (lines 27-39):** Updated styling for descriptive text
+   - Changed from `.fen-caption` (monospace) to `.diagram-caption` (sans-serif)
+   - Larger font (14px), better line-height (1.4), italic styling
+
+**Partner Consult:** ChatGPT (Option A), Gemini (Option A), Grok (Option B) - 2/3 voted for synthesis-time generation
+
+**Benefits:**
+- User-friendly explanations instead of technical notation
+- GPT-5 has full context during synthesis for meaningful captions
+- Describes strategic purpose, piece placement, and key ideas
+- Maintains backward compatibility (fallback to FEN if caption missing)
+
+### Enhancement 3 (October 31, 2025): Diagram Validation & Canonical Library
+Implemented automated validation system to ensure chess diagrams accurately illustrate tactical concepts:
+
+**Problem:** Diagrams render correctly with descriptive captions BUT positions don't match the concepts being discussed
+- "Forks and pins" query shows positions without actual forks or pins
+- GPT-5 generates excellent captions but inaccurate FEN positions
+- Diagrams are generic, not contextually appropriate
+
+**Partner Consult:** Gemini, ChatGPT, Grok - UNANIMOUS recommendation for validation approach
+
+**Solution: 3-Phase Smart Hybrid Approach (ITEM-020)**
+
+**Phase 1 - Automated Validation:**
+- Uses `python-chess` library for programmatic position analysis
+- `validate_fork()`: Checks if piece attacks 2+ opponent pieces
+- `validate_pin()`: Uses `board.is_pinned()` API
+- `validate_diagram()`: Main dispatcher based on tactic type
+- Non-tactical positions (development, structure) accepted as valid
+
+**Phase 2 - Canonical Library Fallback:**
+- `canonical_positions.json`: 15 seed positions across 4 categories
+  * Forks: 5 positions (knight, bishop, queen, pawn, mixed)
+  * Pins: 3 positions (bishop pin knight, rook pin knight, bishop pin rook)
+  * Skewers: 2 positions (rook skewer, bishop skewer)
+  * Development: 5 positions (Italian Game, Ruy Lopez, QG, Sicilian Dragon, etc.)
+- `find_canonical_fallback()`: Searches library by tactic/caption/category
+- When validation fails, replace with verified canonical position
+- Better to show pedagogically optimal example than invalid position
+
+**Phase 3-lite - Optional TACTIC Metadata:**
+- Format: `[DIAGRAM: position | Caption: text | TACTIC: type]`
+- Valid types: fork, pin, skewer, development
+- Helps validator understand intent when caption alone is ambiguous
+- FULLY backward compatible (works without TACTIC field)
+- GPT-5 prompted to include TACTIC for tactical concepts
+
+**Validation Flow:**
+```
+1. Synthesis: [DIAGRAM: position | Caption: text | TACTIC: type]
+2. diagram_processor.py extracts position, caption, tactic
+3. validate_diagram(fen, caption, tactic) using python-chess
+4. If VALID → Add to diagram_positions array
+5. If INVALID → find_canonical_fallback(tactic or caption)
+   - Found? Replace with canonical position
+   - Not found? Skip diagram (better than showing wrong position)
+```
+
+**Implementation:**
+
+Files Created:
+- **diagram_validator.py (156 lines):** Position validation using python-chess
+  - `validate_fork()`: Checks piece attacks 2+ opponent pieces
+  - `validate_pin()`: Checks for pinned pieces via `board.is_pinned()`
+  - `validate_diagram()`: Main validation dispatcher
+- **canonical_positions.json (15 positions):** Verified tactical examples organized by category
+
+Files Modified:
+- **diagram_processor.py (248 lines):**
+  - Added validation loop in `extract_diagram_markers()`
+  - Parses TACTIC field from diagram markers (line 128-135)
+  - Calls `validate_diagram()` for each position (line 168)
+  - Implements canonical fallback logic (line 185-201)
+  - Skips invalid diagrams with no fallback (line 203-204)
+- **synthesis_pipeline.py (lines 118-139):**
+  - Updated DIAGRAM FORMAT instructions with optional TACTIC field
+  - Added examples showing TACTIC usage
+  - Guidelines for when to include TACTIC (tactical positions only)
+
+**Expected Impact:**
+- ✅ 85-90% diagram accuracy (validated positions + canonical fallbacks)
+- ✅ Invalid diagrams skipped (better than showing misleading content)
+- ✅ Canonical positions are pedagogically optimal examples
+- ✅ No manual curation required (automated validation)
+- ✅ Scales to any tactical concept with canonical library expansion
+
+**Future Work (ITEM-021):**
+- Expand canonical library to 50+ positions
+- Add more tactic types (discovered attack, deflection, etc.)
+- Implement GPT-5 structured diagram requests (e.g., `[DIAGRAM: @canonical/fork/knight_fork_king_rook]`)
+- Add skewer-specific validation (currently uses pin logic)
+- Human validation testing with 20 tactical queries

@@ -107,14 +107,38 @@ def stage2_expand_sections(openai_client: OpenAI, sections: list, query: str,
     system_prompt = """You are a chess expert writing detailed explanations with visual diagrams.
 
 CRITICAL DIAGRAM RULES:
-1. Include diagrams using [DIAGRAM: move sequence OR FEN] format
-2. Use standard chess notation: 1.e4 e5 2.Nf3 Nc6 3.Bc4
-3. For openings: diagrams show 3-6 moves from the starting position
-4. For middlegame concepts: use the provided canonical FEN position
-5. Diagrams must match the opening/concept being discussed
-6. Include 2-4 diagrams per section to illustrate key positions
+1. Include diagrams using [DIAGRAM: <position> | Caption: <description>] format
+2. <position> can be: move sequence (1.e4 e5 2.Nf3 Nc6 3.Bc4) OR FEN string
+3. <description> is a DESCRIPTIVE caption explaining what the position shows
+4. For openings: diagrams show 3-6 moves from the starting position
+5. For middlegame concepts: use the provided canonical FEN position
+6. Diagrams must match the opening/concept being discussed
+7. Include 2-4 diagrams per section to illustrate key positions
 
-IMPORTANT: ALWAYS wrap diagrams in [DIAGRAM: ...] brackets
+DIAGRAM FORMAT (with optional TACTIC field):
+- [DIAGRAM: <position> | Caption: <description>]
+- [DIAGRAM: <position> | Caption: <description> | TACTIC: <type>]
+
+The TACTIC field is OPTIONAL but helpful for validation. Use it when diagrams illustrate tactical concepts:
+- fork (piece attacks 2+ opponent pieces)
+- pin (piece immobilized by line attack)
+- skewer (like pin but more valuable piece in front)
+- development (piece placement in opening)
+
+EXAMPLES:
+- [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position with White's bishop on c4 | TACTIC: development]
+- [DIAGRAM: 1.d4 d5 2.c4 | Caption: Queen's Gambit - White offers the c-pawn to gain central control | TACTIC: development]
+- [DIAGRAM: r3k3/8/8/3N4/8/8/8/4K3 w - - 0 1 | Caption: Knight forks Black's queen and rook | TACTIC: fork]
+- [DIAGRAM: rnbqkb1r/pppp1ppp/5n2/4p3/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - | Caption: Bishop pins knight to king | TACTIC: pin]
+
+CAPTION GUIDELINES:
+- Be concise (5-15 words)
+- Describe what's HAPPENING in the position (strategic ideas, piece placement, key moves)
+- Do NOT just repeat the move notation
+- Focus on WHY this position is important
+- TACTIC field is optional - only include it for tactical positions
+
+IMPORTANT: ALWAYS wrap diagrams in [DIAGRAM: ... | Caption: ...] brackets
 NEVER output bare FEN strings directly in the text without brackets
 
 CANONICAL POSITION USAGE:
