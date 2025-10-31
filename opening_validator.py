@@ -228,7 +228,7 @@ Write the corrected expanded section now:"""
     return (last_content, False, max_retries + 1)
 
 
-def validate_stage2_diagrams(expanded_sections: list, opening_name: str) -> bool:
+def validate_stage2_diagrams(expanded_sections: list, opening_name: str) -> list:
     """
     FIX 3: Validate that all diagram markers match the expected opening signature.
 
@@ -237,7 +237,7 @@ def validate_stage2_diagrams(expanded_sections: list, opening_name: str) -> bool
         opening_name: Name of the opening being discussed (e.g., "Italian Game")
 
     Returns:
-        True if all diagrams match the opening signature, False otherwise
+        expanded_sections list (unchanged - validation prints warnings only)
     """
     print(f"\n[Validation] validate_stage2_diagrams called for: {opening_name}")
     print(f"[Validation] Number of sections to validate: {len(expanded_sections)}")
@@ -268,7 +268,7 @@ def validate_stage2_diagrams(expanded_sections: list, opening_name: str) -> bool
 
     if opening_name not in opening_signatures:
         print(f"[Validation] No signature found for opening: {opening_name}")
-        return True  # Skip validation for unknown openings
+        return expanded_sections  # Skip validation for unknown openings
 
     expected_signature = opening_signatures[opening_name]
     print(f"[Validation] Expected signature: {expected_signature}")
@@ -278,7 +278,8 @@ def validate_stage2_diagrams(expanded_sections: list, opening_name: str) -> bool
     import re
     total_diagrams = 0
     for i, section in enumerate(expanded_sections):
-        diagrams = re.findall(r'\[DIAGRAM:\s*([^\]]+)\]', section)
+        section_content = section.get('content', '') if isinstance(section, dict) else section
+        diagrams = re.findall(r'\[DIAGRAM:\s*([^\]]+)\]', section_content)
 
         for diagram_moves in diagrams:
             total_diagrams += 1
@@ -325,7 +326,8 @@ def validate_stage2_diagrams(expanded_sections: list, opening_name: str) -> bool
     else:
         print(f"[Validation] ❌ Some diagrams do NOT match opening signature!")
 
-    return all_valid
+    print(f"[DEBUG] About to return expanded_sections (type: {type(expanded_sections)}, len: {len(expanded_sections)})")
+    return expanded_sections
 
 
 def validate_and_fix_diagrams(openai_client, query: str, expanded_sections: list, context: str) -> list:

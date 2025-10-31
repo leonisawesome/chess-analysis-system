@@ -215,7 +215,7 @@ Do NOT repeat the same FEN multiple times. Show PROGRESSION and VARIATIONS."""
 
     # Validate diagrams if validation function provided
     if validate_stage2_diagrams_func and expected_signature:
-        expanded = validate_stage2_diagrams_func(expanded, expected_signature)
+        expanded = validate_stage2_diagrams_func(expanded, opening_name)
 
     return expanded
 
