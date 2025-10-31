@@ -7,6 +7,8 @@
 
     <!-- Chessboard.js CSS -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <!-- Chess Diagram Renderer CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/diagrams.css') }}">
 
     <style>
         * {
@@ -396,6 +398,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <!-- Chessboard.js -->
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <!-- Chess Diagram Renderer -->
+    <script src="{{ url_for('static', filename='js/diagram-renderer.js') }}"></script>
 
     <script>
         function search() {
@@ -477,51 +481,18 @@
                 return;
             }
 
-            // Replace [DIAGRAM_ID_X] placeholders with actual boards
-            let answerHtml = data.answer;
-
-            if (data.diagram_positions && data.diagram_positions.length > 0) {
-                console.log(`Replacing ${data.diagram_positions.length} diagram placeholders...`);
-
-                data.diagram_positions.forEach((diagram, idx) => {
-                    const placeholder = `[DIAGRAM_ID_${idx}]`;
-
-                    console.log(`  Looking for: ${placeholder}`);
-
-                    const boardHtml = `
-                        <div class="inline-diagram" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-left: 4px solid #3498db; border-radius: 8px;">
-                            <div class="diagram-board" style="margin: 10px 0; max-width: 400px;">
-                                ${diagram.svg}
-                            </div>
-                            <div class="diagram-caption" style="font-size: 14px; color: #555; margin: 10px 0; white-space: pre-line;">
-                                ${diagram.caption || diagram.description}
-                            </div>
-                            <div class="diagram-actions">
-                                <a href="${diagram.lichess_url}" target="_blank" style="display: inline-block; padding: 8px 16px; background: #3498db; color: white; text-decoration: none; border-radius: 4px;">
-                                    📊 Analyze on Lichess
-                                </a>
-                            </div>
-                        </div>
-                    `;
-
-                    if (answerHtml.includes(placeholder)) {
-                        console.log(`  ✅ Replaced ${placeholder}`);
-                        answerHtml = answerHtml.replace(placeholder, boardHtml);
-                    } else {
-                        console.log(`  ❌ ${placeholder} not found in answer text`);
-                    }
-                });
-            }
-
-            // Display synthesized answer with inline diagrams
+            // Create answer section container
             const answerSection = document.createElement('div');
             answerSection.className = 'synthesized-answer';
             answerSection.innerHTML = `
                 <h2 style="color: #2c3e50; margin-bottom: 20px;">Answer</h2>
-                <div class="answer-content">${formatAnswerText(answerHtml)}</div>
+                <div class="answer-content" id="answer-content-container"></div>
             `;
-
             resultsDiv.appendChild(answerSection);
+
+            // Use diagram renderer to replace markers and inject diagrams
+            const answerContainer = document.getElementById('answer-content-container');
+            renderAnswerWithDiagrams(data.answer, data.diagram_positions || [], answerContainer);
 
             // Display sources section
             const sourcesSection = document.createElement('div');
