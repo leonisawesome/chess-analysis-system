@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagram Renderer Test</title>
+    <link rel="stylesheet" href="static/css/diagrams.css">
+</head>
+<body>
+    <h1>Diagram Renderer Test</h1>
+    <div id="test-output" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+        <p>Testing diagram renderer with sample data...</p>
+    </div>
+
+    <script src="static/js/diagram-renderer.js"></script>
+    <script>
+        // Test data (simulating backend response)
+        const testAnswer = `
+The Italian Game is a classical chess opening starting with the moves:
+
+[DIAGRAM_ID:test-uuid-001]
+
+After 1.e4 e5 2.Nf3 Nc6 3.Bc4, White develops the bishop to an active square. This is a fundamental opening position.
+
+[DIAGRAM_ID:test-uuid-002]
+
+This opening has been played for centuries and remains popular today.
+        `.trim();
+
+        const testDiagrams = [
+            {
+                id: 'test-uuid-001',
+                fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R',
+                svg: '<svg width="390" height="390"><rect fill="#f0d9b5" x="0" y="0" width="390" height="390"/><text x="195" y="195" text-anchor="middle" font-size="48">Test SVG 1</text></svg>'
+            },
+            {
+                id: 'test-uuid-002',
+                fen: 'r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R',
+                svg: '<svg width="390" height="390"><rect fill="#b58863" x="0" y="0" width="390" height="390"/><text x="195" y="195" text-anchor="middle" font-size="48" fill="white">Test SVG 2</text></svg>'
+            }
+        ];
+
+        // Run test
+        const container = document.getElementById('test-output');
+        console.log('Starting diagram renderer test...');
+        renderAnswerWithDiagrams(testAnswer, testDiagrams, container);
+        console.log('Test complete. Check page for rendered diagrams.');
+    </script>
+</body>
+</html>

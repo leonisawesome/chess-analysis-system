@@ -1,0 +1,95 @@
+/**
+ * Chess Diagram Styles
+ * Created: 2025-10-31
+ * Part of: Chess RAG System diagram rendering fix
+ */
+
+/* Diagram container */
+.chess-diagram {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px auto;
+    max-width: 400px;
+    padding: 10px;
+}
+
+/* SVG board styling */
+.chess-diagram svg {
+    width: 100%;
+    height: auto;
+    max-width: 390px;
+    border: 2px solid #333;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* FEN notation caption */
+.fen-caption {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #666;
+    margin-top: 8px;
+    text-align: center;
+    word-break: break-all;
+    max-width: 100%;
+}
+
+/* Placeholder while loading */
+.chess-diagram-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #f5f5f5;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    font-style: italic;
+    color: #999;
+}
+
+/* Error state */
+.chess-diagram-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 4px;
+    color: #856404;
+    font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .chess-diagram {
+        max-width: 100%;
+        margin: 15px auto;
+    }
+
+    .fen-caption {
+        font-size: 10px;
+    }
+}
+
+/* Dark mode support (if applicable) */
+@media (prefers-color-scheme: dark) {
+    .chess-diagram svg {
+        border-color: #555;
+    }
+
+    .fen-caption {
+        color: #aaa;
+    }
+
+    .chess-diagram-placeholder {
+        background: #2a2a2a;
+        border-color: #444;
+        color: #666;
+    }
+}
