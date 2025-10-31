@@ -718,3 +718,112 @@ Critical UX Issue: 3+ minute query latency (ITEM-018)
 5. **ITEM-017:** Content quality enhancement (P2 - MEDIUM - polish, not critical)
 6. **ITEM-016:** Scale to 5M chunks planning (P1 - HIGH - future infrastructure)
 
+
+---
+
+## FUTURE ENHANCEMENTS (Post-ITEM-020)
+
+### ITEM-021: Expand Canonical Library [P1 - HIGH]
+**Status:** NOT STARTED
+**Priority:** HIGH
+**Blocking:** Better diagram coverage
+
+**Current State:**
+- 15 positions (4 categories: forks, pins, skewers, development)
+- Covers basic tactical patterns only
+
+**Target:**
+- 50-100 positions
+- Broader coverage of chess concepts
+
+**Categories to Add:**
+1. **More Tactics (20 positions):**
+   - Discovered attacks
+   - Deflection
+   - Decoy
+   - Removal of defender
+   - Interference
+   - Clearance
+
+2. **Opening Positions (15 positions):**
+   - Italian Game: Giuoco Piano, Evans Gambit
+   - Ruy Lopez: Exchange, Morphy Defense
+   - Sicilian variations: Dragon, Najdorf
+   - French Defense main lines
+   - Queen's Gambit variations
+
+3. **Pawn Structures (10 positions):**
+   - Isolated queen pawn
+   - Hanging pawns
+   - Pawn chains
+   - Backward pawns
+   - Passed pawns
+
+4. **Piece Coordination (10 positions):**
+   - Piece harmony examples
+   - Bishop pair advantage
+   - Rook doubling
+   - Knight outposts
+
+5. **Endgame Patterns (10 positions):**
+   - Rook endgames: Lucena, Philidor
+   - Pawn endgames: opposition
+   - Opposite-color bishops
+   - Queen vs pawn
+
+**Sources:**
+- Lichess puzzle database (public API)
+- Classic tactical books (Polgar, Ivashchenko)
+- Opening theory books
+- Programmatically generated positions
+
+**Acceptance Criteria:**
+- 50-100 verified positions in canonical_positions.json
+- All positions validated by python-chess
+- Each position has: FEN, caption, tactic/category, description
+- Organized by category for easy lookup
+- Tested with diverse queries
+
+---
+
+### ITEM-022: Enhanced Validators [P2 - MEDIUM]
+**Status:** NOT STARTED
+**Priority:** MEDIUM
+
+**Current Validators:**
+- validate_fork() ✅
+- validate_pin() ✅
+- validate_diagram() (dispatcher) ✅
+
+**Potential Enhancements:**
+1. **Skewer-specific validator** (currently uses pin logic)
+2. **Development validator:** Check piece mobility and placement
+3. **Harmony validator:** Verify piece coordination
+4. **Structure validator:** Pawn structure analysis
+
+---
+
+### ITEM-023: Programmatic Position Generation [P3 - LOW]
+**Status:** NOT STARTED
+**Priority:** LOW (Optional)
+
+**Purpose:** Generate positions algorithmically for patterns not in canonical library
+
+**Example:**
+```python
+def generate_knight_fork(targets=['king', 'rook'], side='white'):
+    board = chess.Board.empty()
+    # Place kings (required for legal position)
+    # Place target pieces
+    # Place knight attacking both targets
+    # Validate legality
+    return board.fen()
+```
+
+**Use Cases:**
+- Quick generation of simple tactical patterns
+- Testing and validation
+- Fallback when canonical library has no match
+
+---
+
