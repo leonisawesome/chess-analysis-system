@@ -27,7 +27,6 @@ from opening_validator import extract_contamination_details, generate_section_wi
 from synthesis_pipeline import stage1_generate_outline, stage2_expand_sections, stage3_final_assembly, synthesize_answer
 from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction
 from tactical_query_detector import is_tactical_query, inject_canonical_diagrams, strip_diagram_markers
-from backend_html_renderer import apply_backend_html_rendering
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
