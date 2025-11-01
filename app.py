@@ -27,6 +27,7 @@ from opening_validator import extract_contamination_details, generate_section_wi
 from synthesis_pipeline import stage1_generate_outline, stage2_expand_sections, stage3_final_assembly, synthesize_answer
 from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction
 from tactical_query_detector import is_tactical_query, inject_canonical_diagrams, strip_diagram_markers
+from backend_html_renderer import apply_backend_html_rendering
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
@@ -204,8 +205,8 @@ def query():
             # Collect positions from top sources
             synthesized_positions = collect_answer_positions(results, max_positions=2)
 
-            # Return response with canonical diagrams
-            return jsonify({
+            # Build response
+            response = {
                 'success': True,
                 'query': query_text,
                 'answer': synthesized_answer,
@@ -219,7 +220,14 @@ def query():
                     'total': round(total, 2)
                 },
                 'emergency_fix_applied': True  # Flag for debugging
-            })
+            }
+
+            # ITEM-024.6: Backend HTML pre-rendering (Option B - Nuclear Fix)
+            # ITEM-024.7: Reverted to JavaScript rendering (Path B - Clean Architecture)
+            # response = apply_backend_html_rendering(response)
+
+            # Return response with canonical diagrams + embedded SVG HTML
+            return jsonify(response)
 
         # Step 2-4: Execute RAG pipeline (embed → search → rerank)
         ranked_results, rag_timing = execute_rag_query(

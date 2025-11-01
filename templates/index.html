@@ -360,7 +360,6 @@
             font-style: italic;
         }
     </style>
-  <script src="{{ url_for('static', filename='js/diagram-renderer-loader.js') }}"></script>
 </head>
 <body>
     <header>
@@ -400,7 +399,35 @@
     <!-- Chessboard.js -->
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <!-- Chess Diagram Renderer -->
-    <script src="{{ url_for('static', filename='js/diagram-renderer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/diagram-renderer.js') }}?v=1762009042) }}">
+
+    <!-- INLINE FALLBACK FOR renderAnswerWithDiagrams (ITEM-024.6 Emergency Fix) -->
+    <script>
+    console.log("🔧 Checking for renderAnswerWithDiagrams...");
+    
+    // If external JS hasn't loaded, provide inline fallback
+    if (typeof window.renderAnswerWithDiagrams === 'undefined') {
+        console.warn("⚠️ External diagram-renderer.js not loaded, using inline fallback");
+        
+        window.renderAnswerWithDiagrams = function(answer, diagramPositions, container) {
+            console.log("🎨 [FALLBACK] renderAnswerWithDiagrams called");
+            console.log("  Answer length:", answer?.length || 0);
+            console.log("  Diagrams:", diagramPositions?.length || 0);
+            
+            if (!container) {
+                container = document.getElementById('answer-content-container') || document.body;
+            }
+            
+            // Since backend is sending HTML with embedded SVG, just insert it
+            container.innerHTML = answer;
+            
+            console.log("✅ [FALLBACK] Answer inserted with embedded HTML");
+        };
+    } else {
+        console.log("✅ External renderAnswerWithDiagrams loaded successfully");
+    }
+    </script>
+</script>
 
     <script>
         function search() {
@@ -491,7 +518,7 @@
             `;
             resultsDiv.appendChild(answerSection);
 
-            // Use diagram renderer to replace markers and inject diagrams
+            // ITEM-024.6: Backend sends pre-rendered HTML with embedded SVGs - just insert it directly
             const answerContainer = document.getElementById('answer-content-container');
             renderAnswerWithDiagrams(data.answer, data.diagram_positions || [], answerContainer);
 
