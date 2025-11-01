@@ -82,7 +82,7 @@ def inject_canonical_diagrams(query: str, canonical_positions: Dict) -> List[Dic
             diagram = {
                 'id': str(uuid.uuid4()),
                 'fen': pos_data.get('fen'),
-                'caption': pos_data.get('caption', f'{category} example'),
+                'caption': pos_data.get('default_caption', f'{category} example'),
                 'source': 'canonical',
                 'category': category,
                 'canonical_id': f'{category}/{pos_id}',
