@@ -133,7 +133,8 @@ def query():
             print(f"✓ Expected signature: {expected_signature}")
 
         # 🚨 EMERGENCY FIX: Detect tactical queries and bypass GPT diagram generation
-        if CANONICAL_POSITIONS and is_tactical_query(query_text):
+        # DISABLED: Static tactical bypass (ITEM-024.8)
+        if False and CANONICAL_POSITIONS and is_tactical_query(query_text):
             print("=" * 80)
             print("🚨 TACTICAL QUERY DETECTED - Option D Emergency Fix Active")
             print("=" * 80)
