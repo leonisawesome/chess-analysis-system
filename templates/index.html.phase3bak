@@ -360,6 +360,7 @@
             font-style: italic;
         }
     </style>
+  <script src="{{ url_for('static', filename='js/diagram-renderer-loader.js') }}"></script>
 </head>
 <body>
     <header>
