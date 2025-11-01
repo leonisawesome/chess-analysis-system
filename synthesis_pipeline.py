@@ -17,10 +17,10 @@ CANONICAL_POSITIONS_PROMPT = None
 
 def build_canonical_positions_prompt():
     """
-    Build a dynamic prompt section from canonical_positions.json.
-
-    Returns:
-        str: Formatted prompt section listing available canonical positions
+    Build a SIMPLIFIED prompt section from canonical_positions.json.
+    
+    Returns ~400 chars instead of 8,314 chars.
+    Lists categories with counts, not all 73 positions.
     """
     try:
         with open('canonical_positions.json', 'r') as f:
@@ -29,33 +29,26 @@ def build_canonical_positions_prompt():
         prompt_lines = [
             "",
             "CANONICAL POSITIONS LIBRARY:",
-            "You can reference verified positions using @canonical/category/id format.",
+            "Use @canonical/{category}/{id} format for tactical/structural concepts.",
             "",
-            "Available positions:"
+            "Available categories:"
         ]
 
-        # Build a compact listing
+        # Just list categories and counts with 1-2 example IDs
         for category, positions in library.items():
-            prompt_lines.append(f"\n{category}:")
-            for pos_id, pos_data in positions.items():
-                caption = pos_data.get('caption', 'No caption')
-                # Truncate long captions
-                if len(caption) > 60:
-                    caption = caption[:57] + "..."
-                prompt_lines.append(f"  - @canonical/{category}/{pos_id}")
-                prompt_lines.append(f"    {caption}")
+            count = len(positions)
+            example_ids = list(positions.keys())[:2]
+            examples = ', '.join(example_ids)
+            if count > 2:
+                examples += ', ...'
+            prompt_lines.append(f"  - {category} ({count}): {examples}")
 
-        prompt_lines.append("")
-        prompt_lines.append("USAGE EXAMPLES:")
-        prompt_lines.append("- [DIAGRAM: @canonical/forks/knight_fork_queen_rook | Caption: Classic knight fork pattern]")
-        prompt_lines.append("- [DIAGRAM: @canonical/pawn_structures/isolated_queen_pawn | Caption: The isolated queen pawn structure]")
-        prompt_lines.append("")
-        prompt_lines.append("ERROR HANDLING:")
-        prompt_lines.append("- If specific ID not found → fallback to any position in that category")
-        prompt_lines.append("- If category not found → silent skip (no diagram rendered)")
-        prompt_lines.append("- Use canonical positions for tactical/structural concepts")
-        prompt_lines.append("- Use move sequences (1.e4 e5...) for opening lines")
-        prompt_lines.append("")
+        prompt_lines.extend([
+            "",
+            "Format: [DIAGRAM: @canonical/{category}/{id} | Caption: description]",
+            "Example: [DIAGRAM: @canonical/pins/bishop_pin_knight_king | Caption: Bishop pins knight]",
+            ""
+        ])
 
         return "\n".join(prompt_lines)
 
@@ -63,7 +56,6 @@ def build_canonical_positions_prompt():
         return "\nCANONICAL POSITIONS LIBRARY: Not available\n"
     except Exception as e:
         return f"\nCANONICAL POSITIONS LIBRARY: Error loading ({str(e)})\n"
-
 def initialize_canonical_prompt():
     """
     Initialize the global canonical positions prompt.
@@ -178,43 +170,32 @@ def stage2_expand_sections(openai_client: OpenAI, sections: list, query: str,
 
     system_prompt = f"""You are a chess expert writing detailed explanations with visual diagrams.
 
-CRITICAL DIAGRAM RULES:
-1. Include diagrams using [DIAGRAM: <position> | Caption: <description>] format
-2. <position> can be: move sequence (1.e4 e5 2.Nf3 Nc6 3.Bc4) OR FEN string OR @canonical reference
-3. <description> is a DESCRIPTIVE caption explaining what the position shows
-4. For openings: diagrams show 3-6 moves from the starting position
-5. For middlegame concepts: use @canonical/ references or provided canonical FEN
-6. Diagrams must match the opening/concept being discussed
-7. Include 2-4 diagrams per section to illustrate key positions
+MANDATORY DIAGRAM RULES:
 
-DIAGRAM FORMAT (with optional TACTIC field):
-- [DIAGRAM: <position> | Caption: <description>]
-- [DIAGRAM: <position> | Caption: <description> | TACTIC: <type>]
-- [DIAGRAM: @canonical/category/id | Caption: <description>]
+RULE 1 - TACTICAL CONCEPTS (pins, forks, skewers, discovered attacks, etc.):
+  MUST use @canonical/ references from the library below.
+  Format: [DIAGRAM: @canonical/category/id | Caption: description]
+  Example: [DIAGRAM: @canonical/forks/knight_fork_queen_rook | Caption: Classic knight fork pattern]
 
-The TACTIC field is OPTIONAL but helpful for validation. Use it when diagrams illustrate tactical concepts:
-- fork (piece attacks 2+ opponent pieces)
-- pin (piece immobilized by line attack)
-- skewer (like pin but more valuable piece in front)
-- development (piece placement in opening)
+RULE 2 - OPENING SEQUENCES:
+  Use move notation showing 3-6 moves from starting position.
+  Format: [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: description]
+  Example: [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position]
 
-EXAMPLES:
-- [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position with White's bishop on c4 | TACTIC: development]
-- [DIAGRAM: 1.d4 d5 2.c4 | Caption: Queen's Gambit - White offers the c-pawn to gain central control | TACTIC: development]
-- [DIAGRAM: @canonical/forks/knight_fork_queen_rook | Caption: Classic knight fork pattern | TACTIC: fork]
-- [DIAGRAM: @canonical/pins/bishop_pin_knight | Caption: Bishop pins knight to king | TACTIC: pin]
+RULE 3 - ENFORCEMENT GUARANTEE:
+  All tactical diagrams are automatically validated and enforced post-synthesis.
+  Non-canonical tactical diagrams will be replaced with canonical positions.
+
+{canonical_prompt}
 
 CAPTION GUIDELINES:
 - Be concise (5-15 words)
 - Describe what's HAPPENING in the position (strategic ideas, piece placement, key moves)
 - Do NOT just repeat the move notation
 - Focus on WHY this position is important
-- TACTIC field is optional - only include it for tactical positions
 
 IMPORTANT: ALWAYS wrap diagrams in [DIAGRAM: ... | Caption: ...] brackets
 NEVER output bare FEN strings directly in the text without brackets
-
-{canonical_prompt}
 
 CANONICAL POSITION USAGE:
 If a [CANONICAL POSITION: FEN] is provided in the context below:

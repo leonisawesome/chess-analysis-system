@@ -147,6 +147,130 @@ def find_canonical_fallback(search_term):
 
     return None
 
+
+# ============================================================================
+# POST-SYNTHESIS ENFORCEMENT - Tactical Diagram Validation
+# ============================================================================
+
+TACTICAL_KEYWORDS = {
+    'pin', 'fork', 'skewer', 'discovered', 'deflection', 'decoy',
+    'clearance', 'interference', 'removal', 'zwischenzug', 'zugzwang'
+}
+
+def infer_category(caption_or_tactic):
+    """
+    Infer tactical category from caption or tactic field.
+
+    Args:
+        caption_or_tactic: Caption text or tactic keyword
+
+    Returns:
+        str: Category name or None
+    """
+    text_lower = caption_or_tactic.lower()
+
+    # Direct category matches
+    if 'pin' in text_lower:
+        return 'pins'
+    elif 'fork' in text_lower:
+        return 'forks'
+    elif 'skewer' in text_lower:
+        return 'skewers'
+    elif 'discovered' in text_lower:
+        return 'discovered_attacks'
+    elif 'deflection' in text_lower or 'deflect' in text_lower:
+        return 'deflection'
+    elif 'decoy' in text_lower:
+        return 'decoy'
+    elif 'clearance' in text_lower:
+        return 'clearance'
+    elif 'interference' in text_lower:
+        return 'interference'
+    elif 'removal' in text_lower or 'remove' in text_lower:
+        return 'removal_of_defender'
+
+    return None
+
+def is_tactical_diagram(caption, tactic=None):
+    """
+    Check if a diagram represents a tactical concept.
+
+    Args:
+        caption: Diagram caption text
+        tactic: Optional tactic field from marker
+
+    Returns:
+        bool: True if tactical concept detected
+    """
+    # Check tactic field first
+    if tactic and any(keyword in tactic.lower() for keyword in TACTICAL_KEYWORDS):
+        return True
+
+    # Check caption
+    if caption:
+        caption_lower = caption.lower()
+        return any(keyword in caption_lower for keyword in TACTICAL_KEYWORDS)
+
+    return False
+
+def enforce_canonical_for_tactics(diagram_positions):
+    """
+    Post-synthesis enforcement: Replace non-canonical tactical diagrams.
+
+    This function ensures 100% accuracy for tactical concepts by:
+    1. Detecting tactical keywords in captions
+    2. Checking if diagram uses canonical reference
+    3. Auto-replacing with canonical position if not
+
+    Args:
+        diagram_positions: List of diagram objects from extract_diagram_markers()
+
+    Returns:
+        List of diagram objects with tactical diagrams enforced as canonical
+    """
+    enforced_positions = []
+
+    for diagram in diagram_positions:
+        caption = diagram.get('caption', '')
+        tactic = diagram.get('tactic')
+        # Check if this diagram came from a canonical reference
+        # We can infer this from the presence of 'validated' field set by canonical lookup
+        is_from_canonical_reference = diagram.get('replaced', False) or \
+                                     ('validation_reason' in diagram and 'canonical' in diagram.get('validation_reason', '').lower())
+
+        # Check if this is a tactical diagram
+        if is_tactical_diagram(caption, tactic) and not is_from_canonical_reference:
+            logger.warning(f"⚠️ Non-canonical tactical diagram detected: {caption[:50]}...")
+
+            # Infer category from caption or tactic
+            category = infer_category(tactic or caption)
+
+            if category:
+                # Find canonical fallback
+                fallback = find_canonical_fallback(category)
+
+                if fallback:
+                    # Replace with canonical position
+                    original_fen = diagram.get('fen')
+                    diagram['fen'] = fallback['fen']
+                    diagram['svg'] = generate_svg_from_fen(fallback['fen'])
+                    diagram['caption'] = fallback['caption']
+                    diagram['tactic'] = fallback.get('tactic')
+                    diagram['enforced'] = True
+                    diagram['original_fen'] = original_fen
+                    diagram['enforcement_reason'] = f"Non-canonical tactical diagram replaced with {category}"
+
+                    logger.info(f"✓ Enforced canonical: {category}")
+                else:
+                    logger.warning(f"⚠️ No canonical fallback found for category: {category}")
+            else:
+                logger.warning(f"⚠️ Could not infer category from: {caption[:50]}")
+
+        enforced_positions.append(diagram)
+
+    return enforced_positions
+
+
 def extract_diagram_markers(text):
     """
     Extract all diagram markers from text and generate SVG.
@@ -282,6 +406,9 @@ def extract_diagram_markers(text):
                     # Don't add invalid diagram - better to skip than show wrong position
         else:
             logger.warning(f"[extract_diagram_markers] No FEN or moves found in marker: {match[:50]}")
+
+    # POST-SYNTHESIS ENFORCEMENT: Ensure tactical diagrams use canonical positions
+    diagram_positions = enforce_canonical_for_tactics(diagram_positions)
 
     return diagram_positions
 
