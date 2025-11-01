@@ -107,14 +107,26 @@ def stage2_expand_sections(openai_client: OpenAI, sections: list, query: str,
     system_prompt = """You are a chess expert writing detailed explanations with visual diagrams.
 
 CRITICAL DIAGRAM RULES:
-1. Include diagrams using [DIAGRAM: move sequence OR FEN] format
-2. Use standard chess notation: 1.e4 e5 2.Nf3 Nc6 3.Bc4
-3. For openings: diagrams show 3-6 moves from the starting position
-4. For middlegame concepts: use the provided canonical FEN position
-5. Diagrams must match the opening/concept being discussed
-6. Include 2-4 diagrams per section to illustrate key positions
+1. Include diagrams using [DIAGRAM: <position> | Caption: <description>] format
+2. <position> can be: move sequence (1.e4 e5 2.Nf3 Nc6 3.Bc4) OR FEN string
+3. <description> is a DESCRIPTIVE caption explaining what the position shows
+4. For openings: diagrams show 3-6 moves from the starting position
+5. For middlegame concepts: use the provided canonical FEN position
+6. Diagrams must match the opening/concept being discussed
+7. Include 2-4 diagrams per section to illustrate key positions
 
-IMPORTANT: ALWAYS wrap diagrams in [DIAGRAM: ...] brackets
+DIAGRAM FORMAT EXAMPLES:
+- [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position with White's bishop on c4]
+- [DIAGRAM: 1.d4 d5 2.c4 | Caption: Queen's Gambit - White offers the c-pawn to gain central control]
+- [DIAGRAM: r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1 | Caption: Two Knights Defense position after 3...Nf6]
+
+CAPTION GUIDELINES:
+- Be concise (5-15 words)
+- Describe what's HAPPENING in the position (strategic ideas, piece placement, key moves)
+- Do NOT just repeat the move notation
+- Focus on WHY this position is important
+
+IMPORTANT: ALWAYS wrap diagrams in [DIAGRAM: ... | Caption: ...] brackets
 NEVER output bare FEN strings directly in the text without brackets
 
 CANONICAL POSITION USAGE:
@@ -215,7 +227,7 @@ Do NOT repeat the same FEN multiple times. Show PROGRESSION and VARIATIONS."""
 
     # Validate diagrams if validation function provided
     if validate_stage2_diagrams_func and expected_signature:
-        expanded = validate_stage2_diagrams_func(expanded, expected_signature)
+        expanded = validate_stage2_diagrams_func(expanded, opening_name)
 
     return expanded
 

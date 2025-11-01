@@ -111,10 +111,16 @@ function renderAnswerWithDiagrams(answer, diagramPositions, container) {
       // Add SVG
       wrapper.appendChild(sanitizedSvg);
 
-      // Add FEN caption
-      if (diagram.fen) {
+      // Add descriptive caption (or fallback to FEN)
+      if (diagram.caption) {
+        const caption = document.createElement('div');
+        caption.className = 'diagram-caption';
+        caption.textContent = diagram.caption;
+        wrapper.appendChild(caption);
+      } else if (diagram.fen) {
+        // Fallback to FEN if no caption available
         const fenCaption = document.createElement('div');
-        fenCaption.className = 'fen-caption';
+        fenCaption.className = 'diagram-caption';
         fenCaption.textContent = diagram.fen;
         wrapper.appendChild(fenCaption);
       }
