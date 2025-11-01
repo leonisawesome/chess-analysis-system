@@ -26,6 +26,7 @@ from diagram_processor import extract_moves_from_description, extract_diagram_ma
 from opening_validator import extract_contamination_details, generate_section_with_retry, validate_stage2_diagrams, validate_and_fix_diagrams
 from synthesis_pipeline import stage1_generate_outline, stage2_expand_sections, stage3_final_assembly, synthesize_answer
 from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction
+from tactical_query_detector import is_tactical_query, inject_canonical_diagrams, strip_diagram_markers
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
@@ -61,6 +62,17 @@ try:
     print(f"✓ Loaded {len(CANONICAL_FENS)} canonical FEN concepts")
 except FileNotFoundError:
     print("⚠️  canonical_fens.json not found - middlegame queries will use RAG only")
+
+# Load canonical positions library for tactical query bypass
+print("Loading canonical positions library...")
+CANONICAL_POSITIONS = {}
+try:
+    with open('canonical_positions.json', 'r') as f:
+        CANONICAL_POSITIONS = json.load(f)
+    total_positions = sum(len(positions) for positions in CANONICAL_POSITIONS.values())
+    print(f"✓ Loaded {total_positions} canonical positions across {len(CANONICAL_POSITIONS)} categories")
+except FileNotFoundError:
+    print("⚠️  canonical_positions.json not found - tactical query bypass disabled")
 
 # Initialize canonical positions prompt for synthesis
 print("Initializing canonical positions prompt...")
@@ -118,6 +130,84 @@ def query():
             print(f"📋 Detected opening: {opening_name}")
         if expected_signature:
             print(f"✓ Expected signature: {expected_signature}")
+
+        # 🚨 EMERGENCY FIX: Detect tactical queries and bypass GPT diagram generation
+        if CANONICAL_POSITIONS and is_tactical_query(query_text):
+            print("=" * 80)
+            print("🚨 TACTICAL QUERY DETECTED - Option D Emergency Fix Active")
+            print("=" * 80)
+            print(f"Query: {query_text}")
+            print("Bypassing GPT-5 diagram generation, injecting canonical positions...")
+
+            # Still run RAG to get textual context from books
+            ranked_results, rag_timing = execute_rag_query(
+                OPENAI_CLIENT,
+                QDRANT_CLIENT,
+                query_text,
+                COLLECTION_NAME,
+                top_k=TOP_K,
+                top_n=TOP_N,
+                embed_func=embed_query,
+                search_func=semantic_search,
+                rerank_func=gpt5_rerank
+            )
+
+            results = format_rag_results(ranked_results, query_text, extract_positions=True)
+            context_chunks = prepare_synthesis_context(results, None, top_n=8)
+            context = "\n\n".join(context_chunks)
+
+            # Let GPT-5 generate text explanation ONLY (no diagrams)
+            print("Requesting text-only explanation from GPT-5...")
+            response = OPENAI_CLIENT.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are a chess expert. Explain tactical concepts clearly and concisely. DO NOT include any [DIAGRAM] markers or FEN strings in your response."},
+                    {"role": "user", "content": f"Question: {query_text}\n\nContext from chess literature:\n{context[:4000]}\n\nProvide a detailed explanation of this tactical concept. Focus on how it works, when to use it, and key patterns to recognize. Do NOT include diagram markers."}
+                ],
+                max_completion_tokens=2000
+            )
+
+            synthesized_answer = response.choices[0].message.content
+
+            # Strip any diagram markers GPT-5 might have generated anyway
+            synthesized_answer = strip_diagram_markers(synthesized_answer)
+
+            # Inject canonical diagrams programmatically
+            diagram_positions = inject_canonical_diagrams(query_text, CANONICAL_POSITIONS)
+
+            # Generate SVG for injected diagrams
+            from diagram_processor import generate_svg_from_fen
+            for diagram in diagram_positions:
+                if 'fen' in diagram and not diagram.get('svg'):
+                    diagram['svg'] = generate_svg_from_fen(diagram['fen'])
+
+            # Replace diagram placeholders with IDs (none expected, but for consistency)
+            synthesized_answer = replace_markers_with_ids(synthesized_answer, [])
+
+            total = time.time() - start
+            print(f"✅ EMERGENCY FIX COMPLETE: Injected {len(diagram_positions)} canonical diagrams")
+            print(f"🎯 TOTAL: {total:.2f}s")
+            print("=" * 80)
+
+            # Collect positions from top sources
+            synthesized_positions = collect_answer_positions(results, max_positions=2)
+
+            # Return response with canonical diagrams
+            return jsonify({
+                'success': True,
+                'query': query_text,
+                'answer': synthesized_answer,
+                'positions': synthesized_positions,
+                'diagram_positions': diagram_positions,  # Canonical diagrams
+                'sources': results[:5],
+                'results': results,
+                'timing': {
+                    **rag_timing,
+                    'synthesis': round(total, 2),
+                    'total': round(total, 2)
+                },
+                'emergency_fix_applied': True  # Flag for debugging
+            })
 
         # Step 2-4: Execute RAG pipeline (embed → search → rerank)
         ranked_results, rag_timing = execute_rag_query(
