@@ -181,20 +181,8 @@ def query():
                 if 'fen' in diagram and not diagram.get('svg'):
                     diagram['svg'] = generate_svg_from_fen(diagram['fen'])
 
-            # === CRITICAL FIX: Re-insert markers for frontend rendering ===
-            # Frontend expects [DIAGRAM_ID:uuid] markers in answer text
-            # This re-establishes the contract between backend and frontend
-            print(f"🔧 Re-inserting {len(diagram_positions)} diagram markers into answer text...")
-
-            # Append markers at end of text with captions
-            marker_text = "\n\n"
-            for i, diagram in enumerate(diagram_positions):
-                marker_text += f"[DIAGRAM_ID:{diagram['id']}]\n"
-                if 'caption' in diagram:
-                    marker_text += f"{diagram['caption']}\n\n"
-
-            synthesized_answer += marker_text
-            print("✅ Markers re-inserted - frontend will now render diagrams")
+            # Replace diagram placeholders with IDs (none expected, but for consistency)
+            synthesized_answer = replace_markers_with_ids(synthesized_answer, [])
 
             total = time.time() - start
             print(f"✅ EMERGENCY FIX COMPLETE: Injected {len(diagram_positions)} canonical diagrams")

@@ -1,132 +1,105 @@
 """
-Tactical Query Detection and Canonical Diagram Injection
-Purpose: Bypass GPT-5 diagram generation for tactical queries
+Tactical Query Detector (Option D - Emergency Fix)
+FIXED: Multi-category detection using SET instead of if/elif chain
 """
 import re
+import json
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set
+import uuid
 
 logger = logging.getLogger(__name__)
 
-# Tactical keywords that trigger canonical injection
+# Tactical keywords mapped to categories
 TACTICAL_KEYWORDS = {
-    'pin', 'pins', 'pinned', 'pinning',
-    'fork', 'forks', 'forking',
-    'skewer', 'skewers', 'skewering',
-    'discovered', 'discovered attack', 'discovered check',
-    'deflection', 'deflect',
-    'decoy',
-    'clearance',
-    'interference',
-    'removal', 'remove defender',
-    'x-ray', 'xray',
-    'windmill',
-    'smothered mate',
-    'zugzwang',
-    'zwischenzug'
+    'pins': ['pin', 'pins', 'pinned', 'pinning'],
+    'forks': ['fork', 'forks', 'forked', 'forking', 'knight fork', 'double attack'],
+    'skewers': ['skewer', 'skewers', 'skewering', 'x-ray', 'x-ray attack'],
+    'discovered_attacks': ['discovered attack', 'discovered', 'discovery', 'discovered check'],
+    'deflection': ['deflection', 'deflect', 'deflecting'],
+    'decoy': ['decoy', 'lure'],
+    'clearance': ['clearance', 'line clearance'],
+    'interference': ['interference', 'interpose'],
+    'removal_of_defender': ['removal', 'remove defender', 'removing defender'],
 }
 
 def is_tactical_query(query: str) -> bool:
-    """
-    Detect if user query is asking about tactical concepts.
-
-    Args:
-        query: User's search query
-
-    Returns:
-        bool: True if tactical query detected
-    """
+    """Checks if query contains any tactical keywords."""
     query_lower = query.lower()
-
-    # Check for tactical keywords
-    for keyword in TACTICAL_KEYWORDS:
-        if keyword in query_lower:
-            logger.info(f"Tactical query detected: keyword '{keyword}' found in query")
-            return True
-
+    for keywords in TACTICAL_KEYWORDS.values():
+        for keyword in keywords:
+            if keyword in query_lower:
+                return True
     return False
 
-def infer_tactical_category(query: str) -> Optional[str]:
+def infer_tactical_categories(query: str) -> Set[str]:
     """
-    Infer canonical category from query.
-
-    Args:
-        query: User's search query
-
-    Returns:
-        str: Category name or None
+    Infers ALL tactical categories mentioned in query.
+    Returns SET of category names (e.g., {'pins', 'forks'}).
+    
+    FIXED: Was if/elif chain that only returned first match.
+    Now returns all matching categories.
     """
     query_lower = query.lower()
-
-    # Map keywords to categories
-    if any(k in query_lower for k in ['pin', 'pins', 'pinned', 'pinning']):
-        return 'pins'
-    elif any(k in query_lower for k in ['fork', 'forks', 'forking']):
-        return 'forks'
-    elif any(k in query_lower for k in ['skewer', 'skewers', 'skewering']):
-        return 'skewers'
-    elif any(k in query_lower for k in ['discovered']):
-        return 'discovered_attacks'
-    elif any(k in query_lower for k in ['deflection', 'deflect']):
-        return 'deflection'
-    elif 'decoy' in query_lower:
-        return 'decoy'
-    elif 'clearance' in query_lower:
-        return 'clearance'
-    elif 'interference' in query_lower:
-        return 'interference'
-    elif any(k in query_lower for k in ['removal', 'remove']):
-        return 'removal_of_defender'
-
-    return None
+    found_categories = set()
+    
+    for category, keywords in TACTICAL_KEYWORDS.items():
+        for keyword in keywords:
+            if keyword in query_lower:
+                found_categories.add(category)
+                break  # Found this category, check next
+    
+    return found_categories
 
 def inject_canonical_diagrams(query: str, canonical_positions: Dict) -> List[Dict]:
     """
-    Inject canonical diagrams for tactical query.
-
-    Args:
-        query: User's search query
-        canonical_positions: Canonical positions library
-
-    Returns:
-        List of diagram objects
+    Injects canonical diagrams for ALL inferred categories.
+    
+    FIXED: Now handles multi-category queries properly.
+    
+    Returns list of diagram objects with FEN, caption, id.
     """
-    category = infer_tactical_category(query)
-
-    if not category or category not in canonical_positions:
-        logger.warning(f"Could not infer category or category not found: {category}")
+    inferred_categories = infer_tactical_categories(query)
+    all_diagrams = []
+    
+    logger.info(f"[Detector] Query: {query}")
+    logger.info(f"[Detector] Inferred categories: {inferred_categories}")
+    
+    if not inferred_categories:
+        logger.warning("[Detector] No tactical categories inferred")
         return []
-
-    positions = canonical_positions[category]
-    diagrams = []
-
-    # Inject up to 5 canonical positions
-    for i, (pos_id, pos_data) in enumerate(list(positions.items())[:5]):
-        diagram = {
-            'id': f'@canonical/{category}/{pos_id}',
-            'fen': pos_data.get('fen'),
-            'caption': pos_data.get('default_caption', f'{category} example'),
-            'tactic': pos_data.get('tactic'),
-            'source': 'canonical',
-            'injected': True,
-            'category': category
-        }
-        diagrams.append(diagram)
-        logger.info(f"Injected canonical diagram: {category}/{pos_id}")
-
-    logger.info(f"Injected {len(diagrams)} canonical diagrams for category '{category}'")
-    return diagrams
+    
+    for category in inferred_categories:
+        if category not in canonical_positions:
+            logger.warning(f"[Detector] Category '{category}' not in canonical library")
+            continue
+        
+        category_data = canonical_positions[category]
+        logger.info(f"[Detector] Found {len(category_data)} positions in '{category}'")
+        
+        # Add diagrams from this category
+        for pos_id, pos_data in list(category_data.items())[:3]:  # Max 3 per category
+            diagram = {
+                'id': str(uuid.uuid4()),
+                'fen': pos_data.get('fen'),
+                'caption': pos_data.get('default_caption', f'{category} example'),
+                'source': 'canonical',
+                'category': category,
+                'canonical_id': f'{category}/{pos_id}',
+                'tactic': pos_data.get('tactic', category)
+            }
+            all_diagrams.append(diagram)
+    
+    # Limit total diagrams to reasonable number
+    MAX_DIAGRAMS = 6
+    if len(all_diagrams) > MAX_DIAGRAMS:
+        logger.info(f"[Detector] Limiting {len(all_diagrams)} diagrams to {MAX_DIAGRAMS}")
+        all_diagrams = all_diagrams[:MAX_DIAGRAMS]
+    
+    logger.info(f"[Detector] Returning {len(all_diagrams)} total diagrams")
+    return all_diagrams
 
 def strip_diagram_markers(text: str) -> str:
-    """
-    Remove all [DIAGRAM: ...] markers from text.
-
-    Args:
-        text: GPT-5 generated text
-
-    Returns:
-        Text with diagram markers removed
-    """
-    # Remove [DIAGRAM: ...] markers
-    cleaned = re.sub(r'\[DIAGRAM:.*?\]', '', text, flags=re.DOTALL)
+    """Remove all [DIAGRAM: ...] markers from text."""
+    cleaned = re.sub(r'\[DIAGRAM(?:_ID)?:.*?\]', '', text, flags=re.IGNORECASE | re.DOTALL)
     return cleaned
