@@ -20,6 +20,10 @@ logger = logging.getLogger(__name__)
 # We still validate and only fallback to canonical when a diagram is invalid.
 ENFORCE_TACTICAL_CANONICAL = False
 
+# When validation fails but a FEN/SVG exists, keep the original diagram instead of
+# replacing it with a canonical fallback. This preserves dynamic variety.
+USE_FALLBACK_ON_FAILED_VALIDATION = False
+
 # Load canonical positions library
 try:
     with open('canonical_positions.json', 'r') as f:
@@ -388,26 +392,48 @@ def extract_diagram_markers(text):
             else:
                 logger.warning(f"✗ Diagram validation failed: {validation_reason}")
 
-                # PHASE 2: Try canonical fallback
-                fallback = find_canonical_fallback(tactic or caption or position_part)
-                if fallback:
-                    logger.info(f"✓ Using canonical fallback position")
-                    fallback_svg = generate_svg_from_fen(fallback['fen'])
+                if USE_FALLBACK_ON_FAILED_VALIDATION:
+                    # PHASE 2 (optional): Try canonical fallback
+                    fallback = find_canonical_fallback(tactic or caption or position_part)
+                    if fallback:
+                        logger.info(f"✓ Using canonical fallback position")
+                        fallback_svg = generate_svg_from_fen(fallback['fen'])
+                        diagram_positions.append({
+                            'id': diagram_id,
+                            'fen': fallback['fen'],
+                            'svg': fallback_svg,
+                            'caption': fallback['caption'],
+                            'tactic': fallback.get('tactic'),
+                            'validated': True,
+                            'replaced': True,
+                            'original_fen': fen,
+                            'validation_reason': f"Replaced: {validation_reason}",
+                            'original_marker': f'[DIAGRAM: {match}]'
+                        })
+                    else:
+                        logger.warning(f"✗ No canonical fallback found, keeping original diagram (unvalidated)")
+                        diagram_positions.append({
+                            'id': diagram_id,
+                            'fen': fen,
+                            'svg': svg,
+                            'caption': caption or f"Position: {fen[:20]}...",
+                            'tactic': tactic,
+                            'validated': False,
+                            'validation_reason': validation_reason,
+                            'original_marker': f'[DIAGRAM: {match}]'
+                        })
+                else:
+                    # Keep original diagram to preserve dynamic variety
                     diagram_positions.append({
                         'id': diagram_id,
-                        'fen': fallback['fen'],
-                        'svg': fallback_svg,
-                        'caption': fallback['caption'],
-                        'tactic': fallback.get('tactic'),
-                        'validated': True,
-                        'replaced': True,
-                        'original_fen': fen,
-                        'validation_reason': f"Replaced: {validation_reason}",
+                        'fen': fen,
+                        'svg': svg,
+                        'caption': caption or f"Position: {fen[:20]}...",
+                        'tactic': tactic,
+                        'validated': False,
+                        'validation_reason': validation_reason,
                         'original_marker': f'[DIAGRAM: {match}]'
                     })
-                else:
-                    logger.warning(f"✗ No canonical fallback found, skipping diagram")
-                    # Don't add invalid diagram - better to skip than show wrong position
         else:
             logger.warning(f"[extract_diagram_markers] No FEN or moves found in marker: {match[:50]}")
 
