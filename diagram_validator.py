@@ -14,50 +14,49 @@ logger = logging.getLogger(__name__)
 
 def validate_fork(board: chess.Board, caption: str) -> Tuple[bool, str]:
     """
-    Validate if position shows a fork matching the caption.
+    Validate if position shows a fork. Prefer knights, but accept any piece that
+    attacks 2+ opponent pieces. If caption specifies piece or color, honor it;
+    otherwise search broadly (both colors, multiple piece types with knight first).
 
-    Args:
-        board: chess.Board object
-        caption: Caption describing the fork
-
-    Returns:
-        (is_valid, reason)
+    Returns: (is_valid, reason)
     """
-    caption_lower = caption.lower()
+    caption_lower = (caption or '').lower()
 
-    # Determine attacker piece type from caption
-    piece_type = None
-    if 'knight' in caption_lower:
-        piece_type = chess.KNIGHT
-    elif 'bishop' in caption_lower:
-        piece_type = chess.BISHOP
-    elif 'queen' in caption_lower:
-        piece_type = chess.QUEEN
-    elif 'rook' in caption_lower:
-        piece_type = chess.ROOK
-    elif 'pawn' in caption_lower:
-        piece_type = chess.PAWN
+    # Attacker preference from caption
+    def preferred_types():
+        if 'knight' in caption_lower:
+            return [chess.KNIGHT]
+        if 'bishop' in caption_lower:
+            return [chess.BISHOP]
+        if 'rook' in caption_lower:
+            return [chess.ROOK]
+        if 'queen' in caption_lower:
+            return [chess.QUEEN]
+        if 'pawn' in caption_lower:
+            return [chess.PAWN]
+        # Default preference: knights first, then heavy pieces
+        return [chess.KNIGHT, chess.QUEEN, chess.ROOK, chess.BISHOP, chess.PAWN]
+
+    # Attacking side from caption (optional)
+    colors = []
+    if 'white' in caption_lower:
+        colors = [chess.WHITE]
+    elif 'black' in caption_lower:
+        colors = [chess.BLACK]
     else:
-        logger.warning(f"Could not determine attacker type from caption: {caption[:50]}")
-        return (False, "No attacker type specified")
+        colors = [chess.WHITE, chess.BLACK]
 
-    # Determine attacking side
-    color = chess.WHITE if 'white' in caption_lower else chess.BLACK
+    for color in colors:
+        for ptype in preferred_types():
+            for square in board.pieces(ptype, color):
+                attacks = board.attacks(square)
+                targets = [sq for sq in attacks
+                           if board.piece_at(sq)
+                           and board.piece_at(sq).color != color]
+                if len(targets) >= 2:
+                    piece_names = [board.piece_at(sq).symbol() for sq in targets]
+                    return (True, f"Fork validated: {chess.piece_name(ptype)} attacks {len(targets)} pieces {piece_names}")
 
-    # Check all pieces of that type
-    for square in board.pieces(piece_type, color):
-        attacks = board.attacks(square)
-        # Count attacked opponent pieces
-        targets = [sq for sq in attacks
-                   if board.piece_at(sq)
-                   and board.piece_at(sq).color != color]
-
-        if len(targets) >= 2:  # Fork = attacks 2+ pieces
-            piece_names = [board.piece_at(sq).symbol() for sq in targets]
-            logger.info(f"✓ Valid fork found: {chess.piece_name(piece_type)} on {chess.square_name(square)} attacks {len(targets)} pieces")
-            return (True, f"Fork validated: attacks {piece_names}")
-
-    logger.warning(f"✗ No valid fork found for caption: {caption[:50]}")
     return (False, "No piece attacks 2+ opponent pieces")
 
 
