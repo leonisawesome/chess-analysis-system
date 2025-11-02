@@ -179,8 +179,8 @@ def query():
         print(f"📋 Extracted {len(diagram_positions)} diagram positions from synthesis")
 
         # Step 6.6: Tactical backfill from RAG results (if needed)
-        tactic_from_query = infer_tactic_from_query(f"{query_text} 
- {synthesized_answer}")
+        combined_text = (query_text or "") + "\n" + (synthesized_answer or "")
+        tactic_from_query = infer_tactic_from_query(combined_text)
         if ENABLE_RAG_BACKFILL and tactic_from_query:
             have = len(diagram_positions)
             need = max(0, MIN_TACTICAL_DIAGRAMS - have)
@@ -261,6 +261,16 @@ def query():
                 print(f"First position FEN: {response_data['positions'][0].get('fen', 'N/A')}")
                 print(f"First position has SVG: {bool(response_data['positions'][0].get('svg'))}")
         print("="*80 + "\n")
+
+        # DEBUG: dump response to local file for analysis
+        try:
+            import os, json, time
+            Path('.local_out/responses').mkdir(parents=True, exist_ok=True)
+            ts = time.strftime('%Y%m%d-%H%M%S')
+            with open(f'.local_out/responses/response-{ts}.json','w') as f:
+                json.dump(response_data, f)
+        except Exception as _e:
+            print(f"[warn] could not dump response: {_e}")
 
         return jsonify(response_data)
 

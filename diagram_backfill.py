@@ -11,6 +11,7 @@ import uuid
 
 from diagram_validator import validate_diagram
 from diagram_processor import generate_svg_from_fen
+from chess_positions import extract_chess_positions
 
 
 TACTICAL_KEYWORDS = {
@@ -54,6 +55,21 @@ def backfill_tactical_diagrams_from_results(
 
     for res in results:
         positions = res.get('positions') or []
+        # Fallback: mine positions from raw text if struct positions missing
+        if not positions:
+            text = res.get('text') or ''
+            try:
+                mined = extract_chess_positions(text) or []
+            except Exception:
+                mined = []
+            # Normalize mined format: list of dicts with 'fen' and optional 'caption'
+            norm = []
+            for m in mined:
+                if isinstance(m, dict) and m.get('fen'):
+                    norm.append({'fen': m.get('fen'), 'caption': m.get('caption') or ''})
+                elif isinstance(m, tuple) and len(m) >= 1:
+                    norm.append({'fen': m[0], 'caption': ''})
+            positions = norm
         if not positions:
             continue
         for pos in positions:
