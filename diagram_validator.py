@@ -74,29 +74,93 @@ def validate_pin(board: chess.Board, caption: str) -> Tuple[bool, str]:
     """
     caption_lower = caption.lower()
 
-    # Determine pinned side (optional). If not stated, check both colors.
-    pinned_color = None
-    if 'black' in caption_lower:
-        pinned_color = chess.BLACK
-    elif 'white' in caption_lower:
-        pinned_color = chess.WHITE
-
-    def count_pins(color):
-        cnt = 0
+    # 1) Absolute pins (to king): use python-chess helper
+    abs_pins = 0
+    for color in [chess.WHITE, chess.BLACK]:
         for square in chess.SQUARES:
             piece = board.piece_at(square)
             if piece and piece.color == color and board.is_pinned(color, square):
-                cnt += 1
-        return cnt
+                abs_pins += 1
 
-    colors_to_check = [pinned_color] if pinned_color is not None else [chess.WHITE, chess.BLACK]
-    total_pins = 0
-    for c in colors_to_check:
-        total_pins += count_pins(c)
+    if abs_pins > 0:
+        logger.info(f"✓ Valid absolute pin(s) found: {abs_pins}")
+        return (True, f"Absolute pin validated: {abs_pins} piece(s) pinned")
 
-    if total_pins > 0:
-        logger.info(f"✓ Valid pin found: {total_pins} piece(s) pinned")
-        return (True, f"Pin validated: {total_pins} piece(s) pinned")
+    # 2) Relative pins (to higher-value piece like queen/rook behind)
+    # Heuristic: for each slider (B/R/Q), if along a ray we see: enemy piece then enemy queen/rook/king behind -> relative pin
+    def ray_dirs(piece_type):
+        if piece_type == chess.BISHOP:
+            return [chess.DIAGONAL_NE, chess.DIAGONAL_NW, chess.DIAGONAL_SE, chess.DIAGONAL_SW]
+        if piece_type == chess.ROOK:
+            return [chess.UP, chess.DOWN, chess.LEFT, chess.RIGHT]
+        # queen: both
+        return [chess.DIAGONAL_NE, chess.DIAGONAL_NW, chess.DIAGONAL_SE, chess.DIAGONAL_SW, chess.UP, chess.DOWN, chess.LEFT, chess.RIGHT]
+
+    def step(square, direction):
+        # chess library doesn't have generic step; emulate by offsets
+        file = chess.square_file(square)
+        rank = chess.square_rank(square)
+        df, dr = 0, 0
+        if direction == chess.UP:
+            df, dr = 0, 1
+        elif direction == chess.DOWN:
+            df, dr = 0, -1
+        elif direction == chess.LEFT:
+            df, dr = -1, 0
+        elif direction == chess.RIGHT:
+            df, dr = 1, 0
+        elif direction == chess.DIAGONAL_NE:
+            df, dr = 1, 1
+        elif direction == chess.DIAGONAL_NW:
+            df, dr = -1, 1
+        elif direction == chess.DIAGONAL_SE:
+            df, dr = 1, -1
+        elif direction == chess.DIAGONAL_SW:
+            df, dr = -1, -1
+        nf, nr = file + df, rank + dr
+        if 0 <= nf <= 7 and 0 <= nr <= 7:
+            return chess.square(nf, nr)
+        return None
+
+    def find_relative_pin():
+        for sq in chess.SQUARES:
+            a = board.piece_at(sq)
+            if not a or a.piece_type not in (chess.BISHOP, chess.ROOK, chess.QUEEN):
+                continue
+            dirs = ray_dirs(a.piece_type)
+            for d in dirs:
+                s1 = sq
+                # march to first blocker
+                while True:
+                    s1 = step(s1, d)
+                    if s1 is None:
+                        break
+                    p1 = board.piece_at(s1)
+                    if p1 is None:
+                        continue
+                    # must be enemy piece to be potentially pinned
+                    if p1.color == a.color:
+                        break
+                    # march further to see what lies behind
+                    s2 = s1
+                    while True:
+                        s2 = step(s2, d)
+                        if s2 is None:
+                            break
+                        p2 = board.piece_at(s2)
+                        if p2 is None:
+                            continue
+                        # if behind is same color as p1 and is king/queen/rook, count as relative pin
+                        if p2.color == p1.color and p2.piece_type in (chess.KING, chess.QUEEN, chess.ROOK):
+                            return True
+                        # hit another piece; ray blocked
+                        break
+                    break
+        return False
+
+    if find_relative_pin():
+        logger.info("✓ Valid relative pin found")
+        return (True, "Relative pin validated")
 
     logger.warning(f"✗ No valid pin found for caption: {caption[:50]}")
     return (False, "No pinned pieces found")
