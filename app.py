@@ -179,7 +179,8 @@ def query():
         print(f"📋 Extracted {len(diagram_positions)} diagram positions from synthesis")
 
         # Step 6.6: Tactical backfill from RAG results (if needed)
-        tactic_from_query = infer_tactic_from_query(query_text)
+        tactic_from_query = infer_tactic_from_query(f"{query_text} 
+ {synthesized_answer}")
         if ENABLE_RAG_BACKFILL and tactic_from_query:
             have = len(diagram_positions)
             need = max(0, MIN_TACTICAL_DIAGRAMS - have)

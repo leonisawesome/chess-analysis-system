@@ -14,9 +14,9 @@ from diagram_processor import generate_svg_from_fen
 
 
 TACTICAL_KEYWORDS = {
-    'pin': {'pin'},
-    'fork': {'fork'},
-    'skewer': {'skewer'},
+    'pin': {'pin','pins','pinned','pinning'},
+    'fork': {'fork','forks','double attack','double-attack'},
+    'skewer': {'skewer','skewers'},
 }
 
 
