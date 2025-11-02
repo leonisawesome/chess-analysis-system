@@ -24,6 +24,10 @@ ENFORCE_TACTICAL_CANONICAL = False
 # For dynamic, content-driven diagrams, disable by default.
 ALLOW_CANONICAL_REFERENCES = False
 
+# For tactical diagrams, require validation success; otherwise skip to avoid
+# showing incorrect tactical examples (e.g., non-pin labeled as pin).
+REQUIRE_VALID_FOR_TACTICS = True
+
 # When validation fails but a FEN/SVG exists, keep the original diagram instead of
 # replacing it with a canonical fallback. This preserves dynamic variety.
 USE_FALLBACK_ON_FAILED_VALIDATION = False
@@ -291,11 +295,14 @@ def extract_diagram_markers(text):
     WITH VALIDATION: Validates positions and provides fallbacks
     Returns list of diagram objects with id, fen, svg, and caption.
     """
-    pattern = r'\[DIAGRAM:\s*([^\]]+)\]'
-    matches = re.findall(pattern, text)
+    # Accept common label typos and case-insensitive: DIAGRAM / DIGRAM / DIAGRM
+    marker_re = re.compile(r"\[(?:DIAGRAM|DIGRAM|DIAGRM)\s*:\s*([^\]]+)\]", re.IGNORECASE)
+    matches = list(marker_re.finditer(text))
 
     diagram_positions = []
-    for match in matches:
+    for m in matches:
+        match = m.group(1)
+        full_marker = m.group(0)
         fen = None
         caption = None
         tactic = None
@@ -391,12 +398,15 @@ def extract_diagram_markers(text):
                     'tactic': tactic,
                     'validated': True,
                     'validation_reason': validation_reason,
-                    'original_marker': f'[DIAGRAM: {match}]'
+                    'original_marker': full_marker
                 })
             else:
                 logger.warning(f"✗ Diagram validation failed: {validation_reason}")
 
-                if USE_FALLBACK_ON_FAILED_VALIDATION:
+                # Skip invalid tactical diagrams to prevent misinformation
+                if REQUIRE_VALID_FOR_TACTICS and is_tactical_diagram(caption or '', tactic):
+                    logger.warning("Skipping invalid tactical diagram (REQUIRE_VALID_FOR_TACTICS)")
+                elif USE_FALLBACK_ON_FAILED_VALIDATION:
                     # PHASE 2 (optional): Try canonical fallback
                     fallback = find_canonical_fallback(tactic or caption or position_part)
                     if fallback:
@@ -412,7 +422,7 @@ def extract_diagram_markers(text):
                             'replaced': True,
                             'original_fen': fen,
                             'validation_reason': f"Replaced: {validation_reason}",
-                            'original_marker': f'[DIAGRAM: {match}]'
+                            'original_marker': full_marker
                         })
                     else:
                         logger.warning(f"✗ No canonical fallback found, keeping original diagram (unvalidated)")
@@ -424,7 +434,7 @@ def extract_diagram_markers(text):
                             'tactic': tactic,
                             'validated': False,
                             'validation_reason': validation_reason,
-                            'original_marker': f'[DIAGRAM: {match}]'
+                            'original_marker': full_marker
                         })
                 else:
                     # Keep original diagram to preserve dynamic variety
@@ -436,7 +446,7 @@ def extract_diagram_markers(text):
                         'tactic': tactic,
                         'validated': False,
                         'validation_reason': validation_reason,
-                        'original_marker': f'[DIAGRAM: {match}]'
+                        'original_marker': full_marker
                     })
         else:
             logger.warning(f"[extract_diagram_markers] No FEN or moves found in marker: {match[:50]}")
