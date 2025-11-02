@@ -1609,4 +1609,58 @@ After ITEM-024.6 backend deployment, user identified critical architectural mism
 5. Git commit with hybrid fix details
 
 ---
+============================================================
+EPIC: Positions Index + Diagram Pipeline (Deferred)
+Decided: 2025-11-02
+Note: See DESIGN.md (v0.1) for the canonical system design; backlog focuses on milestones and tasks only.
+Status: Deferred until PGN corpus is cleaned (ETA 2–3 months)
+Owner: leon / assistant
+------------------------------------------------------------
+Decision Record (DR-2025-11-02-PI)
+- Problem: RAG text rarely contains machine-extractable positions; LLM markers are noisy. Strict validation (correctly) filters wrong tactics, causing 0–few diagrams.
+- Decision: Defer building a dedicated positions index sourced from cleaned PGNs; keep current dynamic system without static canonical injection. Resume once PGNs are ready.
+- Rationale: Avoid tech debt; create a durable capability that serves diagrams, training plans, and game feedback.
+- Consequence: Short-term diagram yield may be low for some tactical queries; textual answers still work.
 
+Milestone 1: PGN Cleaning Complete (External)
+- Deliverable: Validated PGN set, deduped, normalized headers.
+- Artifacts: pgn_manifest.json, integrity report, volume metrics.
+
+Milestone 2: Positions Index MVP (Tactics)
+- Extract positions from PGNs (every N plies), persist FEN + move SAN + side-to-move.
+- Label tactics deterministically (pin/fork/skewer) via python-chess heuristics; store labels.
+- Schema (SQLite/Parquet): fen, tactic, side, caption, source_game_id, ply, tags(opening, phase).
+- QC: Sample 500 labeled positions per tactic; spot-validate with validator + Stockfish sanity.
+- Output: positions.db (or positions.parquet) ~10–50M rows incremental.
+
+Milestone 3: Integrate Index for Diagrams
+- Backfill source switches from RAG text to positions index lookup by tactic (+ diversity, de-dup). Target K=3–5 diagrams.
+- API contract unchanged: answer + diagram_positions with SVGs and captions.
+- Acceptance: For pins/forks/skewers queries, >=3 validated unique diagrams in 95% of runs.
+
+Milestone 4: Tutor Features Enablement
+- Training generator: fetch difficulty-banded positions per tactic; schedule spaced repetition.
+- Game feedback: ingest user PGNs, detect blunders, retrieve “similar positions” from index, suggest drills.
+
+Milestone 5: Infra & Scale
+- Move Qdrant to Docker/Cloud; remove local lock + >20k warning.
+- Lazy-initialize Qdrant; add startup health checks; keep response dumps (.local_out/responses).
+
+Out-of-Scope (Now)
+- Static canonical injection (kept disabled).
+- Large refactors to RAG/synthesis.
+
+Linkage
+- Canonical design: DESIGN.md
+- Execution tracker: BACKLOG.txt (avoid duplicating design narrative here)
+
+Acceptance Criteria (Epic)
+- Deterministic, validated diagrams independent of LLM markers.
+- Stable performance at target K diagrams for core tactical queries.
+- No static assets or hard-coded examples; all dynamic from index.
+
+Restart Plan (When PGNs Ready)
+1) Build extractor + labeling (1–2 days MVP on subset).
+2) Populate positions.db; add simple query helper.
+3) Wire helper into current backfill hook; test end-to-end.
+4) Expand coverage + labels; add Stockfish scores for difficulty.
