@@ -16,6 +16,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Feature flag: disable forced tactical canonical replacement by default.
+# We still validate and only fallback to canonical when a diagram is invalid.
+ENFORCE_TACTICAL_CANONICAL = False
+
 # Load canonical positions library
 try:
     with open('canonical_positions.json', 'r') as f:
@@ -408,7 +412,8 @@ def extract_diagram_markers(text):
             logger.warning(f"[extract_diagram_markers] No FEN or moves found in marker: {match[:50]}")
 
     # POST-SYNTHESIS ENFORCEMENT: Ensure tactical diagrams use canonical positions
-    diagram_positions = enforce_canonical_for_tactics(diagram_positions)
+    if ENFORCE_TACTICAL_CANONICAL:
+        diagram_positions = enforce_canonical_for_tactics(diagram_positions)
 
     return diagram_positions
 
