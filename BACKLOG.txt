@@ -1645,6 +1645,7 @@ Milestone 4: Tutor Features Enablement
 Milestone 5: Infra & Scale
 - Move Qdrant to Docker/Cloud; remove local lock + >20k warning.
 - Lazy-initialize Qdrant; add startup health checks; keep response dumps (.local_out/responses).
+ - Provenance & hygiene: add full chunk metadata in ingesters; create data/manifest; build denylist + rag_admin.py (list/find/purge/reindex); enable payload indexes for source filters; surface provenance in UI.
 
 Out-of-Scope (Now)
 - Static canonical injection (kept disabled).

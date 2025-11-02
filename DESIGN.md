@@ -20,6 +20,21 @@ Purpose: A single, adaptive training system that “speaks to your data”, prod
 - Web App / API
   - Chat (ask anything, plans, source citations), Drills UI (FEN→board + feedback), Dashboards.
 
+## Provenance & Traceability (RAG Hygiene)
+- Chunk metadata (stored in Qdrant payloads and manifests):
+  - Core: `source_type` (book|course|pgn), `source_id` (stable), `source_title`, `author`, `year`, `edition`
+  - File: `file_path` (relative), `sha256_file`, `ingest_version`, `ingest_time`
+  - Chunk: `doc_id` (stable), `chunk_id` (uuid), `content_sha256`, `char_start`/`char_end` (or page/chapter), `collection`
+  - PGN (when ready): `game_id` (hash), `headers` (event/site/date/players/eco), `ply_start`/`ply_end`, `phase`
+- Manifests & audit:
+  - `data/manifest/*.json` (one per source) + `data/manifest/index.json`
+  - `data/audit/purges-YYYYMMDD.json` for removals
+- Dirty‑data removal flow:
+  - `data/denylist.yaml` supports keys by `source_id|file_path|sha256|doc_id|game_id`
+  - Admin CLI (rag_admin.py): list-sources, find-chunks, purge, reindex
+- Indexing for filters: payload indexes on `source_id`, `doc_id`, `collection` in Qdrant
+- Answer provenance: UI shows title/chapter/source_id and links back to manifest
+
 ## Data Model (Positions Index)
 - Core columns: `id, game_id, ply, fen, side_to_move, tactic_labels(set), opening_tag, phase, source`.
 - Engine fields: `eval_cp, best_move_san, alt_move_penalty_cp, depth`.
@@ -43,4 +58,3 @@ Purpose: A single, adaptive training system that “speaks to your data”, prod
 
 ## Notes on OTB ~2400 Target
 - Requires regular classical tournaments, disciplined study, and feedback loops. System prioritizes deliberate practice (not generic puzzles), personalized drills, and engine‑checked review to accelerate learning.
-
