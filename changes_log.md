@@ -251,3 +251,9 @@ git clean -f scripts/ tests/test_pgn_manifest_external_merge.py || true
 - Or restore files individually:
   - `git checkout HEAD~1 -- Makefile ci/baselines/spotcheck_production.json`
   - `git rm -f scripts/pgn_manifest.py tests/test_pgn_manifest_external_merge.py && git commit -m "revert: remove manifest tool + test"`
+2025-11-02
+- Hotfix: Implement inline diagram renderer in `templates/index.html` to replace `[DIAGRAM_ID:uuid]` with SVG + caption using `diagram_positions`.
+- Rationale: External `diagram-renderer.js` did not define `renderAnswerWithDiagrams` and expected a different payload shape; inline fallback previously inserted raw answer without rendering diagrams.
+- Front-end: Updated `static/js/diagram-renderer.js` to export `window.renderAnswerWithDiagrams(answer, diagramPositions, container)` using the backend contract.
+
+- Remove emergency tactical injection path and module; dynamic pipeline is authoritative.

@@ -404,24 +404,47 @@
     <!-- INLINE FALLBACK FOR renderAnswerWithDiagrams (ITEM-024.6 Emergency Fix) -->
     <script>
     console.log("🔧 Checking for renderAnswerWithDiagrams...");
-    
-    // If external JS hasn't loaded, provide inline fallback
+
+    // Basic HTML escaper for captions
+    function escHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text == null ? '' : String(text);
+        return div.innerHTML;
+    }
+
+    // If external JS hasn't loaded, provide inline fallback that replaces [DIAGRAM_ID:uuid]
     if (typeof window.renderAnswerWithDiagrams === 'undefined') {
         console.warn("⚠️ External diagram-renderer.js not loaded, using inline fallback");
-        
+
         window.renderAnswerWithDiagrams = function(answer, diagramPositions, container) {
             console.log("🎨 [FALLBACK] renderAnswerWithDiagrams called");
             console.log("  Answer length:", answer?.length || 0);
-            console.log("  Diagrams:", diagramPositions?.length || 0);
-            
+            console.log("  Diagrams:", Array.isArray(diagramPositions) ? diagramPositions.length : 0);
+
             if (!container) {
                 container = document.getElementById('answer-content-container') || document.body;
             }
-            
-            // Since backend is sending HTML with embedded SVG, just insert it
-            container.innerHTML = answer;
-            
-            console.log("✅ [FALLBACK] Answer inserted with embedded HTML");
+
+            // Build map: id -> { svg, caption }
+            const byId = {};
+            (diagramPositions || []).forEach(d => {
+                if (d && d.id) byId[d.id] = { svg: d.svg || '', caption: d.caption || '' };
+            });
+
+            // Replace placeholders with rendered HTML blocks
+            const replaced = String(answer || '').replace(/\[DIAGRAM_ID:([a-f0-9\-]+)\]/gi, (m, id) => {
+                const entry = byId[id];
+                if (!entry || !entry.svg) return '<div class="chess-diagram-error">Diagram not available</div>';
+                const captionHtml = entry.caption ? `<div class=\"diagram-caption\">${escHtml(entry.caption)}</div>` : '';
+                return `
+<div class=\"chess-diagram-container\" style=\"margin:25px auto;max-width:400px;text-align:center;\">
+  <div class=\"chess-diagram\" style=\"display:inline-block;\">${entry.svg}</div>
+  ${captionHtml}
+ </div>`;
+            });
+
+            container.innerHTML = replaced;
+            console.log("✅ [FALLBACK] Answer rendered with inline diagrams");
         };
     } else {
         console.log("✅ External renderAnswerWithDiagrams loaded successfully");

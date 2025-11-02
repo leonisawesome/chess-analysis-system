@@ -705,3 +705,32 @@ def infer_tactical_categories(query: str) -> Set[str]:
 - Integration: VERIFIED
 - SVG generation: WORKING
 - 100% accuracy for all tactical queries
+---
+
+Date: November 2, 2025 (Hotfix)
+Session Focus: Diagram placeholders not rendering in web UI
+
+Problem
+- Frontend expected to render `[DIAGRAM_ID:uuid]` placeholders using a function `renderAnswerWithDiagrams(answer, diagram_positions, container)`.
+- External `static/js/diagram-renderer.js` did not define `renderAnswerWithDiagrams` and used a different contract (`response.diagrams` map).
+- Inline fallback in `templates/index.html` merely inserted `answer` as HTML without replacing placeholders, leaving `[DIAGRAM_ID:…]` visible and no diagrams rendered.
+
+Fix (Minimal, Surgical)
+- Updated inline fallback in `templates/index.html` to implement `renderAnswerWithDiagrams` that:
+  - Builds an in-memory map from `diagram_positions` (id → {svg, caption}).
+  - Replaces every `[DIAGRAM_ID:uuid]` with a self-contained HTML block including the SVG and escaped caption.
+  - Keeps external JS optional; works even if it fails to load or has API mismatches.
+
+Impact
+- Diagrams render reliably from backend-supplied `diagram_positions` without requiring backend HTML pre-rendering.
+- No changes to backend contract (`answer` + `diagram_positions`).
+
+Next
+- Refactor `static/js/diagram-renderer.js` to export the same `renderAnswerWithDiagrams` signature for parity and caching behavior. (Done)
+
+Front‑end Alignment (Nov 2, 2025)
+- Updated `static/js/diagram-renderer.js` to define `window.renderAnswerWithDiagrams(answer, diagramPositions, container)`.
+- Behavior: Builds id→{svg, caption} map and replaces `[DIAGRAM_ID:uuid]` inline, matching backend contract.
+- Result: External script and inline fallback now share the same API; diagrams render dynamically from content.
+
+Removed: tactical_query_detector emergency injection path; frontend now renders dynamic diagrams only.

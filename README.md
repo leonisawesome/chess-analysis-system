@@ -919,7 +919,7 @@ Early detection and complete bypass at /query endpoint level:
 
 **Implementation (ITEM-024.2):**
 
-1. **tactical_query_detector.py** (132 lines) - New module:
+1. **(removed) tactical_query_detector.py** (132 lines) - New module:
    - 27 tactical keywords across 14 categories
    - `is_tactical_query()` - Keyword matching detection
    - `infer_tactical_category()` - Category inference from query text
