@@ -20,6 +20,10 @@ logger = logging.getLogger(__name__)
 # We still validate and only fallback to canonical when a diagram is invalid.
 ENFORCE_TACTICAL_CANONICAL = False
 
+# Honor @canonical/category/id references in [DIAGRAM: ...] markers?
+# For dynamic, content-driven diagrams, disable by default.
+ALLOW_CANONICAL_REFERENCES = False
+
 # When validation fails but a FEN/SVG exists, keep the original diagram instead of
 # replacing it with a canonical fallback. This preserves dynamic variety.
 USE_FALLBACK_ON_FAILED_VALIDATION = False
@@ -319,12 +323,12 @@ def extract_diagram_markers(text):
                 else:
                     tactic = tactic_part
                 logger.info(f"[extract_diagram_markers] Found tactic: {tactic}")
-
         # Strategy 0: Check for @canonical/ reference first
-        category, position_id = parse_canonical_reference(position_part.strip())
-        if category and position_id:
-            # This is a canonical reference - look it up
-            canonical_pos = lookup_canonical_position(category, position_id)
+        if ALLOW_CANONICAL_REFERENCES:
+            category, position_id = parse_canonical_reference(position_part.strip())
+            if category and position_id:
+                # This is a canonical reference - look it up
+                canonical_pos = lookup_canonical_position(category, position_id)
             if canonical_pos:
                 fen = canonical_pos['fen']
                 # Use provided caption if available, otherwise use canonical caption
@@ -441,7 +445,18 @@ def extract_diagram_markers(text):
     if ENFORCE_TACTICAL_CANONICAL:
         diagram_positions = enforce_canonical_for_tactics(diagram_positions)
 
-    return diagram_positions
+    # Deduplicate diagrams (prefer unique FENs) to avoid repeated static boards
+    seen_fens = set()
+    uniq = []
+    for d in diagram_positions:
+        fen = d.get('fen')
+        if fen and fen in seen_fens:
+            continue
+        if fen:
+            seen_fens.add(fen)
+        uniq.append(d)
+
+    return uniq
 
 def replace_markers_with_ids(text, diagram_positions):
     """
