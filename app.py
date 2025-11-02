@@ -26,9 +26,14 @@ from diagram_processor import extract_moves_from_description, extract_diagram_ma
 from opening_validator import extract_contamination_details, generate_section_with_retry, validate_stage2_diagrams, validate_and_fix_diagrams
 from synthesis_pipeline import stage1_generate_outline, stage2_expand_sections, stage3_final_assembly, synthesize_answer
 from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction
+from diagram_backfill import backfill_tactical_diagrams_from_results, infer_tactic_from_query
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
+
+# Backfill settings: ensure we have at least this many tactical diagrams
+ENABLE_RAG_BACKFILL = True
+MIN_TACTICAL_DIAGRAMS = 3
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -172,6 +177,26 @@ def query():
         rag_timing['diagrams'] = round(time.time() - diagram_start, 2)
         print(f"⏱  Diagram extraction complete: {rag_timing['diagrams']}s")
         print(f"📋 Extracted {len(diagram_positions)} diagram positions from synthesis")
+
+        # Step 6.6: Tactical backfill from RAG results (if needed)
+        tactic_from_query = infer_tactic_from_query(query_text)
+        if ENABLE_RAG_BACKFILL and tactic_from_query:
+            have = len(diagram_positions)
+            need = max(0, MIN_TACTICAL_DIAGRAMS - have)
+            if need > 0:
+                print(f"🔧 Backfilling tactical diagrams from RAG: need {need}")
+                backfilled = backfill_tactical_diagrams_from_results(results, tactic_from_query, need)
+                if backfilled:
+                    # Append markers for backfilled diagrams at the end of the answer
+                    marker_text = "\n\n"
+                    for d in backfilled:
+                        marker_text += f"[DIAGRAM_ID:{d['id']}]\n"
+                        if d.get('caption'):
+                            marker_text += f"{d['caption']}\n\n"
+                    synthesized_answer += marker_text
+                    # Extend diagram_positions
+                    diagram_positions.extend(backfilled)
+                    print(f"✅ Backfilled {len(backfilled)} diagram(s)")
 
         total = time.time() - start
         print(f"🎯 TOTAL: {total:.2f}s")
