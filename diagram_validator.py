@@ -74,20 +74,29 @@ def validate_pin(board: chess.Board, caption: str) -> Tuple[bool, str]:
     """
     caption_lower = caption.lower()
 
-    # Determine pinned side
-    pinned_color = chess.BLACK if 'black' in caption_lower else chess.WHITE
+    # Determine pinned side (optional). If not stated, check both colors.
+    pinned_color = None
+    if 'black' in caption_lower:
+        pinned_color = chess.BLACK
+    elif 'white' in caption_lower:
+        pinned_color = chess.WHITE
 
-    # Check if any piece is pinned
-    pinned_squares = []
-    for square in chess.SQUARES:
-        piece = board.piece_at(square)
-        if piece and piece.color == pinned_color:
-            if board.is_pinned(pinned_color, square):
-                pinned_squares.append(square)
+    def count_pins(color):
+        cnt = 0
+        for square in chess.SQUARES:
+            piece = board.piece_at(square)
+            if piece and piece.color == color and board.is_pinned(color, square):
+                cnt += 1
+        return cnt
 
-    if pinned_squares:
-        logger.info(f"✓ Valid pin found: {len(pinned_squares)} piece(s) pinned")
-        return (True, f"Pin validated: {len(pinned_squares)} piece(s) pinned")
+    colors_to_check = [pinned_color] if pinned_color is not None else [chess.WHITE, chess.BLACK]
+    total_pins = 0
+    for c in colors_to_check:
+        total_pins += count_pins(c)
+
+    if total_pins > 0:
+        logger.info(f"✓ Valid pin found: {total_pins} piece(s) pinned")
+        return (True, f"Pin validated: {total_pins} piece(s) pinned")
 
     logger.warning(f"✗ No valid pin found for caption: {caption[:50]}")
     return (False, "No pinned pieces found")
