@@ -1,5 +1,8 @@
 # Chess Knowledge RAG System
 
+Scope Update (Nov 2, 2025): RAG‑Only
+- The near‑term scope is Retrieval‑Augmented Generation only: answer questions with grounded citations from your corpus. Diagram generation, tutor/planner features, and positions indexing are deferred. The `/query` API returns `answer`, `sources`, and `results` (debug). Any diagram fields are ignored by the UI for now.
+
 **A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 357,957 chunks from 1,052 chess books.**
 
 ---

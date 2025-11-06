@@ -734,3 +734,19 @@ Front‑end Alignment (Nov 2, 2025)
 - Result: External script and inline fallback now share the same API; diagrams render dynamically from content.
 
 Removed: tactical_query_detector emergency injection path; frontend now renders dynamic diagrams only.
+Date: November 2, 2025 (Evening)
+Session Focus: Stabilize current system; defer positions index
+
+Summary
+- Decision: Reduce scope to Chess RAG only (answers + citations). Diagrams, tutor/planner, SRS, and positions index deferred until PGNs are ready.
+- Verified API returns grounded answers and sources; response dumps enabled.
+- Observed that LLM‑authored diagram markers are noisy and under‑constrained; confirmed decision to drop diagrams for now.
+
+Actions Logged
+- BACKLOG.txt: Marked RAG‑only scope; added RAG items (provenance, retrieval baseline, performance); deferred all diagram/tutor work.
+- Branch hotfix/dynamic-diagram-rendering pushed; PR prepared via compare link.
+
+Next (when PGNs ready)
+1) Build positions index MVP (subset), wire into backfill hook.
+2) Move Qdrant to Docker/Cloud and enable lazy init.
+3) Resume tutor features: training generator and game feedback leveraging the index.

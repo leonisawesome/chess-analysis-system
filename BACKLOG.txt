@@ -16,13 +16,31 @@ Note: Time estimates removed per Master Prompt - Principal Architect has
 no reliable sense of time passage. Complexity assessed during execution.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ACTIVE ITEMS
+ACTIVE ITEMS (RAG‑Only Scope)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-ITEM-019: Diagram Quality - Contextual Relevance [P1]
-Status: COMPLETED - See ITEM-020
-Priority: HIGH
-Blocking: Diagram usefulness and accuracy
+DECISION (Nov 2, 2025)
+- Scope reduced to Chess RAG only (answers + citations). All diagram/tutor/SRS work deferred. See DESIGN.md for canonical design; this backlog tracks RAG work only.
+
+ITEM-RAG-001: Provenance & Traceability [P0]
+Status: IN PROGRESS
+Priority: CRITICAL
+Description: Label all chunks with full source metadata (source_id, file sha256, doc_id/chunk_id, content sha), manifests, denylist + admin CLI, payload indexes for filters; show provenance in UI.
+Acceptance: Any answer’s sources can be traced to exact file + chapter/page; denylisted sources are purged.
+
+ITEM-RAG-002: Retrieval Quality Baseline [P0]
+Status: NOT STARTED
+Priority: CRITICAL
+Description: Establish top‑k retrieval + reranking settings, collection partitions (openings/strategy/endgames), and a 20‑query evaluation set; measure grounding quality.
+Acceptance: ≥80% of queries judged well‑grounded with clear citations.
+
+ITEM-RAG-003: Performance & Stability [P1]
+Status: NOT STARTED
+Description: Move Qdrant to Docker/Cloud; lazy‑init Qdrant; startup health checks; response dumps.
+Acceptance: Cold start < 10s to serve /query; no local lock errors.
+
+DEFERRED: Diagram/Tutor Work (kept for record)
+ITEM-019, ITEM-024.x and all diagram/tutor/SRS items are deferred until PGNs are ready and the positions index MVP is implemented.
 
 Description:
   ISSUE 2 from October 31, 2025 session:
