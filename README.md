@@ -8,7 +8,7 @@
 
 ### What This System Does
 - **User asks:** "Explain the Italian Game opening"
-- **System retrieves:** Relevant chunks from 1,052 chess books via Qdrant vector search
+- **System retrieves:** Relevant chunks from 1,055 chess books via Qdrant vector search
 - **GPT-5 reranks:** Results by relevance
 - **3-stage synthesis:** Creates coherent answer with chess diagrams
 - **Output:** Professional article with interactive chess positions
@@ -23,7 +23,7 @@
 
 ### Critical System Facts
 - **Model:** GPT-5 (\`gpt-chatgpt-4o-latest-20250514\`)
-- **Corpus:** 357,957 chunks from 1,052 books (Qdrant vector DB)
+- **Corpus:** 358,529 chunks from 1,055 books (Qdrant vector DB)
 - **Success Rate:** 100% on Phase 1 & Phase 2 validation queries
 - **Port:** Flask runs on port 5001
 - **Auth:** GitHub SSH (no token expiration issues)
@@ -253,13 +253,43 @@ export COLLECTION_NAME='chess_production'
 \`\`\`
 
 ### Running the System
+
+**Docker Qdrant (Recommended - 15x faster startup)**
+
+The system now uses Docker Qdrant for better performance:
+
 ```bash
-# Start Flask server
+# 1. Start Qdrant container (if not already running)
+docker-compose up -d
+
+# 2. Start Flask with Docker Qdrant
+export OPENAI_API_KEY='your-openai-key-here'
+export QDRANT_MODE=docker
+export QDRANT_URL=http://localhost:6333
+source .venv/bin/activate
+python app.py
+
+# Server starts in ~3 seconds (vs 45s with local mode)
+# ✅ You'll see: "Using Docker Qdrant at http://localhost:6333"
+# ✅ Flask: "Running on http://127.0.0.1:5001"
+```
+
+**Qdrant Dashboard:** http://localhost:6333/dashboard
+
+**Local Qdrant (Legacy - slower)**
+
+```bash
+# Start Flask server with local Qdrant
+export QDRANT_MODE=local  # or omit (defaults to local)
 python3 app.py
 
-# Server will start on port 5001
-# ✅ You'll see: "Running on http://127.0.0.1:5001"
+# Server will start in ~45 seconds (loads 5.5GB into memory)
+# ⚠️  Warning: "Not recommended for collections with >20,000 points"
 ```
+
+**Performance Comparison:**
+- **Docker:** 3s startup, persistent, production-ready
+- **Local:** 45s startup, reloads on every restart, dev only
 
 ### Accessing the Application
 
@@ -1276,7 +1306,7 @@ def infer_tactical_categories(query: str) -> Set[str]:
 **Production Status:**
 - ✅ Flask server @ http://127.0.0.1:5001
 - ✅ Canonical library: 73 positions across 14 categories loaded
-- ✅ Qdrant database: 357,957 vectors from 1,052 books
+- ✅ Qdrant database: 358,529 vectors from 1,055 books (Docker mode)
 - ✅ Emergency fix active and monitoring all queries
 - ✅ Multi-category detection: WORKING
 - ✅ Verified with both single and multi-category tactical queries
