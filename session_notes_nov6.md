@@ -151,5 +151,100 @@ sqlite3 epub_analysis.db "SELECT file, score, tier FROM epub_analysis ORDER BY s
 
 ---
 
-**Status:** Session in progress - Ready to run analysis
-**Next Action:** Execute batch EPUB analysis on 7 new books
+## 📊 Analysis Results
+
+### EVS Scores for 7 New Books
+
+| Book | Score | Tier | Word Count | Diagrams |
+|------|-------|------|------------|----------|
+| Simeonidis - Carlsen's Neo-Møller | 60 | MEDIUM | 30,645 | 335 |
+| Dreev - Practical Play Endgame | 55 | MEDIUM | 34,170 | 693 |
+| Dreev - Practical Play Middlegame | 55 | MEDIUM | 35,266 | 370 |
+| Barsky - Universal Weapon 1.d4 d6 | 49 | MEDIUM | 55,675 | 451 |
+| Barsky - Modern Philidor Defence | 49 | MEDIUM | 58,814 | 541 |
+| Dreev - Attacking Caro-Kann | 49 | MEDIUM | 57,699 | 452 |
+| Dreev - Dreev vs Benoni | 49 | MEDIUM | 66,818 | 506 |
+
+**Average Score:** 52.3 (MEDIUM tier)
+
+### Comparative Analysis
+
+| Category | Avg Score | Book Count | Range |
+|----------|-----------|------------|-------|
+| **Overall Corpus** | 59.9 | 1,118 | 25-88 |
+| **7 New Books** | 52.3 | 7 | 49-60 |
+| **HIGH Tier (70+)** | 74.5 | 191 (17%) | 70-88 |
+| **MEDIUM Tier (45-69)** | 58.2 | 868 (77%) | 45-69 |
+| **LOW Tier (<45)** | 37.2 | 59 (5%) | 25-44 |
+
+### Key Findings
+
+1. **Tier Classification:** All 7 books fall in MEDIUM tier (45-69 range)
+2. **Corpus Comparison:** New books average 52.3 vs corpus average 59.9 (13% below average)
+3. **Tier Distribution:** Books are in the same tier as 77% of existing corpus
+4. **Book Type:** Opening repertoire books (high variation density, lower instructional prose)
+5. **Author Consistency:** 2 existing Barsky books scored 54-59 (similar to new ones)
+
+### Analysis Details
+
+**Strengths:**
+- ✅ All books have substantial content (30k-66k words)
+- ✅ High diagram density (335-693 diagrams per book)
+- ✅ Maximum keyword scores (15/15 - good chess terminology)
+- ✅ Respectable publishers (Chess Stars, NIC, Thinkers)
+
+**Limitations:**
+- ⚠️ Lower structure scores (5-11 range) - typical for opening books
+- ⚠️ Lower notation ratio scores (all 5) - heavy on variations vs prose
+- ⚠️ Below corpus average for instructional value
+- ⚠️ Opening repertoire books (reference material) vs teaching material
+
+---
+
+## 💡 Recommendations
+
+### Decision: **CONDITIONAL ADD**
+
+**Recommendation:** Add books to corpus with understanding of their role:
+
+**Reasons TO Add:**
+1. **Coverage:** Fill gaps in opening repertoire (Philidor, Neo-Møller, Benoni, Caro-Kann)
+2. **Majority Tier:** Books are in same tier as 77% of existing corpus
+3. **Legitimate Content:** Substantial word counts, high diagram density
+4. **Publisher Quality:** Chess Stars, NIC, Thinkers are respected publishers
+5. **Practical Value:** Useful for opening-specific queries
+
+**Reasons for CAUTION:**
+1. **Below Average:** 13% below corpus average (52.3 vs 59.9)
+2. **Not HIGH Tier:** None reach the 70+ threshold for elite content
+3. **Reference Material:** More variation-heavy than teaching-focused
+4. **Diminishing Returns:** Adding MEDIUM tier books dilutes overall corpus quality
+
+### Suggested Approach
+
+**Option A: Add All (Expand Coverage)**
+- Increases corpus to 1,059 books
+- Provides comprehensive opening coverage
+- Accepts slight quality dilution for breadth
+
+**Option B: Add Selectively (Quality Focus)**
+- Add only score 55+: Simeonidis (60), 2 Dreev books (55, 55)
+- Increases corpus to 1,055 books
+- Maintains higher average quality
+
+**Option C: Defer Addition**
+- Wait for higher-quality books (70+ tier)
+- Maintain current corpus quality
+- Risk: Missing specific opening coverage
+
+### User Decision Required
+
+**Question:** Which approach do you prefer?
+- A) Add all 7 books (breadth)
+- B) Add top 3 (55+ scores)
+- C) Skip for now (quality threshold)
+
+---
+
+**Status:** Analysis complete - Awaiting user decision on corpus addition
+**Next Action:** User selects approach, then add books to Qdrant if approved
