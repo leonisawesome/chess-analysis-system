@@ -42,7 +42,18 @@ if not api_key:
     raise ValueError("OPENAI_API_KEY environment variable not set!")
 
 OPENAI_CLIENT = OpenAI(api_key=api_key)
-QDRANT_CLIENT = QdrantClient(path=QDRANT_PATH)
+
+# Initialize Qdrant (support both local and Docker modes)
+QDRANT_MODE = os.getenv('QDRANT_MODE', 'local')  # 'local' or 'docker'
+QDRANT_URL = os.getenv('QDRANT_URL', 'http://localhost:6333')
+
+if QDRANT_MODE == 'docker':
+    print(f"   Using Docker Qdrant at {QDRANT_URL}")
+    QDRANT_CLIENT = QdrantClient(url=QDRANT_URL)
+else:
+    print(f"   Using local Qdrant at {QDRANT_PATH}")
+    QDRANT_CLIENT = QdrantClient(path=QDRANT_PATH)
+
 print(f"✓ Clients initialized (Qdrant: {QDRANT_CLIENT.count(COLLECTION_NAME).count} vectors)")
 
 # Load spaCy model for smart caption extraction
