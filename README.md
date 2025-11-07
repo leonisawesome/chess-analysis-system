@@ -668,6 +668,162 @@ EOF
 
 ---
 
+## 🎮 PGN Game Collection Pipeline (In Development)
+
+**Status:** Architecture design phase - NOT YET IMPLEMENTED
+
+### Overview
+
+The system is being designed to support 1M+ PGN games from professional chess course materials:
+- **Chessable courses** (~40%) - Structured opening repertoires
+- **ChessBase Mega Database** (~30%) - High-quality master games
+- **ChessBase PowerBases** (~15%) - Thematic collections (opening/player/endgame specific)
+- **Modern Chess courses** (~10%) - Professional training content
+- **ChessBase Magazine** (significant) - Every monthly issue since 1987
+- **Chess Publishing monthly** (remaining) - Latest opening theory updates
+
+### Key Context
+
+**These are NOT random game databases** - They are professional course materials:
+- Already curated and cleaned (user removed low-quality games)
+- Course games have hierarchical structure (Course → Chapter → Section → Game)
+- Even "unannotated" games in courses are teaching examples (model repertoire lines)
+- Different sources serve different purposes (courses vs databases vs magazines)
+
+### Design Documents
+
+**1. PGN_CHUNKING_QUESTIONS.md**
+- Comprehensive design questions for AI consultation
+- 6 key areas: chunking strategy, filtering, metadata, variations, use cases, cost/scale
+- 4 chunking options analyzed (full game, game+metadata, by phase, critical positions)
+
+**2. PGN_SOURCE_CLARIFICATION.md**
+- Critical context about professional course materials (not random games)
+- Explains course structure and hierarchical organization
+- 5 re-evaluation questions for architecture decisions
+- Sent to multiple AIs for consultation
+
+**3. CLAUDE_PGN_RECOMMENDATION.md**
+- Claude's detailed recommendation: Modified Option B
+- **One game = one chunk** with rich, source-aware metadata
+- Preserves course hierarchy (course name, author, chapter, section)
+- Minimal filtering (user already curated collection)
+- Includes all variations in game (part of teaching context)
+- Estimated: 850K-900K unique games after deduplication
+- Cost: ~$2.40 for embeddings, ~15GB storage
+
+### Recommended Chunking Strategy
+
+**Modified Option B: Full Game + Rich Metadata**
+
+Each chunk contains:
+```
+Source Metadata:
+  source_type: "chessable_course" (or mega_database, powerbase, magazine, etc.)
+  course_name: "Lifetime Repertoire: 1.e4"
+  course_author: "GM Boris Avrukh"
+  chapter: "Open Sicilian - Najdorf"
+  section: "6.Bg5 - Poisoned Pawn Variation"
+
+Game Header:
+  White: Magnus Carlsen (2863)
+  Black: Hikaru Nakamura (2789)
+  Event: World Championship 2023, Round 5
+  ECO: B97 (Najdorf Sicilian, Poisoned Pawn)
+  Result: 1-0
+
+Full PGN:
+  1. e4 c5 2. Nf3 d6... (all moves, annotations, variations)
+```
+
+**Rationale:**
+- Similar to successful book chunking (keeps context intact)
+- Course structure preserved (like book chapters)
+- Rich metadata enables precise filtering
+- Cost-effective: ~$2.40 for 1M games
+- Manageable scale: 1M chunks (not 5M with position fragmentation)
+
+### Implementation Plan (Not Yet Started)
+
+**Phase 1: Sample Testing**
+1. Get 1,000 sample PGNs from user (mixed sources)
+2. Create `analyze_pgn_games.py` - parsing, metadata extraction
+3. Test chunking strategy with samples
+4. Validate retrieval precision
+
+**Phase 2: Pilot Batch**
+1. Process 60K games (10K from each source)
+2. Cost: ~$0.15
+3. Test cross-source queries
+4. Refine deduplication logic
+
+**Phase 3: Full Scale**
+1. Process all 1M games
+2. Cost: ~$2.40, Duration: 2-2.5 hours
+3. Create `add_pgn_to_corpus.py` - batch ingestion
+4. Upload to production Qdrant
+
+**Phase 4: Integration**
+1. Update Flask to query books + games
+2. Add source filtering to UI
+3. Display game diagrams
+4. Production deployment
+
+### Cost Estimates
+
+**Embedding:**
+- 1M games × 1,200 tokens average = 1.2B tokens
+- Cost: $2.40 (at $0.02 per 1M tokens)
+
+**Storage:**
+- Current corpus: 358K chunks (5.5GB)
+- PGN addition: 1M chunks (~15GB)
+- Total: ~20.5GB (Docker Qdrant handles easily)
+
+**Processing Time:**
+- Parsing: 30-60 minutes
+- Embedding: 40-50 minutes
+- Upload: 20-30 minutes
+- **Total: 2-2.5 hours**
+
+### Query Examples (Future)
+
+When implemented, the system will support:
+
+**Course-specific queries:**
+- "Show me Avrukh's Najdorf repertoire against 6.Bg5"
+- Returns: Games from his Chessable course with chapter context
+
+**Latest theory queries:**
+- "Latest Poisoned Pawn theory from 2023"
+- Returns: Recent ChessBase Magazine games, theory updates
+
+**Player-specific queries:**
+- "Magnus Carlsen Najdorf wins"
+- Returns: Mega Database + PowerBase + Magazine games
+
+**Technique queries:**
+- "Rook endgame technique"
+- Returns: PowerBase endgames, course sections, annotated games
+
+### Current Status (November 2025)
+
+- ✅ Design questions document created
+- ✅ Source clarification document created
+- ✅ Claude's recommendation written
+- ⏳ Waiting for AI consultation responses (Grok, Gemini, ChatGPT)
+- ⏳ Sample PGN games needed from user (100-1,000 representative samples)
+- ❌ Implementation not yet started
+- ❌ Scripts not yet written (`analyze_pgn_games.py`, `add_pgn_to_corpus.py`)
+
+**Next Steps:**
+1. Collect updated AI recommendations with proper course material context
+2. Synthesize all recommendations and finalize architecture
+3. Get sample PGNs from user for testing
+4. Implement Phase 1 (sample testing)
+
+---
+
 ## 🧪 Testing & Validation
 
 ### Phase 1 Test Queries (Opening-Specific)

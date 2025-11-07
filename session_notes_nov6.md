@@ -430,3 +430,116 @@ python app.py
 ---
 
 **Final Status:** Docker migration complete - System running at peak performance ✅
+
+---
+
+## 🎮 PGN Pipeline Design (November 7, 2025)
+
+**Motivation:** Add 1M+ PGN games to complement the 1,055-book EPUB/MOBI corpus
+
+### Initial Context
+
+**PGN Collection Size:**
+- Current: 288K games in master ChessBase file (cleaning in progress)
+- Target: 1M+ games from multiple sources
+- Quality: User has already removed low-quality games and duplicates
+
+### Work Completed
+
+**1. Created Comprehensive Design Questions ✅**
+- `PGN_CHUNKING_QUESTIONS.md` (179 lines)
+- 6 key questions for AI consultation:
+  1. Chunking strategy (Options A-D: full game, game+metadata, by phase, critical positions)
+  2. Quality filtering approach
+  3. Metadata design (what to include for retrieval)
+  4. Variations handling (nested move alternatives)
+  5. Use case priority (player lookup, opening theory, endgame technique, etc.)
+  6. Cost vs quality tradeoffs (1M to 5M chunks, $5-$25 embedding costs)
+
+**2. Collected AI Recommendations ✅**
+- **Grok**: Hybrid approach (Option B for annotated, Option D for positions)
+- **Gemini**: Option B (game + rich metadata) with course structure preservation
+- **ChatGPT**: Hybrid approach (Option B base + Option D augmentation)
+- All three converged on similar strategies but with nuances
+
+**3. Critical Context Discovery ✅**
+**User revealed PGN sources are NOT random games but PROFESSIONAL COURSE MATERIALS:**
+
+**Source Breakdown:**
+1. **Chessable Courses** (~40%)
+   - Structured opening repertoires (e.g., "Lifetime Repertoire: 1.e4")
+   - Sequential learning paths with model games
+   - Professional GM annotations
+
+2. **ChessBase Mega Database** (~30%)
+   - High-quality master games (2400+)
+   - Curated flagship product
+
+3. **ChessBase PowerBases** (~15%)
+   - Opening-specific (e.g., "Sicilian Najdorf PowerBase")
+   - Player-specific (e.g., "Carlsen PowerBase")
+   - Thematic collections (e.g., "Rook Endgames PowerBase")
+
+4. **Modern Chess Courses** (~10%)
+   - Professional training content
+   - Annotated model games
+
+5. **ChessBase Magazine** (Significant)
+   - **EVERY SINGLE MONTHLY ISSUE** (since 1987)
+   - 10-20 annotated master games per issue
+   - Tournament coverage with GM analysis
+
+6. **Chess Publishing Monthly** (Remaining)
+   - Latest opening theory updates
+   - Tournament bulletins
+
+**Already Cleaned:**
+- Low-quality games removed
+- Duplicates eliminated
+- Amateur/blitz excluded (unless pedagogically valuable)
+- Quality floor is high
+
+**4. Created Re-evaluation Document ✅**
+- `PGN_SOURCE_CLARIFICATION.md` (212 lines)
+- Explains that PGNs are course materials, not random games
+- 5 specific re-evaluation questions for AIs:
+  1. Does course structure change chunking strategy?
+  2. Should different sources be chunked differently?
+  3. How does pre-cleaning affect filtering recommendations?
+  4. Should course metadata (chapter/section hierarchy) be preserved?
+  5. Does higher quality floor change cost/scale tradeoffs?
+
+### Key Insights
+
+**This Changes Everything:**
+- **Not a game database** → Professional course materials (like books)
+- **Course structure matters** → Chapters, variations, model games
+- **Different sources, different purposes** → Courses vs databases vs magazines
+- **Higher quality floor** → Less aggressive filtering needed
+- **Even "unannotated" games are valuable** → They're teaching repertoire lines
+
+**Implications for Architecture:**
+1. **Preserve course metadata** - Course name, author, chapter, section
+2. **Respect hierarchical structure** - Like book chapters
+3. **Be more inclusive** - User already did quality filtering
+4. **Source-specific strategies?** - Courses vs magazines vs databases may need different handling
+5. **Full games likely better than fragments** - Course games tell a story
+
+### Next Steps
+
+**Waiting on:**
+1. User to share `PGN_SOURCE_CLARIFICATION.md` with Grok, Gemini, ChatGPT
+2. Collect updated AI recommendations with proper context
+3. Synthesize all recommendations + add my updated opinion
+4. Get 100-1,000 sample PGN games from user for testing
+
+**Then implement:**
+1. `analyze_pgn_games.py` - PGN parsing, metadata extraction, quality scoring
+2. `add_pgn_to_corpus.py` - Batch ingestion to Qdrant with chosen chunking strategy
+3. Test with samples before scaling to full 1M collection
+
+### Files Created
+- `PGN_CHUNKING_QUESTIONS.md` - Initial consultation questions
+- `PGN_SOURCE_CLARIFICATION.md` - Context update for re-consultation
+
+**Status:** Consultation documents ready - Waiting for AI responses with proper context ✅
