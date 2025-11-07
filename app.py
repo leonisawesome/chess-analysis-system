@@ -389,7 +389,7 @@ if __name__ == '__main__':
     print("=" * 80)
     print("SYSTEM A WEB UI")
     print("=" * 80)
-    print(f"Corpus: 357,957 chunks from 1,052 books")
+    print(f"Corpus: 358,529 chunks from 1,055 books")
     print(f"Starting server at http://127.0.0.1:5001")
     print("=" * 80)
 
