@@ -246,5 +246,52 @@ sqlite3 epub_analysis.db "SELECT file, score, tier FROM epub_analysis ORDER BY s
 
 ---
 
-**Status:** Analysis complete - Awaiting user decision on corpus addition
-**Next Action:** User selects approach, then add books to Qdrant if approved
+---
+
+## 🛠️ Incremental Addition Script Created
+
+**Script:** `add_books_to_corpus.py`
+
+### Features
+- Adds books to existing Qdrant collection without rebuilding
+- Automatically finds next available point ID
+- Preserves existing corpus
+- Supports multiple input methods:
+  - Direct arguments: `python add_books_to_corpus.py book1.epub book2.epub`
+  - Flag syntax: `python add_books_to_corpus.py --books "book1.epub" "book2.epub"`
+  - Auto-discovery: `python add_books_to_corpus.py --all-new`
+- Dry-run mode for testing
+- Cost and time estimation
+- Progress tracking
+
+### Usage Examples
+
+**Add 3 Selected Books:**
+```bash
+source .venv/bin/activate
+export OPENAI_API_KEY='your-key-here'
+
+python add_books_to_corpus.py \
+  simeonidis_2020_carlsens_neo_moller_nic.epub \
+  dreev_2019_improve_your_practical_play_in_the_endgame_thinkers.epub \
+  dreev_2018_improve_your_practical_play_in_the_middlegame_thinkers.epub
+```
+
+**Dry Run First:**
+```bash
+python add_books_to_corpus.py --dry-run \
+  simeonidis_2020_carlsens_neo_moller_nic.epub \
+  dreev_2019_improve_your_practical_play_in_the_endgame_thinkers.epub \
+  dreev_2018_improve_your_practical_play_in_the_middlegame_thinkers.epub
+```
+
+**Expected Results:**
+- ~1,000-1,200 new chunks added
+- ~$0.05 embedding cost
+- ~2-3 minutes processing time
+- Final corpus: 358,957-359,157 chunks
+
+---
+
+**Status:** All documentation complete - Ready to index books
+**Next Action:** Run add_books_to_corpus.py to index the 3 books into Qdrant

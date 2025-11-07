@@ -466,9 +466,9 @@ python app.py
   - Benefit: Ensures complete consistency
 
 **Current Status (Nov 2025):**
-- Incremental addition script (`add_books_to_corpus.py`) needs to be created
-- Full rebuild script (`build_production_corpus.py`) exists and tested
-- Recommended: Create incremental script for routine additions
+- ✅ Incremental addition script (`add_books_to_corpus.py`) - Ready to use
+- ✅ Full rebuild script (`build_production_corpus.py`) - Tested and working
+- 📝 3 books prepared (Nov 6): simeonidis_2020, dreev_2019, dreev_2018 (not yet indexed)
 
 ### File Naming Convention
 
