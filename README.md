@@ -367,6 +367,37 @@ sqlite3 epub_analysis.db "SELECT file, score, tier FROM epub_analysis ORDER BY s
 
 **Current Status:** Adding new books requires re-vectorizing the corpus (deferred until production scaling).
 
+### File Naming Convention
+
+**CRITICAL:** All EPUB files must follow the standardized naming pattern for corpus consistency.
+
+**Pattern:** `lastname_year_title_publisher.epub`
+
+**Rules:**
+- All lowercase letters
+- Underscores instead of spaces
+- Remove special characters (commas, apostrophes, brackets, etc.)
+- Format: `author_year_description_publisher.epub`
+
+**Examples:**
+```
+Original: Aagaard, Jacob - GM Preparation Strategic Play [Quality Chess, 2013].epub
+Renamed:  aagaard_2013_gm_preparation_strategic_play_quality_chess.epub
+
+Original: Dreev, Alexey - Improve Your Practical Play in the Endgame [Thinkers, 2019].epub
+Renamed:  dreev_2019_improve_your_practical_play_in_the_endgame_thinkers.epub
+
+Original: Soltis, Andrew - 500 Chess Questions Answered [Batsford, 2021].epub
+Renamed:  soltis_2021_500_chess_questions_answered_batsford.epub
+```
+
+**Renaming Command:**
+```bash
+# Template
+mv "/path/to/Original Name [Publisher, Year].epub" \
+   "/path/to/lastname_year_title_publisher.epub"
+```
+
 ### File Locations
 - **EPUB Analyzer:** `fast_epub_analyzer.py` - Single file analysis
 - **Batch Processor:** `batch_process_epubs.py` - Multiple files
