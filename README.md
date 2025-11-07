@@ -322,6 +322,79 @@ curl -X POST http://localhost:5001/query \
 
 ---
 
+## 🎮 PGN Game Collection Pipeline (In Development)
+
+**Status:** Design phase - pipeline under development
+
+### Overview
+Adding PGN game collections (1M+ games from Chessable, ChessBase, Modern Chess, etc.) to the RAG corpus for game-based queries.
+
+**Sources:**
+- Chessable course PGNs
+- ChessBase mega database
+- Modern Chess publications
+- Publisher-specific collections
+- Currently: 288K games in master ChessBase file (cleaning in progress)
+- Target: 1M+ games total
+
+### Design Questions (To Be Resolved)
+
+**1. Chunking Strategy:**
+- **Option A:** Each game = 1 chunk (simple, ~500-2000 tokens/game)
+- **Option B:** Per-game with rich metadata (players, opening, ECO, annotations)
+- **Option C:** Split by phase (opening/middlegame/endgame for annotated games)
+- **Option D:** Critical positions only (extract key moments + annotations)
+
+**2. Quality Filtering:**
+- Master games only (2000+ rating)?
+- Annotated games only?
+- Exclude blitz/bullet games?
+- Minimum game length (moves)?
+- Deduplication strategy (transpositions, same games from different sources)?
+
+**3. Metadata to Preserve:**
+- White/Black players + ratings
+- ECO code, Opening name
+- Event, Site, Date, Round
+- Result
+- Annotations/comments
+- Time control
+- Source (Chessable/ChessBase/etc)
+
+**4. Use Cases to Support:**
+- "Show games where Carlsen played the Najdorf"
+- "Rook endgame technique examples"
+- "How to play against the London System"
+- "Typical middlegame plans in the King's Indian"
+- "Sacrificial attacks in the Sicilian Dragon"
+
+**5. Scale Considerations:**
+- Current corpus: 358K chunks from 1,134 books
+- Adding 1M games could add 1-3M chunks (depending on chunking strategy)
+- Estimate: Each game → 1-3 chunks (game + variations)
+- Storage: ~10-30GB additional Qdrant storage
+- Embedding cost: ~$5-15 for 1M games
+
+**6. Development Plan:**
+- Phase 1: Test with 100-1,000 sample games
+- Phase 2: Build chunking + quality filtering
+- Phase 3: Test retrieval quality
+- Phase 4: Scale to full 1M+ dataset
+
+### Sample Games Needed
+For pipeline development: **100-1,000 representative PGN games**
+- Mix of annotated and unannotated
+- Mix of openings
+- Mix of master/amateur games
+- Mix of sources (Chessable, ChessBase, etc.)
+
+### Future Scripts (Not Yet Created)
+- `analyze_pgn_games.py` - Quality scoring for PGN collections
+- `add_pgn_to_corpus.py` - Ingest PGN games to Qdrant
+- `batch_process_pgns.py` - Batch PGN processing
+
+---
+
 ## 📚 Adding New Books to the Corpus
 
 ### Overview
