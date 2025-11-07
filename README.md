@@ -292,6 +292,158 @@ curl -X POST http://localhost:5001/query \
 
 ---
 
+## 📚 Adding New Books to the Corpus
+
+### Overview
+The system has **two separate workflows** for processing chess books:
+1. **RAG Corpus Building** - EPUB extraction and vectorization (what you need for adding books)
+2. **File Analysis/Renaming** - PGN/PDF quality analysis (uses `chess_rag_system` module)
+
+### Prerequisites
+```bash
+# Activate the virtual environment (CRITICAL!)
+source .venv/bin/activate
+
+# Verify ebooklib is available
+python -c "import ebooklib; print('✓ ebooklib available')"
+```
+
+### Quick Start: Analyze New EPUBs
+
+**Single Book Analysis:**
+```bash
+# Activate venv first
+source .venv/bin/activate
+
+# Analyze one book
+python fast_epub_analyzer.py "/path/to/book.epub"
+
+# Output shows:
+# - EVS Score (Educational Value Score)
+# - Tier (TIER_1: 85+, TIER_2: 80-84, TIER_3: 70-79)
+# - Author reputation score
+# - Instructional content percentage
+# - Tactical/strategic content analysis
+```
+
+**Batch Analysis (Multiple Books):**
+```bash
+# Activate venv
+source .venv/bin/activate
+
+# Analyze all books in a directory
+python batch_process_epubs.py "/Volumes/T7 Shield/epub/1new"
+
+# Results stored in: epub_analysis.db
+# Query results:
+sqlite3 epub_analysis.db "SELECT file, score, tier FROM epub_analysis ORDER BY score DESC LIMIT 10;"
+```
+
+### Understanding EPUB Analysis Results
+
+**EVS Score Tiers:**
+- **TIER_1 (85+):** Elite instructional content - High priority for RAG
+- **TIER_2 (80-84):** Premium educational material - Good for RAG
+- **TIER_3 (70-79):** Quality supplementary content - Include if space allows
+- **Below 70:** Low instructional value - Consider excluding
+
+**Key Metrics:**
+- `score`: Overall educational value (0-100)
+- `author_score`: Reputation bonus for GM/elite authors
+- `instructional_pct`: % of text with teaching patterns
+- `tactical_content`: Tactical concept density
+- `strategic_content`: Strategic concept density
+
+### Adding Books to Qdrant Vector Database
+
+**IMPORTANT:** The current system uses pre-built Qdrant database with 357,957 chunks from 1,052 books.
+
+**To add new books (future workflow):**
+1. Analyze books to verify quality (EVS 70+)
+2. Extract and chunk text
+3. Generate embeddings
+4. Insert into Qdrant collection
+5. Update metadata
+
+**Current Status:** Adding new books requires re-vectorizing the corpus (deferred until production scaling).
+
+### File Naming Convention
+
+**CRITICAL:** All EPUB files must follow the standardized naming pattern for corpus consistency.
+
+**Pattern:** `lastname_year_title_publisher.epub`
+
+**Rules:**
+- All lowercase letters
+- Underscores instead of spaces
+- Remove special characters (commas, apostrophes, brackets, etc.)
+- Format: `author_year_description_publisher.epub`
+
+**Examples:**
+```
+Original: Aagaard, Jacob - GM Preparation Strategic Play [Quality Chess, 2013].epub
+Renamed:  aagaard_2013_gm_preparation_strategic_play_quality_chess.epub
+
+Original: Dreev, Alexey - Improve Your Practical Play in the Endgame [Thinkers, 2019].epub
+Renamed:  dreev_2019_improve_your_practical_play_in_the_endgame_thinkers.epub
+
+Original: Soltis, Andrew - 500 Chess Questions Answered [Batsford, 2021].epub
+Renamed:  soltis_2021_500_chess_questions_answered_batsford.epub
+```
+
+**Renaming Command:**
+```bash
+# Template
+mv "/path/to/Original Name [Publisher, Year].epub" \
+   "/path/to/lastname_year_title_publisher.epub"
+```
+
+### File Locations
+- **EPUB Analyzer:** `fast_epub_analyzer.py` - Single file analysis
+- **Batch Processor:** `batch_process_epubs.py` - Multiple files
+- **Analysis DB:** `epub_analysis.db` - SQLite results storage
+- **Qdrant DB:** `./qdrant_production_db/` - Vector database (6GB)
+
+### Example: Adding 7 New Books
+
+```bash
+# 1. Activate environment
+source .venv/bin/activate
+
+# 2. Analyze new books
+python batch_process_epubs.py "/Volumes/T7 Shield/epub/1new"
+
+# 3. Check results
+sqlite3 epub_analysis.db <<EOF
+SELECT
+  SUBSTR(file, -60) as book,
+  score,
+  tier,
+  author_score
+FROM epub_analysis
+WHERE file LIKE '%1new%'
+ORDER BY score DESC;
+EOF
+
+# 4. Identify high-quality books (TIER_1 and TIER_2)
+# These are candidates for corpus addition
+```
+
+### Troubleshooting
+
+**Issue: "ModuleNotFoundError: No module named 'ebooklib'"**
+- **Solution:** Activate the virtual environment: `source .venv/bin/activate`
+
+**Issue: "No text content found in EPUB"**
+- **Cause:** Corrupted or image-only EPUB
+- **Solution:** Check `remove_corrupt_files.txt` for known bad files
+
+**Issue: Low EVS scores for known good books**
+- **Cause:** Puzzle books, game collections (not instructional)
+- **Expected:** Only annotated games and teaching content score high
+
+---
+
 ## 🧪 Testing & Validation
 
 ### Phase 1 Test Queries (Opening-Specific)
