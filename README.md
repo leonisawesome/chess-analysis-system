@@ -326,8 +326,14 @@ curl -X POST http://localhost:5001/query \
 
 ### Overview
 The system has **two separate workflows** for processing chess books:
-1. **RAG Corpus Building** - EPUB extraction and vectorization (what you need for adding books)
+1. **RAG Corpus Building** - EPUB/MOBI extraction and vectorization (what you need for adding books)
 2. **File Analysis/Renaming** - PGN/PDF quality analysis (uses `chess_rag_system` module)
+
+**Supported Formats for RAG Corpus:**
+- ✅ **EPUB** (1,023 books) - via `ebooklib`
+- ✅ **MOBI** (111 books) - via `mobi` library
+- ❌ **PGN** - Analysis only, not added to RAG corpus
+- ❌ **PDF** - Analysis only, not added to RAG corpus
 
 ### Prerequisites
 ```bash
@@ -338,15 +344,16 @@ source .venv/bin/activate
 python -c "import ebooklib; print('✓ ebooklib available')"
 ```
 
-### Quick Start: Analyze New EPUBs
+### Quick Start: Analyze New Books (EPUB/MOBI)
 
 **Single Book Analysis:**
 ```bash
 # Activate venv first
 source .venv/bin/activate
 
-# Analyze one book
+# Analyze one book (works with both .epub and .mobi)
 python fast_epub_analyzer.py "/path/to/book.epub"
+python fast_epub_analyzer.py "/path/to/book.mobi"
 
 # Output shows:
 # - EVS Score (Educational Value Score)
@@ -406,9 +413,13 @@ sqlite3 epub_analysis.db "SELECT filename, score, tier FROM epub_analysis WHERE 
 
 **Step 3: Rename to Standard Pattern**
 ```bash
-# Pattern: lastname_year_title_publisher.epub
+# Pattern: lastname_year_title_publisher.{epub|mobi}
+# Examples:
 mv "Author, Name - Title [Publisher, Year].epub" \
    "lastname_year_title_publisher.epub"
+
+mv "Author, Name - Title [Publisher, Year].mobi" \
+   "lastname_year_title_publisher.mobi"
 ```
 
 **Step 4: Choose Indexing Method**
