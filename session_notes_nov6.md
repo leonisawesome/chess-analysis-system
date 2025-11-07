@@ -40,11 +40,11 @@ git checkout -b feature/add-new-epub-books
 
 **Key Finding:** The chess RAG system has **TWO separate workflows:**
 
-1. **RAG Corpus Building** (for EPUB books):
-   - Files: `fast_epub_analyzer.py`, `batch_process_epubs.py`
-   - Dependencies: `ebooklib`, `beautifulsoup4`
+1. **RAG Corpus Building** (for EPUB/MOBI books):
+   - Files: `analyze_chess_books.py`, `batch_process_epubs.py`
+   - Dependencies: `ebooklib` (EPUB), `mobi` (MOBI), `beautifulsoup4`
    - Environment: Requires `.venv` virtual environment
-   - Purpose: Extract text from EPUBs and analyze instructional value
+   - Purpose: Extract text from EPUB/MOBI and analyze instructional value
 
 2. **File Analysis/Renaming** (for PGN/PDF files):
    - Module: `chess_rag_system/`
@@ -54,7 +54,7 @@ git checkout -b feature/add-new-epub-books
 **Why This Matters:**
 - Previous attempt failed because we tried to use `chess_rag_system` module on EPUBs
 - The module's `TextExtractor` class doesn't have EPUB support
-- EPUBs need `fast_epub_analyzer.py` which uses `ebooklib`
+- EPUB/MOBI files need `analyze_chess_books.py` which uses `ebooklib` and `mobi`
 
 ### 3. Documentation Updates ✅
 
@@ -83,8 +83,9 @@ git checkout -b feature/add-new-epub-books
 # 1. Activate virtual environment (CRITICAL!)
 source .venv/bin/activate
 
-# 2. Single book analysis
-python fast_epub_analyzer.py "/path/to/book.epub"
+# 2. Single book analysis (EPUB or MOBI)
+python analyze_chess_books.py "/path/to/book.epub"
+python analyze_chess_books.py "/path/to/book.mobi"
 
 # 3. Batch analysis
 python batch_process_epubs.py "/Volumes/T7 Shield/epub/1new"
@@ -147,7 +148,7 @@ sqlite3 epub_analysis.db "SELECT file, score, tier FROM epub_analysis ORDER BY s
 1. **Two Workflows:** RAG corpus building (EPUB) is separate from file analysis (PGN/PDF)
 2. **Virtual Environment Critical:** Must activate `.venv` for EPUB processing
 3. **Existing Infrastructure:** System already has mature EPUB analysis pipeline
-4. **1,052 Books Baseline:** Current corpus was built using same `fast_epub_analyzer.py` workflow
+4. **1,134 Books Baseline:** Current corpus was built using same `analyze_chess_books.py` workflow (1,023 EPUB + 111 MOBI)
 
 ---
 

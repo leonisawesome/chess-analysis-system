@@ -12,7 +12,7 @@ from tqdm import tqdm
 import json
 
 # Import the fast analyzer
-from fast_epub_analyzer import analyze_epub_fast
+from analyze_chess_books import analyze_epub_fast
 
 
 DB_SCHEMA = """

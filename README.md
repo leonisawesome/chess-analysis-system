@@ -333,7 +333,14 @@ The system has **two separate workflows** for processing chess books:
 - ✅ **EPUB** (1,023 books) - via `ebooklib`
 - ✅ **MOBI** (111 books) - via `mobi` library
 - ❌ **PGN** - Analysis only, not added to RAG corpus
-- ❌ **PDF** - Analysis only, not added to RAG corpus
+- ❌ **PDF** - Intentionally excluded to avoid contaminating RAG with low-quality extractions
+
+**Why no PDF?**
+PDF text extraction is unreliable for chess books due to:
+- Diagram/notation corruption during extraction
+- Inconsistent formatting across different PDF sources
+- High risk of introducing noisy, malformed text into the corpus
+- Decision: Only ingest high-quality EPUB/MOBI with clean text extraction
 
 ### Prerequisites
 ```bash
@@ -352,8 +359,8 @@ python -c "import ebooklib; print('✓ ebooklib available')"
 source .venv/bin/activate
 
 # Analyze one book (works with both .epub and .mobi)
-python fast_epub_analyzer.py "/path/to/book.epub"
-python fast_epub_analyzer.py "/path/to/book.mobi"
+python analyze_chess_books.py "/path/to/book.epub"
+python analyze_chess_books.py "/path/to/book.mobi"
 
 # Output shows:
 # - EVS Score (Educational Value Score)
@@ -543,7 +550,7 @@ mv "/path/to/Original Name [Publisher, Year].epub" \
 ```
 
 ### File Locations
-- **EPUB Analyzer:** `fast_epub_analyzer.py` - Single file analysis
+- **Book Analyzer:** `analyze_chess_books.py` - Single EPUB/MOBI file analysis
 - **Batch Processor:** `batch_process_epubs.py` - Multiple files
 - **Analysis DB:** `epub_analysis.db` - SQLite results storage
 - **Qdrant DB:** `./qdrant_production_db/` - Vector database (6GB)
