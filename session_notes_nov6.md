@@ -295,3 +295,74 @@ python add_books_to_corpus.py --dry-run \
 
 **Status:** All documentation complete - Ready to index books
 **Next Action:** Run add_books_to_corpus.py to index the 3 books into Qdrant
+
+---
+
+## 🐳 Docker Deployment Preparation (November 7, 2025)
+
+**Motivation:** With 358,529 chunks, local Qdrant has performance issues:
+- Flask startup: ~45 seconds (loads 5.5GB into memory)
+- Qdrant warning: "Not recommended for >20,000 points"
+- Memory intensive, no concurrent access
+
+### Work Completed
+
+**1. Created Docker Configuration ✅**
+- `docker-compose.yml` - Qdrant container setup
+  - Port 6333 (REST API)
+  - Volume mapping for persistent storage
+  - Health checks and restart policy
+
+**2. Created Migration Script ✅**
+- `migrate_to_docker_qdrant.py` (250 lines)
+  - Automated snapshot creation
+  - Upload to Docker Qdrant
+  - Collection recovery
+  - Verification (count matching)
+
+**3. Comprehensive Documentation ✅**
+- `DOCKER_MIGRATION_GUIDE.md` (350 lines)
+  - Manual Docker Desktop installation steps
+  - Complete migration workflow
+  - Docker commands reference
+  - Troubleshooting guide
+  - Performance comparison table
+
+**4. Updated Flask for Docker Support ✅**
+- Added `QDRANT_MODE` environment variable ('local' or 'docker')
+- Added `QDRANT_URL` environment variable (http://localhost:6333)
+- Conditional Qdrant client initialization
+- Backward compatible (defaults to local mode)
+
+### Expected Performance Improvements
+
+| Metric | Before (Local) | After (Docker) |
+|--------|----------------|----------------|
+| Flask Startup | ~45 seconds | ~2-3 seconds |
+| Qdrant Loading | Every restart | Once (persistent) |
+| Memory Usage | High (5.5GB) | Optimized |
+| Concurrent Access | Limited | Supported |
+
+### Migration Steps (When Docker Installed)
+
+```bash
+# 1. Start Qdrant in Docker
+docker-compose up -d
+
+# 2. Run migration script
+source .venv/bin/activate
+python migrate_to_docker_qdrant.py
+
+# 3. Update Flask configuration
+export QDRANT_MODE=docker
+python app.py
+```
+
+### Files Committed
+- `docker-compose.yml` - Container configuration
+- `migrate_to_docker_qdrant.py` - Automated migration
+- `DOCKER_MIGRATION_GUIDE.md` - Complete documentation
+- `app.py` - Docker Qdrant support
+
+**Status:** Infrastructure code ready, awaiting Docker Desktop installation
+**Next:** User installs Docker Desktop → Run migration → Enjoy 45s → 3s startup
