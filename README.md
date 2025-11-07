@@ -356,16 +356,119 @@ sqlite3 epub_analysis.db "SELECT file, score, tier FROM epub_analysis ORDER BY s
 
 ### Adding Books to Qdrant Vector Database
 
-**IMPORTANT:** The current system uses pre-built Qdrant database with 357,957 chunks from 1,052 books.
+**Current Corpus:** 357,957 chunks from 1,052 books in `qdrant_production_db`
 
-**To add new books (future workflow):**
-1. Analyze books to verify quality (EVS 70+)
-2. Extract and chunk text
-3. Generate embeddings
-4. Insert into Qdrant collection
-5. Update metadata
+#### Complete Pipeline for Adding New Books
 
-**Current Status:** Adding new books requires re-vectorizing the corpus (deferred until production scaling).
+**Step 1: Analyze Book Quality**
+```bash
+source .venv/bin/activate
+python batch_process_epubs.py "/path/to/new/books"
+
+# Review scores
+sqlite3 epub_analysis.db "SELECT filename, score, tier FROM epub_analysis WHERE full_path LIKE '%new%' ORDER BY score DESC;"
+```
+
+**Step 2: Select Books (Quality Threshold)**
+- Option A: Add all books scoring 70+ (HIGH tier)
+- Option B: Add books scoring 55+ (top MEDIUM tier)
+- Option C: Add books scoring 45+ (all MEDIUM tier)
+
+**Step 3: Rename to Standard Pattern**
+```bash
+# Pattern: lastname_year_title_publisher.epub
+mv "Author, Name - Title [Publisher, Year].epub" \
+   "lastname_year_title_publisher.epub"
+```
+
+**Step 4: Choose Indexing Method**
+
+**Method A: Incremental Addition (Recommended for <10 books)**
+```bash
+source .venv/bin/activate
+
+# Set environment variable for OpenAI API
+export OPENAI_API_KEY='your-key-here'
+
+# Add specific books to existing Qdrant database
+python add_books_to_corpus.py \
+  --books "book1.epub" "book2.epub" "book3.epub" \
+  --collection "chess_production" \
+  --qdrant-path "./qdrant_production_db"
+
+# Cost: ~$0.02-0.05 per book
+# Time: ~30-60 seconds per book
+# Result: Adds ~300-500 chunks per book to existing index
+```
+
+**Method B: Full Corpus Rebuild (For major updates)**
+```bash
+source .venv/bin/activate
+export OPENAI_API_KEY='your-key-here'
+
+# Rebuild entire corpus from scratch
+python build_production_corpus.py
+
+# Cost: ~$2-3 for 1,000+ books
+# Time: ~2-4 hours
+# Result: Fresh index with all books (ensures consistency)
+```
+
+**Step 5: Verify Addition**
+```bash
+# Check Qdrant collection size
+python -c "
+from qdrant_client import QdrantClient
+client = QdrantClient(path='./qdrant_production_db')
+info = client.get_collection('chess_production')
+print(f'Total chunks: {info.points_count}')
+"
+
+# Test query on new content
+curl -X POST http://localhost:5001/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "topics from your new books"}' \
+  | jq '.sources[0].metadata.book_title'
+```
+
+**Step 6: Restart Flask Server**
+```bash
+# Restart to ensure Qdrant changes are loaded
+pkill -f "python.*app.py"
+python app.py
+```
+
+#### Cost Estimation
+
+**OpenAI Embedding Costs:**
+- Model: `text-embedding-3-small` ($0.02 per 1M tokens)
+- Average book: ~30,000 words = ~40,000 tokens
+- Chunks per book: ~300-500 (512 tokens each with overlap)
+
+**Per Book:**
+- Embedding cost: ~$0.001-0.002
+- Processing time: 30-60 seconds
+
+**Example Scenarios:**
+- 3 books (incremental): ~$0.05, 2-3 minutes
+- 10 books (incremental): ~$0.15, 8-10 minutes
+- 1,055 books (full rebuild): ~$2.50, 2-4 hours
+
+#### Important Notes
+
+**Incremental vs Rebuild:**
+- **Incremental:** Fast, cheap, preserves existing index
+  - Use for: Adding 1-10 books
+  - Limitation: Can't remove old books or change chunk strategy
+
+- **Full Rebuild:** Slower, comprehensive, fresh start
+  - Use for: Major updates, corpus cleanup, strategy changes
+  - Benefit: Ensures complete consistency
+
+**Current Status (Nov 2025):**
+- Incremental addition script (`add_books_to_corpus.py`) needs to be created
+- Full rebuild script (`build_production_corpus.py`) exists and tested
+- Recommended: Create incremental script for routine additions
 
 ### File Naming Convention
 
