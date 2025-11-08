@@ -864,18 +864,34 @@ When implemented, the system will support:
 - Dedicated test script validates PGN-only retrieval
 - Can merge collections after validation
 
-**Phase 3: Full Implementation** ⏳ **READY**
-- ⏳ Generate embeddings for 1,779 sample games
-- ⏳ Upload to Qdrant test collection
-- ⏳ Test retrieval quality
-- ⏳ Scale to full 1M+ games collection
+**Phase 3: Testing & Validation** ✅ **COMPLETE** (November 7, 2025)
+- ✅ Generated embeddings: 1,400/1,779 chunks (78.7% success)
+- ✅ Uploaded to `chess_pgn_test` collection
+- ✅ Retrieval testing: **100% purity** (zero contamination)
+- ✅ Audit trail verified (source_file + game_number working)
+- ⚠️ Known issue: 379 chunks too large (exceeded 8192 token limit)
 
-**Next Steps:**
-1. Run full embedding generation on 1,779 samples (~$0.02)
-2. Upload to `chess_pgn_test` collection in Qdrant
-3. Test retrieval with course-specific queries
-4. Validate precision@5 on PGN queries
-5. Scale to production (1M+ games, ~$2-6 cost)
+**Test Results:**
+```
+Embeddings: 1,400 chunks, 1.2M tokens, $0.024, 35 seconds
+Retrieval: 5/5 queries @ 100% precision (all PGN data)
+  - Benko Gambit: 0.65 avg score
+  - London System: 0.55 avg score
+  - Rook endgame: 0.54 avg score
+  - Middlegame plans: 0.50 avg score
+```
+
+**Phase 4: Production Scale** ⏳ **READY** (after fixing oversized chunks)
+- ⏳ Fix oversized chunks (split or truncate games >8K tokens)
+- ⏳ Scale to 1M PGNs: ~787K chunks, ~$13-15, ~5.5 hours
+- ⏳ Deploy to production Qdrant collection
+- ⏳ Integrate with Flask API
+
+**Production Estimates (1M PGNs):**
+- Success rate: ~79% (787K chunks)
+- Failed: ~21% (213K oversized games)
+- Cost: ~$13.44 (at $0.02 per 1M tokens)
+- Time: ~5.5 hours
 
 ---
 
