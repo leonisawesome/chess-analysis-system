@@ -102,6 +102,11 @@ def index():
     """Main page."""
     return render_template('index.html')
 
+@app.route('/test_pgn')
+def test_pgn_page():
+    """PGN collection test interface."""
+    return render_template('test_pgn.html')
+
 @app.route('/test', methods=['POST'])
 def test():
     """Test endpoint."""
@@ -388,6 +393,94 @@ def fen_to_lichess():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/query_pgn', methods=['POST', 'GET'])
+def query_pgn():
+    """Test endpoint for querying PGN collection only."""
+    try:
+        # Get query from POST or GET
+        if request.method == 'POST':
+            data = request.get_json()
+            query_text = data.get('query', '')
+        else:
+            query_text = request.args.get('query', '')
+
+        if not query_text:
+            return jsonify({'error': 'Query cannot be empty'}), 400
+
+        print(f"\n{'='*80}")
+        print(f"PGN TEST QUERY: {query_text}")
+        print(f"{'='*80}\n")
+
+        # Generate embedding
+        print("Generating embedding...")
+        response = OPENAI_CLIENT.embeddings.create(
+            model="text-embedding-3-small",
+            input=[query_text]
+        )
+        query_vector = response.data[0].embedding
+
+        # Search PGN collection
+        print("Searching chess_pgn_repertoire collection...")
+        results = QDRANT_CLIENT.search(
+            collection_name="chess_pgn_repertoire",
+            query_vector=query_vector,
+            limit=10
+        )
+
+        # Format results
+        formatted_results = []
+        for i, hit in enumerate(results, 1):
+            payload = hit.payload
+
+            # Get content and skip PGN headers to show instructional content
+            full_content = payload.get('content', '')
+
+            # Find where the actual game starts (after headers)
+            lines = full_content.split('\n')
+            content_start = 0
+            for idx, line in enumerate(lines):
+                # Skip header lines that start with [
+                if not line.strip().startswith('['):
+                    content_start = idx
+                    break
+
+            # Get content starting from where moves/annotations begin
+            instructional_content = '\n'.join(lines[content_start:])
+            preview = instructional_content[:1000].strip()
+            if len(instructional_content) > 1000:
+                preview += '...'
+
+            formatted_results.append({
+                'rank': i,
+                'score': round(hit.score, 4),
+                'source_file': payload.get('source_file', 'Unknown'),
+                'game_number': payload.get('game_number', '?'),
+                'course_name': payload.get('course_name', ''),
+                'chapter': payload.get('chapter', ''),
+                'section': payload.get('section', ''),
+                'eco': payload.get('eco', ''),
+                'opening': payload.get('opening', ''),
+                'white': payload.get('white', ''),
+                'black': payload.get('black', ''),
+                'content_preview': preview
+            })
+
+        print(f"✓ Found {len(results)} results\n")
+
+        return jsonify({
+            'query': query_text,
+            'collection': 'chess_pgn_repertoire',
+            'total_results': len(results),
+            'results': formatted_results
+        })
+
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR IN /query_pgn ENDPOINT:")
+        print(error_details)
+        return jsonify({'error': str(e), 'details': error_details}), 500
 
 if __name__ == '__main__':
     # Check for API key

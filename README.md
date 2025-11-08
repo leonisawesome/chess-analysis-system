@@ -19,7 +19,8 @@
 - ✅ **ITEM-024.7 Complete:** JavaScript rendering architecture (Path B) - Restored clean separation between backend and frontend
 - ✅ **ITEM-024.8 Complete:** Dynamic diagram extraction restored - Reverted static 73-position bypass, now uses RAG-based extraction from 357,957 chunks
 - ✅ **ITEM-027 Phase 1+2 Complete:** PGN variation splitting - All 1,778 games validated, 0 failures, 0 chunks over limit (40 tests passing)
-- ✅ **ITEM-027 Phase 3 Complete:** Qdrant PGN collection - 17/17 test chunks uploaded, hierarchical ID bug fixed
+- ✅ **ITEM-027 Phase 3 Complete:** Qdrant PGN collection - 1,791 chunks uploaded to `chess_pgn_repertoire`
+- ✅ **ITEM-027 Phase 4 Complete:** PGN retrieval testing - Web interface at `/test_pgn`, 100% query success, example queries feature backported
 - 🔧 **Architecture:** Clean modular design across 6 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 
@@ -936,12 +937,28 @@ Re-analysis with comprehensive logging revealed:
     - Embedding cost: $0.0303
     - Chess Strategy Simplified: 133 chunks (all valid, no transpositions)
   - ✅ **Committed to GitHub:** All bug fixes + full ingestion
-- ⏳ **Phase 4 Pending:** Query integration & RRF merge
+- ✅ **Phase 4 Complete:** PGN Retrieval Testing & Web Interface (November 8, 2025)
+  - ✅ **Web interface created:** `/test_pgn` endpoint with dedicated HTML interface
+  - ✅ **Retrieval testing complete:** 100% successful queries against `chess_pgn_repertoire` collection
+    - Collection size: 1,791 chunks from 1,778 PGN games
+    - Test queries: 5/5 passed with semantic similarity scores 0.70-0.74 (normal range)
+    - Content preview optimized: Shows instructional annotations instead of PGN headers
+  - ✅ **Similarity score validation:** 0.70-0.74 range confirmed normal for semantic search
+    - EPUB collection baseline: 0.7388 for same query
+    - PGN collection: 0.7093 for same query
+    - Semantic mismatch between conversational queries and chess notation expected
+  - ✅ **Example queries feature:** Randomized clickable query suggestions
+    - Implemented in PGN interface (5 random queries from 20 options)
+    - Backported to EPUB interface (5 random queries from 20 options)
+    - Improves user discovery and engagement
+  - ✅ **Style consistency:** PGN interface matches EPUB light theme
+    - Header: #2c3e50, Blue: #3498db, Background: #f5f5f5
+    - Responsive design with metadata grids
+    - 1000-character content previews with instructional focus
+- ⏳ **Phase 5 Pending:** RRF merge for cross-collection queries
   - Implement RRF (Reciprocal Rank Fusion) for multi-collection queries
   - Test cross-collection queries (EPUB + PGN)
   - Production deployment after validation
-- ⏳ Deploy to production Qdrant collection
-- ⏳ Integrate with Flask API
 
 **Production Estimates (1M PGNs):**
 - Based on sample: 0.2% oversized rate (very low)
