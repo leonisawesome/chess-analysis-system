@@ -70,18 +70,39 @@ Phase 5.1: Core RRF Implementation (Week 1)
     - app.py - Add /query_merged endpoint
 
   Tasks:
-    1. Update synthesis prompts with structured source formatting (Priority 1A)
+    1. ✅ Update synthesis prompts with structured source formatting (Priority 1A) - COMPLETE
     2. Create rrf_merger.py with k=60, source weights
     3. Create query_router.py with opening/concept classification
     4. Modify rag_engine.py for parallel search (50+50)
     5. Add /query_merged endpoint in app.py
 
+  Progress (Task 1 Complete - Nov 8, 2025):
+    ✅ Modified rag_engine.py:prepare_synthesis_context()
+       - Added structured source attribution
+       - Format: [Source N: Book/PGN - "Title"]
+       - Detects source type from metadata (book_name vs source_file)
+       - Preserves content exactly as provided
+
+    ✅ Modified synthesis_pipeline.py (all 3 stages):
+       - Stage 1: Updated context description
+       - Stage 2: Added CRITICAL mixed-media instructions
+         * Explains Book sources (strategic concepts)
+         * Explains PGN sources (concrete variations)
+         * Instructions on how to integrate both types
+       - Stage 3: Added note about maintaining integration
+
+    ✅ Created test_mixed_context_formatting.py:
+       - Tests context preparation with 2 EPUB + 2 PGN sources
+       - Validates source labeling (Book vs PGN)
+       - Validates content preservation
+       - ALL 7 checks PASSED
+
   Success Criteria:
-    ✅ /query_merged returns results from both collections
-    ✅ RRF scores calculated correctly
-    ✅ Intent router classifies queries correctly
-    ✅ Synthesis handles mixed EPUB+PGN sources
-    ✅ Response includes source attribution
+    ⏳ /query_merged returns results from both collections
+    ⏳ RRF scores calculated correctly
+    ⏳ Intent router classifies queries correctly
+    ✅ Synthesis handles mixed EPUB+PGN sources (tested and validated)
+    ✅ Response includes source attribution (implemented)
 
 Phase 5.2: Validation & Tuning (Week 2)
   Tasks:

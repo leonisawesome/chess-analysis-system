@@ -19,8 +19,9 @@
 - ✅ **ITEM-024.7 Complete:** JavaScript rendering architecture (Path B) - Restored clean separation between backend and frontend
 - ✅ **ITEM-024.8 Complete:** Dynamic diagram extraction restored - Reverted static 73-position bypass, now uses RAG-based extraction from 357,957 chunks
 - ✅ **ITEM-027 Phase 1+2+3+4 Complete:** PGN variation splitting & ingestion - All 1,778 games validated, 1,791 chunks in `chess_pgn_repertoire`, 100% query success
-- ✅ **ITEM-028 Planning Complete:** Phase 5 RRF Multi-Collection Merge - Partner consultation complete (ChatGPT, Gemini, Grok), unanimous consensus on architecture, ready for implementation
-- 🚀 **Next:** Implement RRF merger to combine EPUB + PGN collections (3-week phased approach)
+- ✅ **ITEM-028 Planning Complete:** Phase 5 RRF Multi-Collection Merge - Partner consultation complete (ChatGPT, Gemini, Grok), unanimous consensus on architecture
+- ✅ **Phase 5.1 Task 1 Complete:** Synthesis prompts updated for mixed-media (EPUB+PGN) - Context attribution implemented and tested
+- 🚀 **In Progress:** Phase 5.1 implementation - RRF merger module and query router (Tasks 2-5)
 - 🔧 **Architecture:** Clean modular design across 6 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 

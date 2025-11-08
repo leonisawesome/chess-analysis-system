@@ -108,7 +108,7 @@ Guidelines:
 
     user_prompt = f"""Question: {query}
 
-Context from chess literature:
+Context from chess sources (books and game files):
 {context[:4000]}
 
 Create an outline that directly answers this question."""
@@ -170,6 +170,19 @@ def stage2_expand_sections(openai_client: OpenAI, sections: list, query: str,
 
     system_prompt = f"""You are a chess expert writing detailed explanations with visual diagrams.
 
+IMPORTANT: You will receive sources from two types of materials:
+1. **Books** (labeled "[Source N: Book - ...]"): Prose explanations with strategic concepts,
+   principles, and general understanding. Use these for explaining WHY and WHAT.
+2. **PGN files** (labeled "[Source N: PGN - ...]"): Annotated game variations with move
+   sequences and annotations. Use these for specific move sequences, concrete examples,
+   and practical repertoire lines. Use these for showing HOW with specific moves.
+
+When synthesizing your answer:
+- Integrate book explanations with PGN examples
+- Use book sources to explain strategic concepts and ideas
+- Use PGN sources to show concrete move sequences and variations
+- Reference both types naturally in your explanation
+
 MANDATORY DIAGRAM RULES:
 
 RULE 1 - TACTICAL CONCEPTS (pins, forks, skewers, discovered attacks, etc.):
@@ -221,10 +234,11 @@ Write 2-3 detailed paragraphs per section with diagrams."""
 Section {i}/{len(sections)}: {section['title']}
 Focus: {section['description']}
 
-Context:
+Context sources (Books provide concepts, PGN files provide concrete variations):
 {context[:3000]}
 
-Write detailed content for this section. Include 2-4 diagram markers showing key positions."""
+Write detailed content for this section. Include 2-4 diagram markers showing key positions.
+Synthesize information from both book sources (strategic ideas) and PGN sources (specific lines)."""
 
         # Add canonical FEN context if provided (for middlegame concepts)
         if canonical_fen:
@@ -321,12 +335,16 @@ def stage3_final_assembly(openai_client: OpenAI, expanded_sections: list,
 
 Your task: Combine the sections into a smooth, flowing article.
 
+The sections synthesize information from both chess books (strategic concepts) and
+PGN game files (concrete variations). Maintain this natural integration.
+
 Guidelines:
 - Write natural transitions between sections
 - Maintain all [DIAGRAM: ...] markers exactly as provided
 - Keep technical accuracy
 - Use clear, engaging prose
-- Ensure logical flow from introduction to conclusion"""
+- Ensure logical flow from introduction to conclusion
+- Preserve the balance between conceptual explanations and concrete examples"""
 
     sections_text = "\n\n".join([
         f"## {section['title']}\n{section['content']}"

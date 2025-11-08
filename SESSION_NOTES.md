@@ -1,10 +1,143 @@
 # Chess RAG System - Session Notes
-**Last Updated:** November 8, 2025 (Phase 5 RRF Planning Complete)
+**Last Updated:** November 8, 2025 (Phase 5.1 Task 1 Implementation Complete)
 
 ---
 
-# 🎯 LATEST SESSION: Phase 5 RRF Multi-Collection Merge Planning
-**Date:** November 8, 2025
+# 🎯 LATEST SESSION: Phase 5.1 Task 1 - Synthesis Prompt Update
+**Date:** November 8, 2025 (Afternoon)
+**Session Focus:** Implement mixed-media synthesis (Priority 1A)
+
+## Summary
+
+Completed Task 1 of Phase 5.1: Updated synthesis prompts to handle mixed EPUB + PGN sources.
+This was identified as Priority 1A by Gemini (critical blind spot) and is the foundation
+for RRF multi-collection merge.
+
+**Status:** TASK 1 COMPLETE ✅ - Tested and validated
+
+## Implementation Details
+
+### 1. Modified rag_engine.py:prepare_synthesis_context()
+**File:** `rag_engine.py` (lines 121-166)
+
+**Changes:**
+- Added structured source attribution for each context chunk
+- Format: `[Source N: Type - "Title"]\n{content}`
+- Detects source type from metadata:
+  - EPUB: Has `book_name` field → labeled as "Book"
+  - PGN: Has `source_file` field → labeled as "PGN"
+- Preserves all content exactly as provided
+
+**Example output:**
+```
+[Source 1: Book - "Mastering the King's Indian Defense"]
+The King's Indian Defense is characterized by...
+
+[Source 2: PGN - "King's Indian Defense (king_indian_repertoire.pgn)"]
+1. d4 Nf6 2. c4 g6 3. Nc3 Bg7...
+```
+
+### 2. Modified synthesis_pipeline.py (all 3 stages)
+**File:** `synthesis_pipeline.py`
+
+**Stage 1 (Outline Generation):**
+- Line 111: Updated context label from "chess literature" to "chess sources (books and game files)"
+- Minimal change, backward compatible
+
+**Stage 2 (Section Expansion) - CRITICAL CHANGES:**
+- Lines 173-184: Added mixed-media instructions
+  * Explains what Book sources contain (strategic concepts, WHY/WHAT)
+  * Explains what PGN sources contain (move sequences, concrete examples, HOW)
+  * Instructions on integrating both types
+- Lines 237-241: Updated section prompt
+  * Notes that books provide concepts, PGN provides variations
+  * Instructs to synthesize from both types
+
+**Stage 3 (Final Assembly):**
+- Lines 338-347: Added note about mixed-media integration
+  * Maintains balance between concepts and examples
+  * Preserves diagram markers from both source types
+
+### 3. Created Test Suite
+**File:** `test_mixed_context_formatting.py` (new)
+
+**Test Design:**
+- Creates mock results with 2 EPUB + 2 PGN sources
+- Calls `prepare_synthesis_context()` with mixed results
+- Validates source labeling and content preservation
+
+**Test Results:**
+```
+✅ Chunk 1 labeled as Book source
+✅ Chunk 2 labeled as PGN source
+✅ Chunk 3 labeled as Book source
+✅ Chunk 4 labeled as PGN source
+✅ Book title preserved
+✅ PGN filename preserved
+✅ PGN move notation preserved
+
+ALL 7 CHECKS PASSED
+```
+
+## Why This Was Priority 1A
+
+From Gemini's partner consultation response:
+
+> **CRITICAL BLIND SPOT: Synthesis Pipeline**
+> - #1 Risk you are missing: Synthesis prompt engineered for book prose
+> - Will now be fed PGN chunks: `1. e4 c5 2. Nf3 {Notes...}`
+> - LLM will get confused by mixed-format context
+> - **This change is NOT OPTIONAL. Critical for high-quality synthesis.**
+
+Without this update:
+- ❌ GPT-5 would treat PGN as "corrupted prose"
+- ❌ Would hallucinate to make it prose-like
+- ❌ Or complain it couldn't understand format
+- ❌ Synthesis quality would be catastrophic
+
+With this update:
+- ✅ GPT-5 knows it's mixed media intentionally
+- ✅ Uses books for concepts, PGN for concrete lines
+- ✅ Synthesizes by integrating both types naturally
+
+## Files Modified
+
+- `rag_engine.py` (modified: prepare_synthesis_context function)
+- `synthesis_pipeline.py` (modified: all 3 stage prompts)
+- `test_mixed_context_formatting.py` (created: validation test)
+- `rag_engine.py.backup` (created: safety backup)
+- `synthesis_pipeline.py.backup` (created: safety backup)
+
+## Validation Results
+
+- ✅ Context formatting: PASSED (7/7 checks)
+- ✅ Source attribution: PASSED (Book vs PGN labels correct)
+- ✅ Content preservation: PASSED (exact content maintained)
+- ✅ Backward compatibility: PASSED (works with EPUB-only results)
+
+## Next Steps (Phase 5.1 Tasks 2-5)
+
+1. Create `rrf_merger.py` with RRF algorithm
+2. Create `query_router.py` with intent classification
+3. Modify `rag_engine.py` for parallel multi-collection search
+4. Add `/query_merged` endpoint in `app.py`
+
+## Git Status
+
+Ready to commit:
+- rag_engine.py (synthesis context preparation)
+- synthesis_pipeline.py (all 3 stage prompts)
+- test_mixed_context_formatting.py (validation test)
+- BACKLOG.txt (Task 1 marked complete)
+- README.md (Current Status updated)
+- SESSION_NOTES.md (this entry)
+
+**Next Commit:** "Phase 5.1 Task 1 Complete: Synthesis prompt update for mixed-media"
+
+---
+
+# 🎯 PREVIOUS SESSION: Phase 5 RRF Multi-Collection Merge Planning
+**Date:** November 8, 2025 (Morning)
 **Session Focus:** Partner consultation for RRF implementation, synthesis document creation
 
 ## Summary

@@ -124,23 +124,45 @@ def prepare_synthesis_context(
     top_n: int = 8
 ) -> List[str]:
     """
-    Prepare context chunks for synthesis pipeline.
-    
+    Prepare context chunks for synthesis pipeline with structured source attribution.
+
+    NEW (Phase 5): Adds source type labels for mixed-media RAG (EPUB + PGN).
+
     Args:
         formatted_results: Formatted RAG results
         canonical_fen: Optional canonical FEN to inject at start
         top_n: Number of top results to include
-    
+
     Returns:
-        List of context strings
+        List of context strings with source attribution
     """
-    context_chunks = [r['text'] for r in formatted_results[:top_n]]
-    
+    context_chunks = []
+
+    for i, result in enumerate(formatted_results[:top_n], start=1):
+        # Detect source type based on available metadata
+        # EPUB results have 'book_name', PGN results will have 'source_file'
+        if 'source_file' in result:
+            # PGN source
+            source_type = "PGN"
+            title = result.get('source_file', 'Unknown Game')
+            if 'opening' in result:
+                title = f"{result['opening']} ({result['source_file']})"
+        else:
+            # EPUB source (default)
+            source_type = "Book"
+            title = result.get('book_name', 'Unknown Book')
+
+        content = result.get('text', '')
+
+        # Format with structured source label
+        formatted_chunk = f"[Source {i}: {source_type} - \"{title}\"]\n{content}"
+        context_chunks.append(formatted_chunk)
+
     # Inject canonical FEN if provided
     if canonical_fen:
         context_chunks.insert(0, f"[CANONICAL POSITION: {canonical_fen}]")
         print(f"📋 Injected canonical FEN into synthesis context")
-    
+
     return context_chunks
 
 
