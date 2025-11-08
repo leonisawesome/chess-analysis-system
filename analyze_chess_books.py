@@ -477,9 +477,11 @@ def analyze_epub_fast(epub_path: str, verbose: bool = True) -> Dict:
 def main():
     """Main entry point."""
     if len(sys.argv) < 2:
-        print("Usage: python fast_epub_analyzer.py <epub_file1> [epub_file2] ...")
+        print("Usage: python analyze_chess_books.py <book_file1> [book_file2] ...")
+        print("\nSupports: .epub and .mobi files")
         print("\nExample:")
-        print('  python fast_epub_analyzer.py "/Volumes/T7 Shield/epub/aagaard*.epub"')
+        print('  python analyze_chess_books.py "/Volumes/T7 Shield/epub/aagaard*.epub"')
+        print('  python analyze_chess_books.py "/path/to/book.mobi"')
         sys.exit(1)
 
     results = []

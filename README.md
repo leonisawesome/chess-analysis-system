@@ -8,22 +8,24 @@
 
 ### What This System Does
 - **User asks:** "Explain the Italian Game opening"
-- **System retrieves:** Relevant chunks from 1,052 chess books via Qdrant vector search
+- **System retrieves:** Relevant chunks from 1,055 chess books via Qdrant vector search
 - **GPT-5 reranks:** Results by relevance
 - **3-stage synthesis:** Creates coherent answer with chess diagrams
 - **Output:** Professional article with interactive chess positions
 
-### Current Status (November 1, 2025)
+### Current Status (November 8, 2025)
 - ✅ **ITEM-008 Complete:** Sicilian contamination bug eliminated (100% success rate)
 - ✅ **ITEM-011 Complete:** Monolithic refactoring (1,474 → 262 lines, -82.2%)
 - ✅ **ITEM-024.7 Complete:** JavaScript rendering architecture (Path B) - Restored clean separation between backend and frontend
 - ✅ **ITEM-024.8 Complete:** Dynamic diagram extraction restored - Reverted static 73-position bypass, now uses RAG-based extraction from 357,957 chunks
+- ✅ **ITEM-027 Phase 1+2 Complete:** PGN variation splitting - All 1,778 games validated, 0 failures, 0 chunks over limit (40 tests passing)
+- ✅ **ITEM-027 Phase 3 Complete:** Qdrant PGN collection - 17/17 test chunks uploaded, hierarchical ID bug fixed
 - 🔧 **Architecture:** Clean modular design across 6 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 
 ### Critical System Facts
 - **Model:** GPT-5 (\`gpt-chatgpt-4o-latest-20250514\`)
-- **Corpus:** 357,957 chunks from 1,052 books (Qdrant vector DB)
+- **Corpus:** 358,529 chunks from 1,055 books (Qdrant vector DB)
 - **Success Rate:** 100% on Phase 1 & Phase 2 validation queries
 - **Port:** Flask runs on port 5001
 - **Auth:** GitHub SSH (no token expiration issues)
@@ -253,13 +255,43 @@ export COLLECTION_NAME='chess_production'
 \`\`\`
 
 ### Running the System
+
+**Docker Qdrant (Recommended - 15x faster startup)**
+
+The system now uses Docker Qdrant for better performance:
+
 ```bash
-# Start Flask server
+# 1. Start Qdrant container (if not already running)
+docker-compose up -d
+
+# 2. Start Flask with Docker Qdrant
+export OPENAI_API_KEY='your-openai-key-here'
+export QDRANT_MODE=docker
+export QDRANT_URL=http://localhost:6333
+source .venv/bin/activate
+python app.py
+
+# Server starts in ~3 seconds (vs 45s with local mode)
+# ✅ You'll see: "Using Docker Qdrant at http://localhost:6333"
+# ✅ Flask: "Running on http://127.0.0.1:5001"
+```
+
+**Qdrant Dashboard:** http://localhost:6333/dashboard
+
+**Local Qdrant (Legacy - slower)**
+
+```bash
+# Start Flask server with local Qdrant
+export QDRANT_MODE=local  # or omit (defaults to local)
 python3 app.py
 
-# Server will start on port 5001
-# ✅ You'll see: "Running on http://127.0.0.1:5001"
+# Server will start in ~45 seconds (loads 5.5GB into memory)
+# ⚠️  Warning: "Not recommended for collections with >20,000 points"
 ```
+
+**Performance Comparison:**
+- **Docker:** 3s startup, persistent, production-ready
+- **Local:** 45s startup, reloads on every restart, dev only
 
 ### Accessing the Application
 
@@ -289,6 +321,633 @@ curl -X POST http://localhost:5001/query \
 # - sources: Top 10 source chunks from RAG
 # - timing: Performance metrics
 ```
+
+---
+
+## 🎮 PGN Game Collection Pipeline (In Development)
+
+**Status:** Design phase - pipeline under development
+
+### Overview
+Adding PGN game collections (1M+ games from Chessable, ChessBase, Modern Chess, etc.) to the RAG corpus for game-based queries.
+
+**Sources:**
+- Chessable course PGNs
+- ChessBase mega database
+- Modern Chess publications
+- Publisher-specific collections
+- Currently: 288K games in master ChessBase file (cleaning in progress)
+- Target: 1M+ games total
+
+### Design Questions (To Be Resolved)
+
+**1. Chunking Strategy:**
+- **Option A:** Each game = 1 chunk (simple, ~500-2000 tokens/game)
+- **Option B:** Per-game with rich metadata (players, opening, ECO, annotations)
+- **Option C:** Split by phase (opening/middlegame/endgame for annotated games)
+- **Option D:** Critical positions only (extract key moments + annotations)
+
+**2. Quality Filtering:**
+- Master games only (2000+ rating)?
+- Annotated games only?
+- Exclude blitz/bullet games?
+- Minimum game length (moves)?
+- Deduplication strategy (transpositions, same games from different sources)?
+
+**3. Metadata to Preserve:**
+- White/Black players + ratings
+- ECO code, Opening name
+- Event, Site, Date, Round
+- Result
+- Annotations/comments
+- Time control
+- Source (Chessable/ChessBase/etc)
+
+**4. Use Cases to Support:**
+- "Show games where Carlsen played the Najdorf"
+- "Rook endgame technique examples"
+- "How to play against the London System"
+- "Typical middlegame plans in the King's Indian"
+- "Sacrificial attacks in the Sicilian Dragon"
+
+**5. Scale Considerations:**
+- Current corpus: 358K chunks from 1,134 books
+- Adding 1M games could add 1-3M chunks (depending on chunking strategy)
+- Estimate: Each game → 1-3 chunks (game + variations)
+- Storage: ~10-30GB additional Qdrant storage
+- Embedding cost: ~$5-15 for 1M games
+
+**6. Development Plan:**
+- Phase 1: Test with 100-1,000 sample games
+- Phase 2: Build chunking + quality filtering
+- Phase 3: Test retrieval quality
+- Phase 4: Scale to full 1M+ dataset
+
+### Sample Games Needed
+For pipeline development: **100-1,000 representative PGN games**
+- Mix of annotated and unannotated
+- Mix of openings
+- Mix of master/amateur games
+- Mix of sources (Chessable, ChessBase, etc.)
+
+### Future Scripts (Not Yet Created)
+- `analyze_pgn_games.py` - Quality scoring for PGN collections
+- `add_pgn_to_corpus.py` - Ingest PGN games to Qdrant
+- `batch_process_pgns.py` - Batch PGN processing
+
+---
+
+## 📚 Adding New Books to the Corpus
+
+### Overview
+The system has **two separate workflows** for processing chess books:
+1. **RAG Corpus Building** - EPUB/MOBI extraction and vectorization (what you need for adding books)
+2. **File Analysis/Renaming** - PGN/PDF quality analysis (uses `chess_rag_system` module)
+
+**Supported Formats for RAG Corpus:**
+- ✅ **EPUB** (1,023 books) - via `ebooklib`
+- ✅ **MOBI** (111 books) - via `mobi` library
+- ❌ **PGN** - Analysis only, not added to RAG corpus
+- ❌ **PDF** - Intentionally excluded to avoid contaminating RAG with low-quality extractions
+
+**Why no PDF?**
+PDF text extraction is unreliable for chess books due to:
+- Diagram/notation corruption during extraction
+- Inconsistent formatting across different PDF sources
+- High risk of introducing noisy, malformed text into the corpus
+- Decision: Only ingest high-quality EPUB/MOBI with clean text extraction
+
+### Prerequisites
+```bash
+# Activate the virtual environment (CRITICAL!)
+source .venv/bin/activate
+
+# Verify ebooklib is available
+python -c "import ebooklib; print('✓ ebooklib available')"
+```
+
+### Quick Start: Analyze New Books (EPUB/MOBI)
+
+**Single Book Analysis:**
+```bash
+# Activate venv first
+source .venv/bin/activate
+
+# Analyze one book (works with both .epub and .mobi)
+python analyze_chess_books.py "/path/to/book.epub"
+python analyze_chess_books.py "/path/to/book.mobi"
+
+# Output shows:
+# - EVS Score (Educational Value Score)
+# - Tier (TIER_1: 85+, TIER_2: 80-84, TIER_3: 70-79)
+# - Author reputation score
+# - Instructional content percentage
+# - Tactical/strategic content analysis
+```
+
+**Batch Analysis (Multiple Books):**
+```bash
+# Activate venv
+source .venv/bin/activate
+
+# Analyze all books in a directory
+python batch_process_epubs.py "/Volumes/T7 Shield/epub/1new"
+
+# Results stored in: epub_analysis.db
+# Query results:
+sqlite3 epub_analysis.db "SELECT file, score, tier FROM epub_analysis ORDER BY score DESC LIMIT 10;"
+```
+
+### Understanding EPUB Analysis Results
+
+**EVS Score Tiers:**
+- **TIER_1 (85+):** Elite instructional content - High priority for RAG
+- **TIER_2 (80-84):** Premium educational material - Good for RAG
+- **TIER_3 (70-79):** Quality supplementary content - Include if space allows
+- **Below 70:** Low instructional value - Consider excluding
+
+**Key Metrics:**
+- `score`: Overall educational value (0-100)
+- `author_score`: Reputation bonus for GM/elite authors
+- `instructional_pct`: % of text with teaching patterns
+- `tactical_content`: Tactical concept density
+- `strategic_content`: Strategic concept density
+
+### Adding Books to Qdrant Vector Database
+
+**Current Corpus:** 357,957 chunks from 1,052 books in `qdrant_production_db`
+
+#### Complete Pipeline for Adding New Books
+
+**Step 1: Analyze Book Quality**
+```bash
+source .venv/bin/activate
+python batch_process_epubs.py "/path/to/new/books"
+
+# Review scores
+sqlite3 epub_analysis.db "SELECT filename, score, tier FROM epub_analysis WHERE full_path LIKE '%new%' ORDER BY score DESC;"
+```
+
+**Step 2: Select Books (Quality Threshold)**
+- Option A: Add all books scoring 70+ (HIGH tier)
+- Option B: Add books scoring 55+ (top MEDIUM tier)
+- Option C: Add books scoring 45+ (all MEDIUM tier)
+
+**Step 3: Rename to Standard Pattern**
+```bash
+# Pattern: lastname_year_title_publisher.{epub|mobi}
+# Examples:
+mv "Author, Name - Title [Publisher, Year].epub" \
+   "lastname_year_title_publisher.epub"
+
+mv "Author, Name - Title [Publisher, Year].mobi" \
+   "lastname_year_title_publisher.mobi"
+```
+
+**Step 4: Choose Indexing Method**
+
+**Method A: Incremental Addition (Recommended for <10 books)**
+```bash
+source .venv/bin/activate
+
+# Set environment variable for OpenAI API
+export OPENAI_API_KEY='your-key-here'
+
+# Add specific books to existing Qdrant database
+python add_books_to_corpus.py \
+  --books "book1.epub" "book2.epub" "book3.epub" \
+  --collection "chess_production" \
+  --qdrant-path "./qdrant_production_db"
+
+# Cost: ~$0.02-0.05 per book
+# Time: ~30-60 seconds per book
+# Result: Adds ~300-500 chunks per book to existing index
+```
+
+**Method B: Full Corpus Rebuild (For major updates)**
+```bash
+source .venv/bin/activate
+export OPENAI_API_KEY='your-key-here'
+
+# Rebuild entire corpus from scratch
+python build_production_corpus.py
+
+# Cost: ~$2-3 for 1,000+ books
+# Time: ~2-4 hours
+# Result: Fresh index with all books (ensures consistency)
+```
+
+**Step 5: Verify Addition**
+```bash
+# Check Qdrant collection size
+python -c "
+from qdrant_client import QdrantClient
+client = QdrantClient(path='./qdrant_production_db')
+info = client.get_collection('chess_production')
+print(f'Total chunks: {info.points_count}')
+"
+
+# Test query on new content
+curl -X POST http://localhost:5001/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "topics from your new books"}' \
+  | jq '.sources[0].metadata.book_title'
+```
+
+**Step 6: Restart Flask Server**
+```bash
+# Restart to ensure Qdrant changes are loaded
+pkill -f "python.*app.py"
+python app.py
+```
+
+#### Cost Estimation
+
+**OpenAI Embedding Costs:**
+- Model: `text-embedding-3-small` ($0.02 per 1M tokens)
+- Average book: ~30,000 words = ~40,000 tokens
+- Chunks per book: ~300-500 (512 tokens each with overlap)
+
+**Per Book:**
+- Embedding cost: ~$0.001-0.002
+- Processing time: 30-60 seconds
+
+**Example Scenarios:**
+- 3 books (incremental): ~$0.05, 2-3 minutes
+- 10 books (incremental): ~$0.15, 8-10 minutes
+- 1,055 books (full rebuild): ~$2.50, 2-4 hours
+
+#### Important Notes
+
+**Incremental vs Rebuild:**
+- **Incremental:** Fast, cheap, preserves existing index
+  - Use for: Adding 1-10 books
+  - Limitation: Can't remove old books or change chunk strategy
+
+- **Full Rebuild:** Slower, comprehensive, fresh start
+  - Use for: Major updates, corpus cleanup, strategy changes
+  - Benefit: Ensures complete consistency
+
+**Current Status (Nov 2025):**
+- ✅ Incremental addition script (`add_books_to_corpus.py`) - Ready to use
+- ✅ Full rebuild script (`build_production_corpus.py`) - Tested and working
+- 📝 3 books prepared (Nov 6): simeonidis_2020, dreev_2019, dreev_2018 (not yet indexed)
+
+### File Naming Convention
+
+**CRITICAL:** All EPUB files must follow the standardized naming pattern for corpus consistency.
+
+**Pattern:** `lastname_year_title_publisher.epub`
+
+**Rules:**
+- All lowercase letters
+- Underscores instead of spaces
+- Remove special characters (commas, apostrophes, brackets, etc.)
+- Format: `author_year_description_publisher.epub`
+
+**Examples:**
+```
+Original: Aagaard, Jacob - GM Preparation Strategic Play [Quality Chess, 2013].epub
+Renamed:  aagaard_2013_gm_preparation_strategic_play_quality_chess.epub
+
+Original: Dreev, Alexey - Improve Your Practical Play in the Endgame [Thinkers, 2019].epub
+Renamed:  dreev_2019_improve_your_practical_play_in_the_endgame_thinkers.epub
+
+Original: Soltis, Andrew - 500 Chess Questions Answered [Batsford, 2021].epub
+Renamed:  soltis_2021_500_chess_questions_answered_batsford.epub
+```
+
+**Renaming Command:**
+```bash
+# Template
+mv "/path/to/Original Name [Publisher, Year].epub" \
+   "/path/to/lastname_year_title_publisher.epub"
+```
+
+### File Locations
+- **Book Analyzer:** `analyze_chess_books.py` - Single EPUB/MOBI file analysis
+- **Batch Processor:** `batch_process_epubs.py` - Multiple files
+- **Analysis DB:** `epub_analysis.db` - SQLite results storage
+- **Qdrant DB:** `./qdrant_production_db/` - Vector database (6GB)
+
+### Example: Adding 7 New Books
+
+```bash
+# 1. Activate environment
+source .venv/bin/activate
+
+# 2. Analyze new books
+python batch_process_epubs.py "/Volumes/T7 Shield/epub/1new"
+
+# 3. Check results
+sqlite3 epub_analysis.db <<EOF
+SELECT
+  SUBSTR(file, -60) as book,
+  score,
+  tier,
+  author_score
+FROM epub_analysis
+WHERE file LIKE '%1new%'
+ORDER BY score DESC;
+EOF
+
+# 4. Identify high-quality books (TIER_1 and TIER_2)
+# These are candidates for corpus addition
+```
+
+### Troubleshooting
+
+**Issue: "ModuleNotFoundError: No module named 'ebooklib'"**
+- **Solution:** Activate the virtual environment: `source .venv/bin/activate`
+
+**Issue: "No text content found in EPUB"**
+- **Cause:** Corrupted or image-only EPUB
+- **Solution:** Check `remove_corrupt_files.txt` for known bad files
+
+**Issue: Low EVS scores for known good books**
+- **Cause:** Puzzle books, game collections (not instructional)
+- **Expected:** Only annotated games and teaching content score high
+
+---
+
+## 🎮 PGN Game Collection Pipeline (In Development)
+
+**Status:** Architecture design phase - NOT YET IMPLEMENTED
+
+### Overview
+
+The system is being designed to support 1M+ PGN games from professional chess course materials:
+- **Chessable courses** (~40%) - Structured opening repertoires
+- **ChessBase Mega Database** (~30%) - High-quality master games
+- **ChessBase PowerBases** (~15%) - Thematic collections (opening/player/endgame specific)
+- **Modern Chess courses** (~10%) - Professional training content
+- **ChessBase Magazine** (significant) - Every monthly issue since 1987
+- **Chess Publishing monthly** (remaining) - Latest opening theory updates
+
+### Key Context
+
+**These are NOT random game databases** - They are professional course materials:
+- Already curated and cleaned (user removed low-quality games)
+- Course games have hierarchical structure (Course → Chapter → Section → Game)
+- Even "unannotated" games in courses are teaching examples (model repertoire lines)
+- Different sources serve different purposes (courses vs databases vs magazines)
+
+### Design Documents
+
+**1. PGN_CHUNKING_QUESTIONS.md**
+- Comprehensive design questions for AI consultation
+- 6 key areas: chunking strategy, filtering, metadata, variations, use cases, cost/scale
+- 4 chunking options analyzed (full game, game+metadata, by phase, critical positions)
+
+**2. PGN_SOURCE_CLARIFICATION.md**
+- Critical context about professional course materials (not random games)
+- Explains course structure and hierarchical organization
+- 5 re-evaluation questions for architecture decisions
+- Sent to multiple AIs for consultation
+
+**3. CLAUDE_PGN_RECOMMENDATION.md**
+- Claude's detailed recommendation: Modified Option B
+- **One game = one chunk** with rich, source-aware metadata
+- Preserves course hierarchy (course name, author, chapter, section)
+- Minimal filtering (user already curated collection)
+- Includes all variations in game (part of teaching context)
+- Estimated: 850K-900K unique games after deduplication
+- Cost: ~$2.40 for embeddings, ~15GB storage
+
+### Recommended Chunking Strategy
+
+**Modified Option B: Full Game + Rich Metadata**
+
+Each chunk contains:
+```
+Source Metadata:
+  source_type: "chessable_course" (or mega_database, powerbase, magazine, etc.)
+  course_name: "Lifetime Repertoire: 1.e4"
+  course_author: "GM Boris Avrukh"
+  chapter: "Open Sicilian - Najdorf"
+  section: "6.Bg5 - Poisoned Pawn Variation"
+
+Game Header:
+  White: Magnus Carlsen (2863)
+  Black: Hikaru Nakamura (2789)
+  Event: World Championship 2023, Round 5
+  ECO: B97 (Najdorf Sicilian, Poisoned Pawn)
+  Result: 1-0
+
+Full PGN:
+  1. e4 c5 2. Nf3 d6... (all moves, annotations, variations)
+```
+
+**Rationale:**
+- Similar to successful book chunking (keeps context intact)
+- Course structure preserved (like book chapters)
+- Rich metadata enables precise filtering
+- Cost-effective: ~$2.40 for 1M games
+- Manageable scale: 1M chunks (not 5M with position fragmentation)
+
+### Implementation Plan (Not Yet Started)
+
+**Phase 1: Sample Testing**
+1. Get 1,000 sample PGNs from user (mixed sources)
+2. Create `analyze_pgn_games.py` - parsing, metadata extraction
+3. Test chunking strategy with samples
+4. Validate retrieval precision
+
+**Phase 2: Pilot Batch**
+1. Process 60K games (10K from each source)
+2. Cost: ~$0.15
+3. Test cross-source queries
+4. Refine deduplication logic
+
+**Phase 3: Full Scale**
+1. Process all 1M games
+2. Cost: ~$2.40, Duration: 2-2.5 hours
+3. Create `add_pgn_to_corpus.py` - batch ingestion
+4. Upload to production Qdrant
+
+**Phase 4: Integration**
+1. Update Flask to query books + games
+2. Add source filtering to UI
+3. Display game diagrams
+4. Production deployment
+
+### Cost Estimates
+
+**Embedding:**
+- 1M games × 1,200 tokens average = 1.2B tokens
+- Cost: $2.40 (at $0.02 per 1M tokens)
+
+**Storage:**
+- Current corpus: 358K chunks (5.5GB)
+- PGN addition: 1M chunks (~15GB)
+- Total: ~20.5GB (Docker Qdrant handles easily)
+
+**Processing Time:**
+- Parsing: 30-60 minutes
+- Embedding: 40-50 minutes
+- Upload: 20-30 minutes
+- **Total: 2-2.5 hours**
+
+### Query Examples (Future)
+
+When implemented, the system will support:
+
+**Course-specific queries:**
+- "Show me Avrukh's Najdorf repertoire against 6.Bg5"
+- Returns: Games from his Chessable course with chapter context
+
+**Latest theory queries:**
+- "Latest Poisoned Pawn theory from 2023"
+- Returns: Recent ChessBase Magazine games, theory updates
+
+**Player-specific queries:**
+- "Magnus Carlsen Najdorf wins"
+- Returns: Mega Database + PowerBase + Magazine games
+
+**Technique queries:**
+- "Rook endgame technique"
+- Returns: PowerBase endgames, course sections, annotated games
+
+### Implementation Status (November 2025)
+
+**Phase 1: Architecture & Consultation** ✅ **COMPLETE**
+- ✅ Design questions document created
+- ✅ Source clarification document created
+- ✅ Claude's recommendation written
+- ✅ All 4 AI responses received (Gemini, Grok, ChatGPT, Claude)
+- ✅ Complete synthesis and decision framework documented
+- ✅ Unanimous baseline approach confirmed
+
+**Phase 2: Sample Testing** ✅ **COMPLETE**
+- ✅ Sample PGN games received (1,779 games from 25 files)
+- ✅ `analyze_pgn_games.py` implemented and tested
+- ✅ `add_pgn_to_corpus.py` implemented
+- ✅ Parser validated: 1,779 games, ~1M tokens, $0.02 cost
+
+**Sample Collection Details:**
+- Source: `/Users/leon/Downloads/ZListo` (Modern Chess courses)
+- Files: 25 PGN files
+- Games: 1,779 total
+- Content: Mostly Modern Chess course materials with hierarchical structure
+- Metadata: Course names, chapters, sections detected successfully
+
+**Scripts Created:**
+1. **`analyze_pgn_games.py`** (570 lines)
+   - Parses PGN files (handles multiple games per file)
+   - Extracts course metadata (Event, White/Black as chapter/section)
+   - Creates chunks with breadcrumb headers
+   - Detects source type (Modern Chess, Chessable, etc.)
+   - Includes full games with annotations and variations
+   - Handles encoding errors gracefully
+
+2. **`add_pgn_to_corpus.py`** (230 lines)
+   - Generates OpenAI embeddings (text-embedding-3-small)
+   - Uploads to Qdrant (Docker or local)
+   - Batch processing (100 chunks/batch)
+   - Progress tracking and cost estimation
+   - Dry-run mode for testing
+
+3. **`test_pgn_retrieval.py`** (206 lines)
+   - Tests ONLY the PGN collection (isolated from book data)
+   - Verifies retrieval works correctly
+   - Confirms results are from PGN games, not books
+   - Includes test suite with 5 diverse queries
+   - Calculates purity metric (% of results from PGN collection)
+
+**Audit Trail & Data Quality:**
+- Every chunk includes `game_number` field for complete traceability
+- Format: `source_file` + `game_number` + `chunk_id` → exact game in exact file
+- Enables easy cleanup of dirty data by tracking back to specific game
+- Example: "mcm_openings_game_42" → Game #42 in mcm_openings.pgn
+
+**Testing Isolation:**
+- Separate Qdrant collections: `chess_production` (books) vs `chess_pgn_test` (PGN games)
+- Prevents contamination when testing new PGN data
+- Dedicated test script validates PGN-only retrieval
+- Can merge collections after validation
+
+**Phase 3: Testing & Validation** ✅ **COMPLETE** (November 7-8, 2025)
+- ✅ Generated embeddings: 1,400/1,779 chunks (78.7% success)
+- ✅ Uploaded to `chess_pgn_test` collection
+- ✅ Retrieval testing: **100% purity** (zero contamination)
+- ✅ Audit trail verified (source_file + game_number working)
+- ✅ **Oversized chunk analysis completed** (November 8, 2025)
+
+**Test Results:**
+```
+Embeddings: 1,400 chunks, 1.2M tokens, $0.024, 35 seconds
+Retrieval: 5/5 queries @ 100% precision (all PGN data)
+  - Benko Gambit: 0.65 avg score
+  - London System: 0.55 avg score
+  - Rook endgame: 0.54 avg score
+  - Middlegame plans: 0.50 avg score
+```
+
+**Oversized Chunk Analysis** (November 8, 2025):
+Re-analysis with comprehensive logging revealed:
+- **Total chunks:** 1,779 (one game = one chunk)
+- **Oversized chunks:** 4 (0.2%)
+- **Files affected:** 4 out of 25 PGN files
+
+**Oversized Chunk Details:**
+| File | Game # | Tokens | Over Limit | Reason |
+|------|--------|--------|------------|--------|
+| Rapport's Stonewall Dutch - All in One | 1 | 41,209 | 33,017 | Massive "all-in-one" file with all variations |
+| The Correspondence Chess Today | 9 | 12,119 | 3,927 | Deep analysis with extensive variations |
+| Queen's Gambit with h6 (MCM) | 15 | 9,540 | 1,348 | Theory-heavy game with many lines |
+| EN - Elite Najdorf Repertoire | 3 | 8,406 | 214 | Detailed opening analysis |
+
+**Analysis logs:**
+- `pgn_analysis_20251108_125859.log` - Full processing log
+- `oversized_chunks_20251108_125859.log` - Oversized chunk details
+- `pgn_summary_20251108_125859.json` - Statistical summary
+
+**Phase 4: Production Scale** 🔧 **IN PROGRESS** (variation splitting validated on full corpus!)
+- ✅ **Chunking strategy implemented:** Variation splitting (Option A chosen after AI partner consultation)
+- ✅ **Phase 1 Complete:** Core implementation + 4 oversized files tested (35 unit + 5 integration tests passing)
+- ✅ **Phase 2 Complete:** Full corpus testing - **ALL 1,779 games validated!**
+  - Total chunks: 1,805 (only 26 extra from splitting)
+  - Split rate: 0.28% (5 games split)
+  - Max chunk: 7,608 tokens (under 7,800 limit)
+  - Failures: 0
+  - Token distribution: 75% under 1,000 tokens
+- ✅ **Phase 3 Complete:** Qdrant PGN Collection Setup (November 8, 2025)
+  - ✅ **Hierarchical chunk ID bug fix:** Prevented duplicates in recursively split variations
+  - ✅ **Collection created:** `chess_pgn_repertoire` (1536-dim vectors, COSINE distance)
+  - ✅ **Ingestion script:** `ingest_pgn_to_qdrant.py` (374 lines)
+    - OpenAI text-embedding-3-small embeddings
+    - Batch processing (100 chunks/batch)
+    - SHA-256 deterministic UUID conversion
+    - Test mode: 4 split games (17 chunks, $0.0009)
+  - ✅ **Bug fixed:** Duplicate chunk_ids in recursive splits
+    - Problem: `variation_index` not passed to recursive calls → all defaulted to 0
+    - Solution: Hierarchical IDs (e.g., `var_002_002`, `var_002_003`)
+    - Result: 17/17 unique points uploaded (was 15/17 with duplicates)
+  - ✅ **Test ingestion:** 17 chunks uploaded successfully to Qdrant
+  - ✅ **Full corpus ingestion bugs discovered and fixed:**
+    - Bug 1: FEN collection crashed on board state mismatches (411 failures)
+    - Bug 2: Upload timeout with 1,380+ points in single batch
+    - Solution 1: Error handling in `collect_fens_from_node()` (graceful degradation)
+    - Solution 2: Batch upload (200 points/batch) prevents timeouts
+  - ✅ **Full corpus ingestion complete:** 1,778 games → 1,791 chunks
+    - Games processed: 1,778/1,778 (100%)
+    - Games failed: 0 (0%)
+    - Points uploaded: 1,791/1,791 (100%)
+    - Embedding cost: $0.0303
+    - Chess Strategy Simplified: 133 chunks (all valid, no transpositions)
+  - ✅ **Committed to GitHub:** All bug fixes + full ingestion
+- ⏳ **Phase 4 Pending:** Query integration & RRF merge
+  - Implement RRF (Reciprocal Rank Fusion) for multi-collection queries
+  - Test cross-collection queries (EPUB + PGN)
+  - Production deployment after validation
+- ⏳ Deploy to production Qdrant collection
+- ⏳ Integrate with Flask API
+
+**Production Estimates (1M PGNs):**
+- Based on sample: 0.2% oversized rate (very low)
+- Expected chunks: ~998K (if excluding oversized)
+- Cost: ~$20 (at $0.02 per 1M tokens)
+- Time: ~6-8 hours
 
 ---
 
@@ -1021,7 +1680,7 @@ def infer_tactical_categories(query: str) -> Set[str]:
 **Production Status:**
 - ✅ Flask server @ http://127.0.0.1:5001
 - ✅ Canonical library: 73 positions across 14 categories loaded
-- ✅ Qdrant database: 357,957 vectors from 1,052 books
+- ✅ Qdrant database: 358,529 vectors from 1,055 books (Docker mode)
 - ✅ Emergency fix active and monitoring all queries
 - ✅ Multi-category detection: WORKING
 - ✅ Verified with both single and multi-category tactical queries

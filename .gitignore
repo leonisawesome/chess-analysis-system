@@ -8,6 +8,10 @@ __pycache__/
 # Output files
 *.csv
 analysis_output.txt
+*_output.txt
+*_test_*.txt
+*_log.txt
+corpus_*.txt
 
 # Documentation files (explicitly NOT ignored)
 !BACKLOG.txt

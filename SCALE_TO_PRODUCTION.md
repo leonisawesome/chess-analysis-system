@@ -226,7 +226,7 @@ Next steps:
 
 ### Existing Infrastructure
 - `epub_analysis.db` - SQLite with 1,111 analyzed books
-- `fast_epub_analyzer.py` - EPUB extraction and chunking
+- `analyze_chess_books.py` - EPUB/MOBI extraction and chunking
 - `batch_process_epubs.py` - Batch book processing
 
 ### Validation Reference

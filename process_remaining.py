@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from tqdm import tqdm
 
-from fast_epub_analyzer import analyze_epub_fast
+from analyze_chess_books import analyze_epub_fast
 from batch_process_epubs import store_result, find_epub_files, generate_summary_report, print_summary_report
 
 
