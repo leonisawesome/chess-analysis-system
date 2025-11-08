@@ -1,5 +1,132 @@
 # Chess RAG System - Session Notes
-**Date:** November 1, 2025 (Afternoon - ITEM-024.8 Dynamic Extraction Restored)
+**Last Updated:** November 8, 2025 (Phase 5 RRF Planning Complete)
+
+---
+
+# 🎯 LATEST SESSION: Phase 5 RRF Multi-Collection Merge Planning
+**Date:** November 8, 2025
+**Session Focus:** Partner consultation for RRF implementation, synthesis document creation
+
+## Summary
+
+Completed comprehensive planning for Phase 5: RRF (Reciprocal Rank Fusion) multi-collection merge.
+Consulted with three AI partners (ChatGPT, Gemini, Grok) to design the architecture for combining
+EPUB (books) and PGN (games) collections into unified search results.
+
+**Status:** PLANNING COMPLETE ✅ - Ready for implementation
+
+## Key Achievements
+
+1. **Partner Consultation Complete**
+   - ChatGPT: Implementation-ready code with MMR diversity, reranking, full feature set
+   - Gemini: Phased approach recommendation, identified critical synthesis prompt blind spot
+   - Grok: Graceful degradation strategies, performance optimization recommendations
+   - **Unanimous consensus**: Option A (new `/query_merged` endpoint), k=60, balanced 50+50 retrieval
+
+2. **Critical Blind Spot Identified (Gemini)**
+   - Synthesis prompts MUST be updated for mixed-media sources
+   - Current prompts tuned for book prose, will fail with PGN chunks
+   - Solution: Structured source formatting in `synthesis_pipeline.py`
+   - **Priority 1A**: Update synthesis BEFORE implementing RRF
+
+3. **Architecture Decision: Option A**
+   - New `/query_merged` endpoint (keep existing endpoints unchanged)
+   - Clean separation, testable, backward compatible, future-proof
+   - 100% unanimous partner recommendation
+
+4. **Core Parameters (Unanimous Agreement)**
+   - RRF k value: **60** (standard from literature)
+   - Retrieval: **50 EPUB + 50 PGN** (CRITICAL fix from 100+10 imbalance)
+   - Collection weights: **1.0 vs 1.3** (via intent router)
+   - No score normalization (RRF is rank-based)
+   - Parallel searches with asyncio.gather()
+
+5. **Implementation Approach: Gemini's Phased Strategy**
+   - Phase 5.1: Core RRF only (Week 1)
+   - Phase 5.2: Validation with 50-query test suite (Week 2)
+   - Phase 5.3: UI/UX improvements (Week 3)
+   - Phase 6: Advanced features (MMR, dedup, reranking) - IF needed
+
+   **Rationale:** Validate foundation before adding complexity (avoid action bias)
+
+## Documentation Created
+
+1. **RRF_PHASE5_SYNTHESIS.md** (1,147 lines)
+   - Complete implementation guide with partner synthesis
+   - Technical specifications and code samples
+   - Validation strategy and success metrics
+   - Principal Architect's opinion and recommendations
+   - Phased implementation plan
+
+2. **PARTNER_CONSULT_RRF_PHASE5.md** (updated)
+   - Full partner responses from ChatGPT, Gemini, Grok
+   - Questions asked and answers received
+   - Consensus points and divergent opinions
+
+## Key Technical Decisions
+
+### Files to Create (Phase 5.1)
+- `rrf_merger.py` - RRF algorithm implementation
+- `query_router.py` - Intent classification (opening vs concept queries)
+
+### Files to Modify (Phase 5.1)
+- `synthesis_pipeline.py` - **CRITICAL**: Update all 3 stage prompts for mixed-media
+- `rag_engine.py` - Add `search_multi_collection_async()` for parallel searches
+- `app.py` - Add `/query_merged` endpoint
+
+### Validation Strategy (Phase 5.2)
+- 50 test queries with ground truth (20 opening, 20 concept, 10 mixed)
+- Calculate MRR and NDCG@10 for all endpoints
+- Prove `/query_merged` outperforms single-collection endpoints
+
+## Principal Architect's Assessment
+
+**Quote:** "This is your best-designed phase yet"
+
+**Key Recommendations:**
+1. Start with Gemini's phased approach (not ChatGPT's feature-rich)
+2. Synthesis prompt update is NON-NEGOTIABLE (Priority 1A)
+3. Balanced 50+50 retrieval is CRITICAL (avoid 100+10 bias)
+
+**Confidence Level:** 95%
+
+**Prediction:** Takes 2.5 weeks, will add MMR diversity from ChatGPT anyway (validation will show need)
+
+## Next Steps
+
+**This Session:**
+1. Create `rrf_merger.py` + unit tests
+2. Create `query_router.py` + test with 10 sample queries
+3. STOP (don't touch synthesis or endpoints yet)
+
+**Next Session:**
+1. Update synthesis prompts with structured source formatting
+2. Test manually with mixed context (2 EPUB + 2 PGN chunks)
+3. Verify GPT-5 handles mixed formats correctly
+4. Only then proceed to endpoint integration
+
+## Files Modified This Session
+
+- RRF_PHASE5_SYNTHESIS.md (CREATED - 1,147 lines)
+- PARTNER_CONSULT_RRF_PHASE5.md (UPDATED with all responses)
+- BACKLOG.txt (UPDATED with ITEM-028)
+- README.md (UPDATED Current Status)
+- SESSION_NOTES.md (UPDATED with this entry)
+
+## Git Status
+
+Ready for commit:
+- All Big 3 documentation updated
+- Planning documents complete
+- Partner consultation responses captured
+- Implementation roadmap clear
+
+**Branch:** main
+**Next Commit:** "Phase 5 RRF Planning Complete - Partner consultation synthesis"
+
+---
+
+# 🎯 PREVIOUS SESSION: November 1, 2025 (ITEM-024.8 Dynamic Extraction Restored)
 **Session Focus:** ITEM-024.7 Path B Revert, ITEM-024.8 Dynamic Extraction Restoration
 
 ---

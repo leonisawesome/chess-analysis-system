@@ -18,9 +18,9 @@
 - ✅ **ITEM-011 Complete:** Monolithic refactoring (1,474 → 262 lines, -82.2%)
 - ✅ **ITEM-024.7 Complete:** JavaScript rendering architecture (Path B) - Restored clean separation between backend and frontend
 - ✅ **ITEM-024.8 Complete:** Dynamic diagram extraction restored - Reverted static 73-position bypass, now uses RAG-based extraction from 357,957 chunks
-- ✅ **ITEM-027 Phase 1+2 Complete:** PGN variation splitting - All 1,778 games validated, 0 failures, 0 chunks over limit (40 tests passing)
-- ✅ **ITEM-027 Phase 3 Complete:** Qdrant PGN collection - 1,791 chunks uploaded to `chess_pgn_repertoire`
-- ✅ **ITEM-027 Phase 4 Complete:** PGN retrieval testing - Web interface at `/test_pgn`, 100% query success, example queries feature backported
+- ✅ **ITEM-027 Phase 1+2+3+4 Complete:** PGN variation splitting & ingestion - All 1,778 games validated, 1,791 chunks in `chess_pgn_repertoire`, 100% query success
+- ✅ **ITEM-028 Planning Complete:** Phase 5 RRF Multi-Collection Merge - Partner consultation complete (ChatGPT, Gemini, Grok), unanimous consensus on architecture, ready for implementation
+- 🚀 **Next:** Implement RRF merger to combine EPUB + PGN collections (3-week phased approach)
 - 🔧 **Architecture:** Clean modular design across 6 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 
