@@ -109,7 +109,7 @@ class PGNAnalyzer:
         """Create a RAG chunk from a PGN game."""
 
         # Extract metadata
-        metadata = self._extract_metadata(game, filename)
+        metadata = self._extract_metadata(game, filename, game_num)
 
         # Create chunk text with breadcrumb header
         chunk_text = self._create_chunk_text(game, metadata)
@@ -129,7 +129,7 @@ class PGNAnalyzer:
             "token_estimate": token_estimate
         }
 
-    def _extract_metadata(self, game: chess.pgn.Game, filename: str) -> Dict:
+    def _extract_metadata(self, game: chess.pgn.Game, filename: str, game_num: int) -> Dict:
         """Extract metadata from PGN headers."""
         headers = game.headers
 
