@@ -146,9 +146,10 @@ class PGNAnalyzer:
         game_role = self._determine_game_role(chapter, section, game)
 
         metadata = {
-            # Source identification
+            # Source identification (for audit trail)
             "source_type": source_type,
             "source_file": filename,
+            "game_number": game_num,  # Game number within the file
             "course_name": course_name,
 
             # Course hierarchy (if applicable)
