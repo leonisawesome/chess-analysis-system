@@ -2193,6 +2193,19 @@ Don't implement complex features (like RRF merge) without first validating basic
 
 **Status:** ✅ Phase 4 Complete - PGN retrieval validated, web interface deployed, ready for Phase 5 (RRF merge)
 
+**Bug Fix (Nov 8, Evening):**
+User reported example queries not randomizing - same 5 buttons every page load.
+
+**Root Causes:**
+1. Unreliable shuffle: `sort(() => Math.random() - 0.5)` produces biased results
+2. Missing from test_pgn.html: Only implemented on index.html
+
+**Solution:**
+- Replaced with Fisher-Yates shuffle algorithm (proper randomization)
+- Applied to both templates (index.html and test_pgn.html)
+- Added debug console logging
+- User confirmed fix working ✅
+
 **Next Steps (Phase 5):**
 - Implement RRF (Reciprocal Rank Fusion) for multi-collection queries
 - Test cross-collection queries (EPUB + PGN)

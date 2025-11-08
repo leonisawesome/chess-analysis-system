@@ -248,11 +248,7 @@
         <div class="search-box">
             <div class="example-queries">
                 <h3>Example Queries:</h3>
-                <button class="example-btn" onclick="setQuery('Benko Gambit opening repertoire')">Benko Gambit</button>
-                <button class="example-btn" onclick="setQuery('Najdorf Sicilian model games')">Najdorf Sicilian</button>
-                <button class="example-btn" onclick="setQuery('London System against d5')">London System</button>
-                <button class="example-btn" onclick="setQuery('rook endgame technique')">Rook Endgames</button>
-                <button class="example-btn" onclick="setQuery('middlegame plans in closed positions')">Closed Middlegames</button>
+                <div id="exampleButtons"></div>
             </div>
 
             <input
@@ -270,9 +266,61 @@
     </div>
 
     <script>
+        // Example queries with random selection
+        const allExampleQueries = [
+            "Benko Gambit opening repertoire",
+            "Najdorf Sicilian model games",
+            "London System against d5",
+            "Rook endgame technique",
+            "Middlegame plans in closed positions",
+            "King's Indian Defense main lines",
+            "Caro-Kann Defense strategy",
+            "French Defense Winawer variation",
+            "Sicilian Dragon repertoire",
+            "Queen's Gambit Declined setups",
+            "Dutch Defense tactical ideas",
+            "Grünfeld Defense positional play",
+            "English Opening systems",
+            "Nimzo-Indian Defense key plans",
+            "Slav Defense main variations",
+            "Catalan Opening theory",
+            "Benoni Defense dynamics",
+            "Pirc Defense formations",
+            "Modern Defense counterplay",
+            "Scotch Game critical lines"
+        ];
+
+        // Fisher-Yates shuffle for proper randomization
+        function getRandomQueries(arr, n) {
+            const copy = [...arr];
+            const result = [];
+            for (let i = 0; i < n && copy.length > 0; i++) {
+                const randomIndex = Math.floor(Math.random() * copy.length);
+                result.push(copy[randomIndex]);
+                copy.splice(randomIndex, 1);
+            }
+            return result;
+        }
+
         function setQuery(query) {
             document.getElementById('queryInput').value = query;
         }
+
+        // Generate random example buttons on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded fired at', new Date().getTime());
+            const exampleButtons = document.getElementById('exampleButtons');
+            const randomQueries = getRandomQueries(allExampleQueries, 5);
+            console.log('Random queries selected:', randomQueries);
+
+            randomQueries.forEach(query => {
+                const button = document.createElement('button');
+                button.className = 'example-btn';
+                button.textContent = query;
+                button.onclick = () => setQuery(query);
+                exampleButtons.appendChild(button);
+            });
+        });
 
         function submitQuery() {
             const query = document.getElementById('queryInput').value.trim();

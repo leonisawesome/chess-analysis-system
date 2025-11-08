@@ -525,3 +525,61 @@ document.addEventListener('DOMContentLoaded', function() {
 **Time Spent:** ~2 hours (testing, web interface, backport, documentation)
 **User Satisfaction:** High (approved interface, explained similarity scores)
 
+
+---
+
+## Bug Fix: Example Queries Not Randomizing
+
+**Time:** Evening (after Phase 4 completion)
+**Issue:** User reported example queries showing same 5 buttons on every page load
+
+### Investigation:
+
+**Root Causes Identified:**
+1. **Wrong shuffle algorithm:** Used `sort(() => Math.random() - 0.5)` which is unreliable and can produce biased results
+2. **Missing implementation:** Randomization was only added to `index.html`, not `test_pgn.html`
+
+### Solution Implemented:
+
+1. **Fisher-Yates Shuffle Algorithm:**
+   - Replaced unreliable `sort()` method with proper Fisher-Yates shuffle
+   - Guarantees true randomization without bias
+   ```javascript
+   function getRandomQueries(arr, n) {
+       const copy = [...arr];
+       const result = [];
+       for (let i = 0; i < n && copy.length > 0; i++) {
+           const randomIndex = Math.floor(Math.random() * copy.length);
+           result.push(copy[randomIndex]);
+           copy.splice(randomIndex, 1);
+       }
+       return result;
+   }
+   ```
+
+2. **Applied to Both Templates:**
+   - `templates/index.html`: Already had randomization, algorithm fixed
+   - `templates/test_pgn.html`: Added complete randomization implementation
+   - Both now select 5 random queries from 20-query pool on every page load
+
+3. **Debug Logging Added:**
+   - Console logs to verify randomization working
+   - Shows timestamp and selected queries array
+
+### Files Modified:
+- `templates/index.html`: Fixed shuffle algorithm, added debug logging
+- `templates/test_pgn.html`: Added complete randomization (was using static hardcoded buttons)
+
+### Verification:
+- User tested in incognito mode
+- Confirmed different queries on each page refresh
+- ✅ **User feedback:** "Yup you fixed it"
+
+### Key Lesson:
+`Array.sort(() => Math.random() - 0.5)` is a common JavaScript anti-pattern that produces biased results. Always use Fisher-Yates shuffle for proper randomization.
+
+---
+
+**Session Status:** ✅ Bug Fixed - Randomization working on both interfaces
+**User Satisfaction:** High - "You are doing great today! Very impressed"
+

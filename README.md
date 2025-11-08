@@ -951,6 +951,7 @@ Re-analysis with comprehensive logging revealed:
     - Implemented in PGN interface (5 random queries from 20 options)
     - Backported to EPUB interface (5 random queries from 20 options)
     - Improves user discovery and engagement
+    - Bug fix: Replaced biased `sort()` with Fisher-Yates shuffle for true randomization
   - ✅ **Style consistency:** PGN interface matches EPUB light theme
     - Header: #2c3e50, Blue: #3498db, Background: #f5f5f5
     - Responsive design with metadata grids

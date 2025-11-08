@@ -485,10 +485,16 @@
             "Nimzo-Indian Defense key concepts"
         ];
 
-        // Function to randomly select N items from array
+        // Fisher-Yates shuffle for proper randomization
         function getRandomQueries(arr, n) {
-            const shuffled = [...arr].sort(() => Math.random() - 0.5);
-            return shuffled.slice(0, n);
+            const copy = [...arr];
+            const result = [];
+            for (let i = 0; i < n && copy.length > 0; i++) {
+                const randomIndex = Math.floor(Math.random() * copy.length);
+                result.push(copy[randomIndex]);
+                copy.splice(randomIndex, 1);
+            }
+            return result;
         }
 
         // Function to set query in input field
@@ -498,8 +504,10 @@
 
         // Generate random example buttons on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded fired at', new Date().getTime());
             const exampleButtons = document.getElementById('exampleButtons');
             const randomQueries = getRandomQueries(allExampleQueries, 5);
+            console.log('Random queries selected:', randomQueries);
 
             randomQueries.forEach(query => {
                 const button = document.createElement('button');
