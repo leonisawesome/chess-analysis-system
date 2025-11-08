@@ -7,7 +7,7 @@ Extracts text and tests figurine conversion.
 import sys
 from pathlib import Path
 
-from fast_epub_analyzer import extract_ebook_text_and_html
+from analyze_chess_books import extract_ebook_text_and_html
 from figurine_normalizer import normalize_figurines, has_figurines, count_figurines
 
 
