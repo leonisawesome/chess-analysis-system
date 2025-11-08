@@ -683,6 +683,59 @@ python add_pgn_to_corpus.py chunks.json --dry-run
 python add_pgn_to_corpus.py chunks.json --limit 100
 ```
 
+**3. test_pgn_retrieval.py** (206 lines) ✅
+- **Purpose:** Test PGN retrieval quality in isolation
+- **Features:**
+  - Tests ONLY the PGN collection (not the book collection)
+  - Verifies retrieval works correctly
+  - Confirms results are from PGN data, not books
+  - Includes test suite with 5 diverse queries
+  - Calculates purity metric (% of results from PGN collection)
+  - Single query testing mode
+  - Collection statistics reporting
+
+**Usage:**
+```bash
+# Run full test suite
+python test_pgn_retrieval.py --collection chess_pgn_test
+
+# Test single query
+python test_pgn_retrieval.py --collection chess_pgn_test --query "Benko Gambit opening"
+```
+
+### Audit Trail & Data Quality
+
+**Complete Traceability:**
+- Every chunk includes `game_number` field in metadata
+- Format: `source_file` + `game_number` + `chunk_id` → exact game in exact file
+- Enables easy cleanup of dirty data by backtracking to specific game
+- Example: "mcm_openings_game_42" traces to Game #42 in mcm_openings.pgn file
+
+**Why This Matters:**
+- If a chunk has bad data, can identify and remove specific game
+- Can re-process individual files without rebuilding entire corpus
+- Maintains data lineage for debugging and quality control
+
+### Testing Isolation Strategy
+
+**Separate Collections:**
+- `chess_production`: 358,529 chunks from 1,055 books (existing)
+- `chess_pgn_test`: 1,779 PGN game chunks (new, for testing)
+
+**Why Separate Collections:**
+- Prevents contamination when testing new PGN data
+- Can verify retrieval results are from PGN games, not books
+- Allows independent tuning of each collection
+- Can merge collections after validation
+
+**Validation Approach:**
+1. Upload PGN chunks to `chess_pgn_test` collection
+2. Run test queries using `test_pgn_retrieval.py`
+3. Verify 100% of results are from PGN data (purity check)
+4. Validate course metadata is preserved correctly
+5. Test precision@5 on course-specific queries
+6. After validation, can merge to production or keep separate
+
 ### Chunk Structure Example
 
 **Breadcrumb header:**
@@ -738,10 +791,11 @@ Opening: A58 Benko Gambit | Date: 2024.??.?? | Result: * | Content: annotated, v
 - Monitor performance
 
 ### Files Created/Modified
-- `analyze_pgn_games.py` (new, 570 lines)
-- `add_pgn_to_corpus.py` (new, 230 lines)
-- `AI_RESPONSES_COMPARISON.md` (new, 546 lines)
-- `README.md` (updated PGN pipeline section)
-- `session_notes_nov6.md` (this file, updated)
+- `analyze_pgn_games.py` (new, 570 lines) - Parser with audit trail
+- `add_pgn_to_corpus.py` (new, 230 lines) - Embedding generation and upload
+- `test_pgn_retrieval.py` (new, 206 lines) - Testing isolation and validation
+- `AI_RESPONSES_COMPARISON.md` (new, 546 lines) - 4-AI synthesis
+- `README.md` (updated PGN pipeline section with audit trail and testing info)
+- `session_notes_nov6.md` (this file, updated with complete pipeline docs)
 
-**Status:** Scripts implemented and tested - Ready for embedding generation ✅
+**Status:** Scripts implemented, tested, and documented - Ready for embedding generation ✅

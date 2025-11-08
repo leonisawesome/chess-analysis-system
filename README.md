@@ -845,6 +845,25 @@ When implemented, the system will support:
    - Progress tracking and cost estimation
    - Dry-run mode for testing
 
+3. **`test_pgn_retrieval.py`** (206 lines)
+   - Tests ONLY the PGN collection (isolated from book data)
+   - Verifies retrieval works correctly
+   - Confirms results are from PGN games, not books
+   - Includes test suite with 5 diverse queries
+   - Calculates purity metric (% of results from PGN collection)
+
+**Audit Trail & Data Quality:**
+- Every chunk includes `game_number` field for complete traceability
+- Format: `source_file` + `game_number` + `chunk_id` → exact game in exact file
+- Enables easy cleanup of dirty data by tracking back to specific game
+- Example: "mcm_openings_game_42" → Game #42 in mcm_openings.pgn
+
+**Testing Isolation:**
+- Separate Qdrant collections: `chess_production` (books) vs `chess_pgn_test` (PGN games)
+- Prevents contamination when testing new PGN data
+- Dedicated test script validates PGN-only retrieval
+- Can merge collections after validation
+
 **Phase 3: Full Implementation** ⏳ **READY**
 - ⏳ Generate embeddings for 1,779 sample games
 - ⏳ Upload to Qdrant test collection
