@@ -65,7 +65,8 @@
         position: fen,
         draggable: false,
         dropOffBoard: 'trash',
-        sparePieces: false
+        sparePieces: false,
+        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
       });
       return board;
     } catch (e) {
