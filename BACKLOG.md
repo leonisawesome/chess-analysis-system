@@ -6,64 +6,68 @@
 
 ## MUST-HAVE FEATURES (Priority Order)
 
-### Phase 6.1a: Interactive Chess Diagrams ⭐ ACTIVE
-**Goal:** Get chess diagrams rendering correctly in the web interface
+### Phase 6.1a: Static EPUB Diagram Extraction ⭐ ACTIVE
+**Goal:** Extract diagrams from EPUB files and display them in search results
 
 **Status:** IN PROGRESS (November 9, 2025)
 
-**Priority:** Fix diagram rendering architecture before moving to static EPUB extraction
+**The Reality:**
+- **Dynamic diagrams (GPT-5 generated): NEVER worked properly**
+- **Static diagrams from EPUBs: NOT extracted yet**
+- 1,055 chess books should contain THOUSANDS of diagrams (not extracted)
+- No code exists to extract images from EPUB files
+- `static/diagrams/` directory is empty
 
-**The Problem (Honest Assessment):**
-- Diagrams not rendering correctly in browser
-- Previous approach was band-aiding individual queries instead of fixing architecture
-- Need architectural fix for diagram generation and display
+**What We're Building:**
+1. Extract PNG/SVG diagrams from EPUB files during ingestion
+2. Store diagrams with unique IDs
+3. Link diagrams to text chunks in Qdrant metadata
+4. Display book diagrams when chunks appear in search results
 
-**Current Approach:**
-- Focus on getting ANY diagrams working first (query-generated)
-- Then move to static EPUB diagram extraction (Phase 6.1b)
-- Dynamic query optimization will require partner consult later
+**Tasks:**
+- [ ] Audit sample EPUBs to understand diagram encoding (PNG? SVG? Base64?)
+- [ ] Build EPUB diagram extraction pipeline
+- [ ] Store extracted diagrams in `static/diagrams/{book_id}/`
+- [ ] Add `diagram_ids: []` metadata to Qdrant chunks
+- [ ] Update frontend to display EPUB diagrams alongside chunk text
+- [ ] Test with diagram-heavy books
+
+**Estimated Time:** 5-7 days
+**Risk Level:** MEDIUM (unknown EPUB diagram formats)
 
 ---
 
-### Phase 6.1b: Fix Static EPUB Diagrams (FUTURE)
-**Goal:** Extract and render diagrams from EPUB files correctly
+### Phase 6.1b: Dynamic Diagram Generation (FUTURE)
+**Goal:** Generate diagrams on-the-fly for queries where no EPUB diagrams exist
 
-**Status:** PENDING (awaiting 6.1a completion)
+**Status:** PENDING (awaiting 6.1a completion + partner consult required)
 
 **The Problem (Honest Assessment):**
-1. Diagrams extracted from EPUBs are often:
-   - Missing entirely (image extraction fails)
-   - Present but unlinked to relevant text (chunking issue)
-   - Irrelevant to the query (reranking doesn't consider diagrams)
-2. Some EPUBs encode diagrams as:
-   - Base64 images → may work
-   - SVG chess notation → probably broken
-   - External image files → likely missing
+- GPT-5 diagram generation has **NEVER worked properly**
+- Previous attempts were "band-aiding individual queries" instead of architectural fix
+- Documented solutions (Enhancement 4.1, 4.2) in README not actually working
+- Need partner consult for proper architecture
 
-**Tasks:**
-- [ ] Audit 20 random EPUBs to see HOW diagrams are encoded
-- [ ] Fix image extraction in `epub_ingestion.py`
-- [ ] Add `has_diagram: boolean` to chunk metadata
-- [ ] Add `diagram_count: int` to chunk metadata
-- [ ] Store diagram images in `./diagrams/{book_id}/{chunk_id}.png`
-- [ ] Update GPT-5 reranking prompt to boost chunks with diagrams when relevant
-- [ ] Test with 10 diagram-heavy books (Silman, Dvoretsky)
+**Why This is Hard:**
+- GPT-5 generates positions that don't match the concepts
+- "Forks and pins" queries return positions without actual forks/pins
+- Validation/enforcement approaches tried but failed
+- Canonical position library exists (73 positions) but integration doesn't work
 
-**Estimated Time:** 5-7 days
-**Risk Level:** MEDIUM
-- May discover EPUBs use unsupported diagram formats
-- Image storage could grow large (budget 5-10GB)
-- Some diagrams may be unsalvageable from source
+**Approach (TBD - Partner Consult Required):**
+- Option A: Fix GPT-5 prompt engineering + validation
+- Option B: Expand canonical library to thousands of positions
+- Option C: Different architecture entirely
+- **Decision:** Requires partner consultation after 6.1a complete
 
-**Partner Consult Topics:**
-- Is increased storage acceptable?
-- Which books MUST have working diagrams? (test priority)
-- Acceptable failure rate? (90% working? 95%?)
+**Estimated Time:** 7-14 days (after partner consult)
+**Risk Level:** HIGH (multiple failed attempts already)
 
 **Definition of Done:**
-- 90% of diagrams from top 100 books render correctly
-- Diagram relevance improved (user testing)
-- Documented list of books with broken diagrams
+- Dynamic diagrams actually render correctly in browser
+- Positions match the concepts being discussed
+- Works for common opening/tactical queries
+- Acceptable failure rate determined through testing
 
 ---
 
@@ -223,11 +227,11 @@ System: [Searches PGN collection with context]
 - ✅ Phase 5.2: Validation framework created (early termination after 28/50 queries)
 
 **Active Work:**
-- 🔧 **Phase 6.1a: Interactive Chess Diagrams** (IN PROGRESS)
-  - **Focus:** Fix architectural issues with diagram rendering in web interface
-  - **Problem:** Diagrams not displaying correctly, previous approach was band-aiding queries
-  - **Approach:** Fix diagram generation and display architecture first
-  - **Next:** Phase 6.1b (static EPUB extraction) after 6.1a working
+- 🔧 **Phase 6.1a: Static EPUB Diagram Extraction** (IN PROGRESS)
+  - **Focus:** Extract diagrams from 1,055 EPUB files and link to chunks
+  - **Reality:** Dynamic diagrams NEVER worked, starting with static extraction
+  - **Goal:** Thousands of book diagrams accessible in search results
+  - **Next:** Phase 6.1b (dynamic generation) after 6.1a complete + partner consult
 
 **On Hold:**
 - ⏸️ **Phase 5.2 Validation:** Paused pending larger PGN corpus
@@ -237,10 +241,9 @@ System: [Searches PGN collection with context]
   - **Status:** RRF system working correctly, just needs more PGN data
 
 **Future Work:**
-- 🎯 **Phase 6.1b:** Static EPUB diagram extraction (after 6.1a complete)
+- 🎯 **Phase 6.1b:** Dynamic diagram generation (after 6.1a + partner consult)
 - 📦 **PGN Corpus Expansion:** Scale from 1,778 → 1M games
 - 🔄 **Phase 5.2 Resume:** Re-validate RRF after PGN corpus expansion
-- 🤖 **Dynamic Diagram Optimization:** Partner consult for query-based diagram generation
 
 ---
 

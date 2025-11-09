@@ -3,9 +3,9 @@
 
 ---
 
-# 🎯 LATEST SESSION: Phase 6.1a - Interactive Chess Diagrams (IN PROGRESS)
+# 🎯 LATEST SESSION: Phase 6.1a - Static EPUB Diagram Extraction (IN PROGRESS)
 **Date:** November 9, 2025
-**Session Focus:** Documentation corrections and diagram rendering architecture work
+**Session Focus:** Major documentation correction - dynamic diagrams never worked, starting static extraction
 
 ## Session Summary
 
@@ -29,54 +29,63 @@
 - ✅ System architecture validated
 - ⚠️ Simply needs more PGN data to demonstrate value
 
-### 2. Phase Sequencing Correction
+### 2. MAJOR CORRECTION: Dynamic Diagrams Never Worked
 
-**Critical Fix:** Cannot work on Phase 6.1b (EPUB diagram extraction) before 6.1a (interactive diagrams) is working.
+**Critical Discovery:** Documentation was incorrect about diagram state.
 
-**Corrected Status:**
-- Phase 6.1a: IN PROGRESS (diagram rendering in browser not working)
-- Phase 6.1b: PENDING (awaiting 6.1a completion)
+**TRUE State:**
+- **Dynamic diagrams (GPT-5 generated): NEVER worked properly**
+- **Static EPUB diagrams: NEVER extracted**
+- README documented Enhancement 4.2 "100% tactical accuracy" - NOT actually working
+- Previous Claude was not updating documentation accurately
 
-### 3. Current Focus: Interactive Chess Diagrams Architecture
+**Phase Definitions Corrected:**
+- **Phase 6.1a:** Static EPUB diagram extraction (extract from 1,055 books)
+- **Phase 6.1b:** Dynamic diagram generation (GPT-5, requires partner consult)
 
-**Goal:** Get chess diagrams rendering correctly in the web interface
+### 3. Current Focus: Static EPUB Diagram Extraction (Phase 6.1a)
 
-**Problem:**
-- Diagrams not displaying correctly in browser
-- Previous approach was band-aiding individual queries instead of fixing architecture
-- Need architectural fix for diagram generation and display
+**Goal:** Extract diagrams from EPUB files and display in search results
 
-**Approach:**
-1. Fix diagram generation and display architecture first (6.1a)
-2. Then move to static EPUB diagram extraction (6.1b)
-3. Dynamic query optimization will require partner consult later
+**Current Reality:**
+- 1,055 chess books contain THOUSANDS of diagrams (not extracted)
+- `static/diagrams/` directory is empty
+- NO extraction code exists
+- NO diagram metadata in Qdrant chunks
 
-**Key Insight:** Must get ANY diagrams working first before moving to EPUB-specific extraction.
+**What We're Building:**
+1. EPUB diagram extraction pipeline
+2. Store diagrams with unique IDs in `static/diagrams/{book_id}/`
+3. Add `diagram_ids: []` metadata to Qdrant chunks
+4. Display book diagrams when chunks appear in search results
+
+**Key Insight:** Start with static extraction (real book diagrams) before attempting dynamic generation.
 
 ### Next Steps
 
 **Immediate Priority:**
-1. **Phase 6.1a:** Fix diagram rendering architecture
-2. **Get diagrams displaying:** Focus on making query-generated diagrams work in browser
+1. **Audit Sample EPUBs:** Understand how diagrams are encoded (PNG? SVG? Base64?)
+2. **Build Extraction Pipeline:** Code to extract diagrams from EPUB files
+3. **Storage Architecture:** Design diagram storage and linking to chunks
 
 **Future Work:**
-1. **Phase 6.1b:** Static EPUB diagram extraction (after 6.1a complete)
-2. **Partner Consult:** Dynamic diagram optimization
-3. **PGN Corpus Expansion:** Scale from 1,778 → 1M games
-4. **Phase 5.2 Resume:** Re-validate RRF with larger corpus
+1. **Phase 6.1b:** Dynamic diagram generation (after 6.1a complete + partner consult)
+2. **PGN Corpus Expansion:** Scale from 1,778 → 1M games
+3. **Phase 5.2 Resume:** Re-validate RRF with larger corpus
 
 ### Documentation Updated
 
 **Files Modified (this session):**
-- `backlog.md` - Corrected phase sequencing, 6.1a = ACTIVE, 6.1b = PENDING
-- `README.md` - Updated Current Status to reflect 6.1a in progress
-- `SESSION_NOTES.md` - This entry
+- `backlog.md` - MAJOR correction: 6.1a = static EPUB extraction, 6.1b = dynamic generation
+- `README.md` - Removed false claims about working diagrams, corrected current state
+- `SESSION_NOTES.md` - This entry documenting the major correction
 
 **Git Commits:**
-1. First commit (603ba5c): Incorrect phase ordering
-2. Second commit (pending): Corrected phase sequencing
+1. Commit 603ba5c: Incorrect (had 6.1b before 6.1a)
+2. Commit 8f4daa0: Partial fix (corrected ordering but wrong phase definitions)
+3. Commit PENDING: Major correction (true state: no diagrams working, starting static extraction)
 
-**Status:** Phase 6.1a IN PROGRESS - Interactive chess diagram architecture
+**Status:** Phase 6.1a IN PROGRESS - Static EPUB diagram extraction architecture
 
 ---
 
