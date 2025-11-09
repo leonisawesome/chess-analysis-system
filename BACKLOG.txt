@@ -2554,3 +2554,137 @@ All changes committed to branch `phase-5.1-ui-integration`:
 - Tune collection weights based on validation results
 - Document optimal query patterns and use cases
 
+
+---
+
+## ITEM-028 (continued): Phase 5.2 - Validation Framework ✅ COMPLETE (Nov 9, 2025)
+
+**Problem Addressed:**
+Phase 5.1 RRF multi-collection merge was deployed to production (main page) without validation. We don't know if RRF actually improves results vs EPUB-only, or if we're degrading quality by mixing PGN into concept queries.
+
+**Goal:**
+Build comprehensive validation system to:
+1. Measure if RRF improves retrieval vs single-collection approaches
+2. Identify which query types benefit from RRF merge
+3. Optimize RRF parameters (k=60, collection weights=1.3x)
+4. Provide data-driven evidence for production deployment decision
+
+**Solution Implemented:**
+
+### 1. **Test Suite Creation** (`validation_test_suite.json`)
+   - **50 curated queries** across 3 categories:
+     - 20 opening queries (expected: PGN best) - e.g., "Benko Gambit mainline", "Najdorf Poisoned Pawn"
+     - 20 concept queries (expected: EPUB best) - e.g., "How to improve calculation", "Rook endgame technique"
+     - 10 mixed queries (expected: RRF best) - e.g., "How to play against London System", "Typical plans in Sicilian Dragon"
+   - Each query labeled with expected best collection
+   - **Metadata note:** PRELIMINARY validation with 1,778 PGN games (0.5% of corpus)
+   - **CRITICAL:** Must re-run when PGN collection scales to 1M games (will be 74% of corpus)
+
+### 2. **Evaluation Metrics Module** (`evaluation_metrics.py` - 340 lines)
+   Implemented standard Information Retrieval metrics:
+   - **MRR (Mean Reciprocal Rank):** Position of first relevant result
+   - **NDCG@5, NDCG@10:** Ranking quality (Normalized Discounted Cumulative Gain)
+   - **Precision@5, Precision@10:** Fraction of top-K results that are relevant
+   - **Recall@5, Recall@10:** Fraction of relevant results found in top-K
+   - **F1@5, F1@10:** Harmonic mean of Precision and Recall
+   - All metrics use GPT-5 relevance scores (0-10 scale, threshold ≥7.0 = relevant)
+   - `compare_approaches()` function for A/B testing across EPUB/PGN/RRF
+
+### 3. **Validation Framework Script** (`phase5_validation.py` - 520 lines)
+   Comprehensive A/B testing pipeline:
+   - Runs each query through all 3 approaches:
+     - EPUB-only (`execute_query_epub_only`)
+     - PGN-only (`execute_query_pgn_only`)
+     - RRF-merged (`execute_query_rrf_merged`)
+   - Calculates metrics for each approach
+   - Determines winner per query (based on NDCG@10)
+   - Generates aggregate comparison report
+   - Saves detailed results to JSON
+
+**Usage:**
+```bash
+# Full validation (50 queries, ~45-60 min, ~$1.50-2.00)
+python phase5_validation.py
+
+# Quick test (10 queries, ~15 min, ~$0.30)
+python phase5_validation.py --quick
+
+# Category-specific
+python phase5_validation.py --category opening
+
+# Custom output file
+python phase5_validation.py --output my_results.json
+```
+
+**Cost Analysis (corrected):**
+- Per query execution: ~$0.01 (embedding + GPT-5 reranking)
+- Full 50 queries × 3 approaches = 150 executions
+- **Total cost: ~$1.50-2.00** (not $15-20 as originally estimated)
+
+**Critical Limitation:**
+Current corpus is **heavily skewed toward EPUB**:
+- EPUB: 358,529 chunks (99.5%)
+- PGN: 1,791 chunks (0.5%)
+
+When PGN scales to 1M games:
+- EPUB: 358,529 chunks (~26%)
+- PGN: ~1,000,000 chunks (~74%)
+
+**Results will be dramatically different at scale.** This is a preliminary validation with small PGN corpus. Phase 5.2 MUST be re-run when PGN collection reaches production scale.
+
+**Implementation Details:**
+
+Files Created:
+1. **validation_test_suite.json** (50 queries)
+   - Structured as JSON with metadata and query objects
+   - Each query has: id, category, query text, expected_best, rationale
+   - Metadata warns about preliminary nature of validation
+
+2. **evaluation_metrics.py** (340 lines)
+   - `mean_reciprocal_rank()` - MRR calculation
+   - `dcg_at_k()`, `ndcg_at_k()` - NDCG metrics
+   - `precision_at_k()`, `recall_at_k()`, `f1_at_k()` - Classification metrics
+   - `calculate_all_metrics()` - Compute all metrics for results
+   - `compare_approaches()` - A/B test EPUB vs PGN vs RRF
+   - `determine_winner()` - Pick best approach based on primary metric
+
+3. **phase5_validation.py** (520 lines)
+   - `execute_query_epub_only()` - Search EPUB collection only
+   - `execute_query_pgn_only()` - Search PGN collection only  
+   - `execute_query_rrf_merged()` - Full RRF pipeline (both collections + merge)
+   - `run_validation()` - Main loop running all queries through all approaches
+   - `aggregate_metrics_per_approach()` - Average metrics across queries
+   - `print_summary()` - Console output with winner breakdown
+   - `save_results()` - JSON export of detailed results
+   - Supports --quick, --category, --output CLI flags
+
+**Git Workflow:**
+- Branch: `phase-5.1-ui-integration`
+- Commit: "Phase 5.2: Add validation framework for RRF multi-collection merge"
+- Files: 3 new files, 1,177 lines added
+- Status: ✅ Pushed to GitHub
+
+**Validation Execution Status:**
+- Framework: ✅ Complete and ready
+- Qdrant: ✅ Restarted (was unhealthy, now healthy)
+- Full 50-query run: ⏳ In progress (running in background)
+- Expected completion: ~45-60 minutes
+- Results will be saved to: `validation_results_YYYYMMDD_HHMMSS.json`
+
+**Next Steps (Phase 5.3 - pending validation results):**
+1. Analyze validation results
+2. Compare EPUB vs PGN vs RRF performance across categories
+3. Identify optimal RRF parameters (k, collection weights)
+4. Document query patterns and recommendations
+5. Make data-driven decision about production deployment
+6. **Schedule Phase 5.2 re-run when PGN collection reaches 1M games**
+
+**Future Work (CRITICAL):**
+Add to backlog: **ITEM-029 - Phase 5.2 Re-validation at Scale**
+- Re-run full 50-query validation when PGN collection reaches 1M games
+- Compare preliminary results (0.5% PGN) vs production results (74% PGN)
+- Adjust RRF parameters based on production-scale corpus
+- Document how results changed with scale
+
+**Status:** ✅ Phase 5.2 Framework Complete - Validation running
+
