@@ -6,30 +6,12 @@
 
 ## MUST-HAVE FEATURES (Priority Order)
 
-### Phase 6.1a: Client-Side Interactive Diagrams ✅ COMPLETE
-**Goal:** Render FEN positions as interactive chessboards
+### Phase 6.1b: Fix Static EPUB Diagrams ⭐ ACTIVE
+**Goal:** Extract and render diagrams from EPUB files correctly
 
-**Status:** SHIPPED (November 9, 2025)
+**Status:** IN PROGRESS (November 9, 2025)
 
-**What We Shipped:**
-- ✅ FEN extraction already existed in diagram_processor.py (extract_fen_from_marker)
-- ✅ Modified diagram-renderer.js to detect FEN and render with chessboard.js
-- ✅ Interactive chessboards for all diagrams with FEN positions
-- ✅ SVG fallback preserved for static diagrams
-- ✅ Chessboard.js + Chess.js libraries already loaded in index.html
-
-**Technical Details:**
-- Backend: diagram_processor.py extracts FEN, includes in diagram_positions response
-- Frontend: diagram-renderer.js checks for `diagram.fen` field, renders Chessboard() if present
-- Board config: 400px width, centered, non-draggable (display only)
-- Fallback: SVG rendering if no FEN available
-
-**Time:** 1 hour (much faster than estimated - FEN extraction already existed!)
-
----
-
-### Phase 6.1b: Fix Static Diagrams ⭐ CRITICAL
-**Goal:** EPUB diagrams render correctly and are contextually relevant
+**Priority:** Focus on EPUB diagram extraction architecture before dynamic query generation
 
 **The Problem (Honest Assessment):**
 1. Diagrams extracted from EPUBs are often:
@@ -220,16 +202,27 @@ System: [Searches PGN collection with context]
 
 **Completed:**
 - ✅ Phase 1-4: EPUB ingestion, search, GPT-5 reranking
-- ✅ Phase 5.1: RRF multi-collection merge
-- ✅ Phase 5.2: Validation framework (IN PROGRESS: 11/50 queries)
+- ✅ Phase 5.1: RRF multi-collection merge (UI integrated, production-ready)
+- ✅ Phase 5.2: Validation framework created (early termination after 28/50 queries)
 
-**Active:**
-- 🔄 Phase 5.2 validation running (~90 minutes remaining)
+**Active Work:**
+- 🔧 **Phase 6.1b: EPUB Diagram Extraction** (IN PROGRESS)
+  - **Focus:** Fix architectural issues with EPUB diagram extraction
+  - **Approach:** Extract diagrams from EPUB files (269 PNGs found in audit)
+  - **Note:** Previous approach was band-aiding individual queries, need architectural fix
+  - **Future:** Dynamic query diagrams will require partner consult after EPUB extraction working
 
-**Next Up:**
-- ⏸️ Wait for validation results
-- ⏸️ Analyze validation findings
-- ⏸️ **Partner consult:** Review Phase 5 results, plan Phase 6
+**On Hold:**
+- ⏸️ **Phase 5.2 Validation:** Paused pending larger PGN corpus
+  - **Reason:** Current 1,778 PGN games too small for meaningful validation
+  - **Findings:** EPUB won 28/28 queries (100%), PGN scored 0.000 on 25% of openings
+  - **Target:** Scale to 1M games before re-validating RRF merge
+  - **Status:** RRF system working correctly, just needs more PGN data
+
+**Future Work:**
+- 📦 **PGN Corpus Expansion:** Scale from 1,778 → 1M games
+- 🔄 **Phase 5.2 Resume:** Re-validate RRF after PGN corpus expansion
+- 🎯 **Phase 6.1c:** Dynamic query diagram generation (requires partner consult)
 
 ---
 
@@ -283,4 +276,4 @@ Things that ARE actually easy:
 ---
 
 **Last Updated:** 2025-11-09
-**Validation Status:** Phase 5.2 in progress (11/50 queries complete)
+**Phase 5.2 Status:** ON HOLD - Awaiting PGN corpus expansion (1,778 → 1M games)

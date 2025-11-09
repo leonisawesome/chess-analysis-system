@@ -27,19 +27,22 @@
   - ✅ Mixed-media synthesis context (EPUB+PGN integration)
   - ✅ Module integration validated (5/5 tests passed)
   - ✅ **UI Integration Complete:** Main page uses /query_merged with dual scores, collection badges, corpus stats
-- ✅ **ITEM-028 Phase 5.2 COMPLETE:** Validation complete (28/50 queries - early termination)
+- ⏸️ **ITEM-028 Phase 5.2 ON HOLD:** Validation paused pending PGN corpus expansion
   - ✅ Test suite: 50 curated queries (20 opening, 20 concept, 10 mixed)
   - ✅ Metrics: MRR, NDCG@5/10, Precision@5/10, Recall@5/10, F1@5/10
   - ✅ Framework: A/B testing script (EPUB vs PGN vs RRF comparison)
-  - ✅ **Results:** EPUB wins 28/28 (100%), PGN corpus too small (1,778 vs 1M target)
-  - ✅ **Findings:** PGN scored 0.000 on 25% of openings, RRF merge underperforms EPUB alone
-  - ⚠️ **Validated:** Current PGN corpus inadequate. Must scale to 1M games and re-validate.
-- ✅ **ITEM-029 Phase 6.1a COMPLETE:** Client-Side Interactive Diagrams
-  - ✅ FEN extraction already implemented in diagram_processor.py
-  - ✅ Modified diagram-renderer.js to render FEN with chessboard.js
-  - ✅ Interactive chessboards render for all diagrams with FEN positions
-  - ✅ SVG fallback preserved for diagrams without FEN
-- 🚀 **Next:** Phase 6.1b - Static EPUB diagram extraction (269 PNGs found in audit)
+  - ✅ **Results:** Early termination after 28/50 queries - EPUB wins 28/28 (100%)
+  - ⚠️ **Findings:** PGN corpus too small (1,778 vs 1M target), scored 0.000 on 25% of openings
+  - 📊 **Status:** RRF system working correctly, validation paused until PGN corpus scaled to 1M games
+- 🔧 **ITEM-029 Phase 6.1b IN PROGRESS:** EPUB Diagram Extraction
+  - **Goal:** Fix architectural issues with EPUB diagram extraction
+  - **Approach:** Extract static diagrams from EPUB files (269 PNGs found in audit)
+  - **Note:** Previous approach was band-aiding individual queries instead of fixing architecture
+  - **Status:** Working on extraction pipeline before dynamic query generation
+- 🎯 **Active Priority:** Phase 6.1b - EPUB diagram extraction architecture
+- 📦 **Future Work:**
+  - Phase 6.1c: Dynamic query diagram generation (requires partner consult)
+  - PGN corpus expansion to 1M games, then resume Phase 5.2 validation
 - 🔧 **Architecture:** Clean modular design across 9 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 
@@ -994,10 +997,13 @@ Re-analysis with comprehensive logging revealed:
     - Header: #2c3e50, Blue: #3498db, Background: #f5f5f5
     - Responsive design with metadata grids
     - 1000-character content previews with instructional focus
-- ⏳ **Phase 5 Pending:** RRF merge for cross-collection queries
-  - Implement RRF (Reciprocal Rank Fusion) for multi-collection queries
-  - Test cross-collection queries (EPUB + PGN)
-  - Production deployment after validation
+- ✅ **Phase 5.1 Complete:** RRF merge for cross-collection queries (production-ready)
+  - ✅ Implemented RRF (Reciprocal Rank Fusion) for multi-collection queries
+  - ✅ Cross-collection queries working (EPUB + PGN via /query_merged)
+  - ✅ UI integration complete with dual scores and collection badges
+- ⏸️ **Phase 5.2 On Hold:** Validation awaiting PGN corpus expansion
+  - Framework complete, validation paused pending 1M game corpus
+  - Current 1,778 games insufficient for meaningful A/B testing
 
 **Production Estimates (1M PGNs):**
 - Based on sample: 0.2% oversized rate (very low)

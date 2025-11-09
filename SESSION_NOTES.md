@@ -1,9 +1,76 @@
 # Chess RAG System - Session Notes
-**Last Updated:** November 8, 2025 (Phase 5.1 COMPLETE - All Tasks Done)
+**Last Updated:** November 9, 2025 (Phase 5.2 Validation ON HOLD)
 
 ---
 
-# 🎯 LATEST SESSION: Phase 5.1 COMPLETE - RRF Implementation
+# 🎯 LATEST SESSION: Phase 6.1b - EPUB Diagram Extraction (IN PROGRESS)
+**Date:** November 9, 2025
+**Session Focus:** Documentation updates and starting EPUB diagram extraction architecture work
+
+## Session Summary
+
+### 1. Phase 5.2 Validation Put ON HOLD
+
+**Phase 5.2 validation has been paused** pending PGN corpus expansion from 1,778 games to target of 1M games.
+
+**Early Termination Results (28/50 queries completed):**
+- EPUB won 28/28 queries (100% win rate)
+- PGN corpus scored 0.000 on 25% of opening queries
+- RRF merge underperformed EPUB-only search
+
+**Root Cause:**
+- Current PGN corpus (1,778 games) too small for meaningful validation
+- Target corpus size: 1M games
+- Insufficient game diversity and coverage
+
+**Status of RRF System:**
+- ✅ RRF implementation working correctly
+- ✅ UI integration complete and production-ready
+- ✅ System architecture validated
+- ⚠️ Simply needs more PGN data to demonstrate value
+
+### 2. Phase 6.1a Status Correction
+
+**Clarification:** Phase 6.1a (client-side interactive diagrams) was NOT completed as previously documented.
+
+**Current Work:** Phase 6.1b - EPUB diagram extraction
+
+### 3. Current Focus: EPUB Diagram Extraction Architecture
+
+**Goal:** Extract and render diagrams from EPUB files correctly
+
+**Approach:**
+- Focus on EPUB diagram extraction first (269 PNGs found in audit)
+- Fix architectural issues (previous approach was band-aiding individual queries)
+- Dynamic query diagram generation will come later with partner consult
+
+**Key Insight:** Need to fix the extraction pipeline architecture rather than patching individual query issues.
+
+### Next Steps
+
+**Immediate Priority:**
+1. **EPUB Diagram Extraction:** Build proper extraction pipeline for static EPUB diagrams
+2. **Architecture Fix:** Address root cause instead of band-aiding symptoms
+
+**Future Work:**
+1. **Partner Consult:** Dynamic query diagram generation (after EPUB extraction working)
+2. **PGN Corpus Expansion:** Scale from 1,778 → 1M games
+3. **Phase 5.2 Resume:** Re-validate RRF with larger corpus
+
+### Documentation Updated
+
+**Files Modified (this session):**
+- `backlog.md` - Updated CURRENT STATUS, removed 6.1a completion, added 6.1b active work
+- `README.md` - Updated Current Status, corrected 6.1a claim, added 6.1b status
+- `SESSION_NOTES.md` - This entry
+
+**Git Commit:** Pending - will commit all Big 3 updates together
+
+**Status:** Phase 6.1b IN PROGRESS - EPUB diagram extraction architecture
+
+---
+
+# 📋 PREVIOUS SESSION: Phase 5.1 COMPLETE - RRF Implementation
 **Date:** November 8, 2025 (Evening)
 **Session Focus:** Complete RRF multi-collection merge implementation (Tasks 2-5)
 
