@@ -1,0 +1,366 @@
+{
+  "metadata": {
+    "version": "1.0-preliminary",
+    "created": "2025-11-09",
+    "corpus_state": "Preliminary validation with 1,778 PGN games (0.5% of corpus)",
+    "note": "MUST RE-RUN when PGN collection scales to 1M games (will be 74% of corpus)",
+    "total_queries": 50,
+    "categories": {
+      "opening": 20,
+      "concept": 20,
+      "mixed": 10
+    }
+  },
+  "queries": [
+    {
+      "id": 1,
+      "category": "opening",
+      "query": "Benko Gambit mainline",
+      "expected_best": "pgn",
+      "rationale": "Specific opening line - PGN games show exact move sequences"
+    },
+    {
+      "id": 2,
+      "category": "opening",
+      "query": "Najdorf Poisoned Pawn variation",
+      "expected_best": "pgn",
+      "rationale": "Sharp tactical opening - needs game examples"
+    },
+    {
+      "id": 3,
+      "category": "opening",
+      "query": "King's Indian Mar del Plata main line",
+      "expected_best": "pgn",
+      "rationale": "Complex opening system - benefits from concrete games"
+    },
+    {
+      "id": 4,
+      "category": "opening",
+      "query": "English Opening with c4 and g3",
+      "expected_best": "pgn",
+      "rationale": "Specific setup - PGN shows move orders"
+    },
+    {
+      "id": 5,
+      "category": "opening",
+      "query": "Grünfeld Defense exchange variation",
+      "expected_best": "pgn",
+      "rationale": "Theoretical opening line"
+    },
+    {
+      "id": 6,
+      "category": "opening",
+      "query": "Sicilian Dragon Yugoslav Attack",
+      "expected_best": "pgn",
+      "rationale": "Sharp tactical opening with critical lines"
+    },
+    {
+      "id": 7,
+      "category": "opening",
+      "query": "French Defense Winawer variation",
+      "expected_best": "pgn",
+      "rationale": "Specific opening system"
+    },
+    {
+      "id": 8,
+      "category": "opening",
+      "query": "Caro-Kann advance variation",
+      "expected_best": "pgn",
+      "rationale": "Concrete opening line"
+    },
+    {
+      "id": 9,
+      "category": "opening",
+      "query": "Queen's Gambit Declined Tartakower",
+      "expected_best": "pgn",
+      "rationale": "Classical opening with established theory"
+    },
+    {
+      "id": 10,
+      "category": "opening",
+      "query": "Ruy Lopez Marshall Attack",
+      "expected_best": "pgn",
+      "rationale": "Sharp gambit line - needs practical examples"
+    },
+    {
+      "id": 11,
+      "category": "opening",
+      "query": "Scandinavian Defense main line",
+      "expected_best": "pgn",
+      "rationale": "Direct opening with clear variations"
+    },
+    {
+      "id": 12,
+      "category": "opening",
+      "query": "Dutch Defense Stonewall setup",
+      "expected_best": "pgn",
+      "rationale": "Specific pawn structure formation"
+    },
+    {
+      "id": 13,
+      "category": "opening",
+      "query": "Nimzo-Indian Rubinstein variation",
+      "expected_best": "pgn",
+      "rationale": "Classical opening system"
+    },
+    {
+      "id": 14,
+      "category": "opening",
+      "query": "Slav Defense Semi-Slav",
+      "expected_best": "pgn",
+      "rationale": "Complex opening with many branches"
+    },
+    {
+      "id": 15,
+      "category": "opening",
+      "query": "Pirc Defense Austrian Attack",
+      "expected_best": "pgn",
+      "rationale": "Aggressive setup against Pirc"
+    },
+    {
+      "id": 16,
+      "category": "opening",
+      "query": "Benoni Defense Modern",
+      "expected_best": "pgn",
+      "rationale": "Dynamic opening with imbalanced pawn structure"
+    },
+    {
+      "id": 17,
+      "category": "opening",
+      "query": "Italian Game Evans Gambit",
+      "expected_best": "pgn",
+      "rationale": "Romantic gambit - needs game examples"
+    },
+    {
+      "id": 18,
+      "category": "opening",
+      "query": "Alekhine Defense four pawns attack",
+      "expected_best": "pgn",
+      "rationale": "Sharp attacking line"
+    },
+    {
+      "id": 19,
+      "category": "opening",
+      "query": "Scotch Game main line",
+      "expected_best": "pgn",
+      "rationale": "Open game with tactical complications"
+    },
+    {
+      "id": 20,
+      "category": "opening",
+      "query": "London System setup against d5",
+      "expected_best": "pgn",
+      "rationale": "Modern system opening"
+    },
+    {
+      "id": 21,
+      "category": "concept",
+      "query": "How to improve calculation in chess",
+      "expected_best": "epub",
+      "rationale": "Training methodology - books provide structured approach"
+    },
+    {
+      "id": 22,
+      "category": "concept",
+      "query": "Rook endgame technique fundamentals",
+      "expected_best": "epub",
+      "rationale": "Endgame principles - books explain concepts systematically"
+    },
+    {
+      "id": 23,
+      "category": "concept",
+      "query": "When to trade pieces in the middlegame",
+      "expected_best": "epub",
+      "rationale": "Strategic decision-making - requires conceptual explanation"
+    },
+    {
+      "id": 24,
+      "category": "concept",
+      "query": "Understanding pawn structure weaknesses",
+      "expected_best": "epub",
+      "rationale": "Positional concepts - books provide systematic coverage"
+    },
+    {
+      "id": 25,
+      "category": "concept",
+      "query": "How to create attacking chances",
+      "expected_best": "epub",
+      "rationale": "Strategic principles - needs instructional explanation"
+    },
+    {
+      "id": 26,
+      "category": "concept",
+      "query": "Bishop vs knight endgames",
+      "expected_best": "epub",
+      "rationale": "Endgame theory - books explain evaluation criteria"
+    },
+    {
+      "id": 27,
+      "category": "concept",
+      "query": "Improving tactical vision",
+      "expected_best": "epub",
+      "rationale": "Training approach - books provide methods and exercises"
+    },
+    {
+      "id": 28,
+      "category": "concept",
+      "query": "Planning in closed positions",
+      "expected_best": "epub",
+      "rationale": "Strategic understanding - requires deep explanation"
+    },
+    {
+      "id": 29,
+      "category": "concept",
+      "query": "Converting advantages in the endgame",
+      "expected_best": "epub",
+      "rationale": "Technique - books provide systematic approach"
+    },
+    {
+      "id": 30,
+      "category": "concept",
+      "query": "Understanding piece activity and mobility",
+      "expected_best": "epub",
+      "rationale": "Positional concepts - needs instructional content"
+    },
+    {
+      "id": 31,
+      "category": "concept",
+      "query": "How to defend difficult positions",
+      "expected_best": "epub",
+      "rationale": "Defensive technique - books explain principles"
+    },
+    {
+      "id": 32,
+      "category": "concept",
+      "query": "King safety principles in the opening",
+      "expected_best": "epub",
+      "rationale": "Fundamental concepts - requires systematic explanation"
+    },
+    {
+      "id": 33,
+      "category": "concept",
+      "query": "Prophylaxis and preventing opponent plans",
+      "expected_best": "epub",
+      "rationale": "Advanced strategic concept - needs deep explanation"
+    },
+    {
+      "id": 34,
+      "category": "concept",
+      "query": "Exploiting weak squares and outposts",
+      "expected_best": "epub",
+      "rationale": "Positional technique - books provide systematic coverage"
+    },
+    {
+      "id": 35,
+      "category": "concept",
+      "query": "Time management in chess games",
+      "expected_best": "epub",
+      "rationale": "Practical skill - books offer training advice"
+    },
+    {
+      "id": 36,
+      "category": "concept",
+      "query": "Improving opening repertoire study",
+      "expected_best": "epub",
+      "rationale": "Study methodology - books provide structured approach"
+    },
+    {
+      "id": 37,
+      "category": "concept",
+      "query": "Understanding initiative and momentum",
+      "expected_best": "epub",
+      "rationale": "Abstract strategic concept - needs explanation"
+    },
+    {
+      "id": 38,
+      "category": "concept",
+      "query": "Handling opposite-colored bishop endgames",
+      "expected_best": "epub",
+      "rationale": "Specific endgame type - books explain principles"
+    },
+    {
+      "id": 39,
+      "category": "concept",
+      "query": "Recognizing tactical patterns",
+      "expected_best": "epub",
+      "rationale": "Pattern recognition training - books categorize motifs"
+    },
+    {
+      "id": 40,
+      "category": "concept",
+      "query": "Developing a training plan for improvement",
+      "expected_best": "epub",
+      "rationale": "Study methodology - books provide structured programs"
+    },
+    {
+      "id": 41,
+      "category": "mixed",
+      "query": "How to play against the London System",
+      "expected_best": "rrf",
+      "rationale": "Needs both ideas (books) and practical examples (PGN)"
+    },
+    {
+      "id": 42,
+      "category": "mixed",
+      "query": "Typical plans in the Sicilian Dragon",
+      "expected_best": "rrf",
+      "rationale": "Strategic plans (books) + concrete games (PGN)"
+    },
+    {
+      "id": 43,
+      "category": "mixed",
+      "query": "King's Indian Attack strategies and games",
+      "expected_best": "rrf",
+      "rationale": "Systematic approach (books) + model games (PGN)"
+    },
+    {
+      "id": 44,
+      "category": "mixed",
+      "query": "French Defense strategic ideas with examples",
+      "expected_best": "rrf",
+      "rationale": "Concepts (books) + illustrative games (PGN)"
+    },
+    {
+      "id": 45,
+      "category": "mixed",
+      "query": "Attacking the castled king in practice",
+      "expected_best": "rrf",
+      "rationale": "Principles (books) + attacking games (PGN)"
+    },
+    {
+      "id": 46,
+      "category": "mixed",
+      "query": "Minority attack technique and examples",
+      "expected_best": "rrf",
+      "rationale": "Theory (books) + practical demonstrations (PGN)"
+    },
+    {
+      "id": 47,
+      "category": "mixed",
+      "query": "Caro-Kann pawn structures and model games",
+      "expected_best": "rrf",
+      "rationale": "Structure analysis (books) + games (PGN)"
+    },
+    {
+      "id": 48,
+      "category": "mixed",
+      "query": "Isolated queen pawn positions strategy",
+      "expected_best": "rrf",
+      "rationale": "Principles (books) + typical games (PGN)"
+    },
+    {
+      "id": 49,
+      "category": "mixed",
+      "query": "Hedgehog structure plans and games",
+      "expected_best": "rrf",
+      "rationale": "Strategic understanding (books) + examples (PGN)"
+    },
+    {
+      "id": 50,
+      "category": "mixed",
+      "query": "Sacrificial attacks in the Najdorf",
+      "expected_best": "rrf",
+      "rationale": "Tactical motifs (books) + brilliant games (PGN)"
+    }
+  ]
+}
