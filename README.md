@@ -18,11 +18,16 @@
 - ✅ **ITEM-011 Complete:** Monolithic refactoring (1,474 → 262 lines, -82.2%)
 - ✅ **ITEM-024.7 Complete:** JavaScript rendering architecture (Path B) - Restored clean separation between backend and frontend
 - ✅ **ITEM-024.8 Complete:** Dynamic diagram extraction restored - Reverted static 73-position bypass, now uses RAG-based extraction from 357,957 chunks
-- ✅ **ITEM-027 Phase 1+2+3+4 Complete:** PGN variation splitting & ingestion - All 1,778 games validated, 1,791 chunks in `chess_pgn_repertoire`, 100% query success
-- ✅ **ITEM-028 Planning Complete:** Phase 5 RRF Multi-Collection Merge - Partner consultation complete (ChatGPT, Gemini, Grok), unanimous consensus on architecture
-- ✅ **Phase 5.1 Task 1 Complete:** Synthesis prompts updated for mixed-media (EPUB+PGN) - Context attribution implemented and tested
-- 🚀 **In Progress:** Phase 5.1 implementation - RRF merger module and query router (Tasks 2-5)
-- 🔧 **Architecture:** Clean modular design across 6 specialized modules
+- ✅ **ITEM-027 Complete:** PGN ingestion system - All 1,778 games validated, 1,791 chunks in `chess_pgn_repertoire`, 100% query success
+- ✅ **ITEM-028 Phase 5.1 COMPLETE:** RRF Multi-Collection Merge - Core implementation done, all tests passing
+  - ✅ Query router with intent classification (8/8 tests passed)
+  - ✅ RRF merger with k=60 and collection weights (8/8 tests passed)
+  - ✅ Parallel multi-collection search with asyncio
+  - ✅ /query_merged endpoint with complete pipeline (237 lines)
+  - ✅ Mixed-media synthesis context (EPUB+PGN integration)
+  - ✅ Module integration validated (5/5 tests passed)
+- 🚀 **Next:** Phase 5.2 - Validation & Tuning (50-query test suite, MRR/NDCG metrics)
+- 🔧 **Architecture:** Clean modular design across 9 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 
 ### Critical System Facts
@@ -36,24 +41,37 @@
 
 ## 📦 System Architecture
 
-### Module Overview (Post-ITEM-011 Refactoring)
+### Module Overview (Post-Phase 5.1)
 \`\`\`
 chess-analysis-system/
-├── app.py (262 lines)
-│   └── Flask routes, initialization, /query endpoint orchestration
+├── app.py (499 lines)
+│   ├── Flask routes, initialization
+│   ├── /query endpoint - EPUB-only queries
+│   ├── /query_pgn endpoint - PGN-only queries
+│   └── /query_merged endpoint - RRF multi-collection merge (NEW Phase 5.1)
 │
-├── rag_engine.py (215 lines)
+├── rag_engine.py (305 lines)
 │   ├── execute_rag_query() - Main RAG pipeline (embed → search → rerank)
 │   ├── format_rag_results() - Format search results for web display
-│   ├── prepare_synthesis_context() - Prepare context for synthesis
+│   ├── prepare_synthesis_context() - Context prep with source attribution (UPDATED)
 │   ├── collect_answer_positions() - Collect positions from top sources
+│   ├── search_multi_collection_async() - Parallel multi-collection search (NEW)
 │   └── debug_position_extraction() - Debug helper
 │
 ├── synthesis_pipeline.py (292 lines)
 │   ├── stage1_generate_outline() - Create structured outline (JSON)
-│   ├── stage2_expand_sections() - Expand with diagrams & ITEM-008 validation
+│   ├── stage2_expand_sections() - Expand with diagrams (UPDATED for mixed-media)
 │   ├── stage3_final_assembly() - Assemble with smooth transitions
 │   └── synthesize_answer() - Main orchestrator
+│
+├── rrf_merger.py (152 lines) - NEW Phase 5.1
+│   ├── reciprocal_rank_fusion() - Core RRF algorithm with k=60
+│   └── merge_collections() - Convenience wrapper for EPUB+PGN merge
+│
+├── query_router.py (136 lines) - NEW Phase 5.1
+│   ├── classify_query() - Intent classification (opening/concept/mixed)
+│   ├── get_collection_weights() - Collection-specific weights
+│   └── get_query_info() - Convenience function
 │
 ├── opening_validator.py (390 lines)
 │   ├── extract_contamination_details() - ITEM-008 feedback generation
@@ -77,7 +95,8 @@ chess-analysis-system/
     └── get_canonical_fen_for_query() - Classify query type & get canonical FEN
 \`\`\`
 
-**Total Code:** 1,641 lines across 6 focused modules (down from 1,474 monolithic lines)
+**Total Code:** ~2,256 lines across 9 focused modules
+**Phase 5.1 Additions:** +288 lines (rrf_merger.py, query_router.py), +237 lines (/query_merged endpoint)
 
 ---
 

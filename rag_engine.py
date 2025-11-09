@@ -6,9 +6,11 @@ Handles:
 - Result formatting for web display
 - Position extraction from retrieved chunks
 - Context preparation for synthesis
+- Multi-collection parallel search (Phase 5.1)
 """
 
 import time
+import asyncio
 from typing import List, Tuple, Dict, Any
 from openai import OpenAI
 from qdrant_client import QdrantClient
@@ -194,6 +196,71 @@ def collect_answer_positions(
             break
     
     return collected_positions
+
+
+async def search_multi_collection_async(
+    qdrant_client: QdrantClient,
+    query_vector: List[float],
+    collections: Dict[str, int],
+    search_func
+) -> Tuple[List, List]:
+    """
+    Search multiple Qdrant collections in parallel.
+
+    Phase 5.1: Parallel multi-collection search for RRF merge.
+
+    Args:
+        qdrant_client: Qdrant client instance
+        query_vector: Embedding vector (computed once, shared across searches)
+        collections: Dict mapping collection name to top_k limit
+                    e.g., {'chess_production': 50, 'chess_pgn_repertoire': 50}
+        search_func: Synchronous search function to wrap in async
+
+    Returns:
+        Tuple of (epub_results, pgn_results)
+
+    Example:
+        epub_results, pgn_results = await search_multi_collection_async(
+            qdrant_client,
+            query_vector,
+            {'chess_production': 50, 'chess_pgn_repertoire': 50},
+            search_func=semantic_search
+        )
+    """
+    # Run searches in parallel using asyncio
+    tasks = []
+    collection_names = []
+
+    for collection_name, top_k in collections.items():
+        # Wrap synchronous search in async using to_thread
+        task = asyncio.to_thread(
+            search_func,
+            qdrant_client,
+            query_vector,
+            top_k=top_k,
+            collection_name=collection_name
+        )
+        tasks.append(task)
+        collection_names.append(collection_name)
+
+    # Wait for all searches to complete
+    results_lists = await asyncio.gather(*tasks)
+
+    # Tag results with collection name
+    for collection_name, results in zip(collection_names, results_lists):
+        for result in results:
+            if isinstance(result, tuple):
+                # If results are (candidate, score) tuples, add to payload
+                candidate, score = result
+                if hasattr(candidate, 'payload'):
+                    candidate.payload['collection'] = collection_name
+            else:
+                # If results are dicts, add directly
+                result['collection'] = collection_name
+
+    # Return in order: EPUB, PGN
+    # Assuming collections dict has chess_production first, chess_pgn_repertoire second
+    return results_lists[0], results_lists[1]
 
 
 def debug_position_extraction(formatted_results: List[Dict[str, Any]], num_sources: int = 5):
