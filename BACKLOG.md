@@ -6,7 +6,29 @@
 
 ## MUST-HAVE FEATURES (Priority Order)
 
-### Phase 6.1: Fix Static Diagrams ⭐ CRITICAL
+### Phase 6.1a: Client-Side Interactive Diagrams ✅ COMPLETE
+**Goal:** Render FEN positions as interactive chessboards
+
+**Status:** SHIPPED (November 9, 2025)
+
+**What We Shipped:**
+- ✅ FEN extraction already existed in diagram_processor.py (extract_fen_from_marker)
+- ✅ Modified diagram-renderer.js to detect FEN and render with chessboard.js
+- ✅ Interactive chessboards for all diagrams with FEN positions
+- ✅ SVG fallback preserved for static diagrams
+- ✅ Chessboard.js + Chess.js libraries already loaded in index.html
+
+**Technical Details:**
+- Backend: diagram_processor.py extracts FEN, includes in diagram_positions response
+- Frontend: diagram-renderer.js checks for `diagram.fen` field, renders Chessboard() if present
+- Board config: 400px width, centered, non-draggable (display only)
+- Fallback: SVG rendering if no FEN available
+
+**Time:** 1 hour (much faster than estimated - FEN extraction already existed!)
+
+---
+
+### Phase 6.1b: Fix Static Diagrams ⭐ CRITICAL
 **Goal:** EPUB diagrams render correctly and are contextually relevant
 
 **The Problem (Honest Assessment):**

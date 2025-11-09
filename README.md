@@ -34,7 +34,12 @@
   - ✅ **Results:** EPUB wins 28/28 (100%), PGN corpus too small (1,778 vs 1M target)
   - ✅ **Findings:** PGN scored 0.000 on 25% of openings, RRF merge underperforms EPUB alone
   - ⚠️ **Validated:** Current PGN corpus inadequate. Must scale to 1M games and re-validate.
-- 🚀 **Next:** Phase 6.1 - Fix static diagram rendering (EPUB image extraction)
+- ✅ **ITEM-029 Phase 6.1a COMPLETE:** Client-Side Interactive Diagrams
+  - ✅ FEN extraction already implemented in diagram_processor.py
+  - ✅ Modified diagram-renderer.js to render FEN with chessboard.js
+  - ✅ Interactive chessboards render for all diagrams with FEN positions
+  - ✅ SVG fallback preserved for diagrams without FEN
+- 🚀 **Next:** Phase 6.1b - Static EPUB diagram extraction (269 PNGs found in audit)
 - 🔧 **Architecture:** Clean modular design across 9 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 

@@ -58,6 +58,22 @@
     }
   }
 
+  // Render interactive chessboard from FEN
+  function renderChessboard(fen, containerId) {
+    try {
+      const board = Chessboard(containerId, {
+        position: fen,
+        draggable: false,
+        dropOffBoard: 'trash',
+        sparePieces: false
+      });
+      return board;
+    } catch (e) {
+      console.error('Failed to render chessboard:', e);
+      return null;
+    }
+  }
+
   // Main rendering function - replaces global
   window.renderAnswerWithDiagrams = function(answer, diagramPositions, container) {
     console.log('🎨 renderAnswerWithDiagrams called');
@@ -119,9 +135,9 @@
     container.innerHTML = '';
     container.appendChild(frag);
 
-    // Now replace placeholders with actual SVGs
+    // Now replace placeholders with actual diagrams (chessboards or SVGs)
     const placeholders = container.querySelectorAll('.diagram-placeholder');
-    console.log('  Replacing', placeholders.length, 'placeholders with SVGs...');
+    console.log('  Replacing', placeholders.length, 'placeholders with diagrams...');
 
     let successCount = 0;
     placeholders.forEach(ph => {
@@ -134,24 +150,22 @@
         return;
       }
 
-      const svgString = diagram.svg || diagram.svg_string || diagram.image;
-      if (!svgString) {
-        console.warn('  ⚠️ No SVG string for ID:', id);
-        return;
-      }
+      // Create wrapper with caption
+      const wrapper = document.createElement('div');
+      wrapper.className = 'chess-diagram-container';
+      wrapper.style.margin = '20px 0';
+      wrapper.style.textAlign = 'center';
 
-      const svgEl = parseSvgString(svgString);
-      if (svgEl) {
-        // Create wrapper with caption
-        const wrapper = document.createElement('div');
-        wrapper.className = 'chess-diagram-container';
-        wrapper.style.margin = '20px 0';
-        wrapper.style.textAlign = 'center';
+      // Check if we have FEN - render interactive chessboard
+      if (diagram.fen) {
+        console.log('  ♟️ Rendering interactive chessboard for:', id);
 
-        const diagramDiv = document.createElement('div');
-        diagramDiv.className = 'chess-diagram';
-        diagramDiv.appendChild(svgEl);
-        wrapper.appendChild(diagramDiv);
+        const boardDiv = document.createElement('div');
+        const boardId = 'board-' + id;
+        boardDiv.id = boardId;
+        boardDiv.style.width = '400px';
+        boardDiv.style.margin = '0 auto';
+        wrapper.appendChild(boardDiv);
 
         // Add caption below
         if (diagram.caption) {
@@ -159,17 +173,52 @@
           caption.className = 'diagram-caption';
           caption.style.fontStyle = 'italic';
           caption.style.marginTop = '10px';
+          caption.style.color = '#666';
           caption.textContent = diagram.caption;
           wrapper.appendChild(caption);
         }
 
-        // Replace placeholder
+        // Replace placeholder first, then render board
         ph.parentNode.replaceChild(wrapper, ph);
+
+        // Render chessboard after DOM insertion
+        renderChessboard(diagram.fen, boardId);
         successCount++;
-        console.log('  ✅ Rendered SVG for:', id);
-      } else {
-        console.error('  ❌ Failed to parse SVG for ID:', id);
-        ph.classList.add('diagram-parse-failed');
+        console.log('  ✅ Rendered interactive board for:', id);
+      }
+      // Fallback to SVG if no FEN
+      else {
+        const svgString = diagram.svg || diagram.svg_string || diagram.image;
+        if (!svgString) {
+          console.warn('  ⚠️ No FEN or SVG for ID:', id);
+          return;
+        }
+
+        const svgEl = parseSvgString(svgString);
+        if (svgEl) {
+          const diagramDiv = document.createElement('div');
+          diagramDiv.className = 'chess-diagram';
+          diagramDiv.appendChild(svgEl);
+          wrapper.appendChild(diagramDiv);
+
+          // Add caption below
+          if (diagram.caption) {
+            const caption = document.createElement('p');
+            caption.className = 'diagram-caption';
+            caption.style.fontStyle = 'italic';
+            caption.style.marginTop = '10px';
+            caption.textContent = diagram.caption;
+            wrapper.appendChild(caption);
+          }
+
+          // Replace placeholder
+          ph.parentNode.replaceChild(wrapper, ph);
+          successCount++;
+          console.log('  ✅ Rendered SVG for:', id);
+        } else {
+          console.error('  ❌ Failed to parse SVG for ID:', id);
+          ph.classList.add('diagram-parse-failed');
+        }
       }
     });
 
