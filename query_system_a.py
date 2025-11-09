@@ -35,10 +35,23 @@ def embed_query(openai_client: OpenAI, query: str) -> List[float]:
     return response.data[0].embedding
 
 
-def semantic_search(qdrant_client: QdrantClient, query_vector: List[float], top_k: int = 40) -> List[Dict]:
-    """Perform semantic search in Qdrant."""
+def semantic_search(qdrant_client: QdrantClient, query_vector: List[float], top_k: int = 40, collection_name: str = None) -> List[Dict]:
+    """Perform semantic search in Qdrant.
+
+    Args:
+        qdrant_client: Qdrant client instance
+        query_vector: Embedding vector for the query
+        top_k: Number of results to return
+        collection_name: Optional collection name (defaults to COLLECTION_NAME)
+
+    Returns:
+        List of search results from Qdrant
+    """
+    # Use provided collection_name or fall back to default
+    target_collection = collection_name if collection_name is not None else COLLECTION_NAME
+
     results = qdrant_client.search(
-        collection_name=COLLECTION_NAME,
+        collection_name=target_collection,
         query_vector=query_vector,
         limit=top_k,
         with_payload=True
@@ -69,7 +82,8 @@ Chunks:
 """
 
     for i, candidate in enumerate(candidates, 1):
-        chunk_text = candidate.payload['text']
+        # Handle both EPUB chunks ('text' field) and PGN chunks ('content' field)
+        chunk_text = candidate.payload.get('text') or candidate.payload.get('content', '')
         # Truncate long chunks for faster processing
         if len(chunk_text) > 500:
             chunk_text = chunk_text[:500] + "..."

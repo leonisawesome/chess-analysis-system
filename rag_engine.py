@@ -247,14 +247,19 @@ async def search_multi_collection_async(
     results_lists = await asyncio.gather(*tasks)
 
     # Tag results with collection name
+    # Note: ScoredPoint objects are immutable, so we modify the payload dict directly
     for collection_name, results in zip(collection_names, results_lists):
         for result in results:
             if isinstance(result, tuple):
                 # If results are (candidate, score) tuples, add to payload
                 candidate, score = result
-                if hasattr(candidate, 'payload'):
+                if hasattr(candidate, 'payload') and isinstance(candidate.payload, dict):
+                    # Payload is a dict, we can modify it
                     candidate.payload['collection'] = collection_name
-            else:
+            elif hasattr(result, 'payload') and isinstance(result.payload, dict):
+                # ScoredPoint with mutable payload dict
+                result.payload['collection'] = collection_name
+            elif isinstance(result, dict):
                 # If results are dicts, add directly
                 result['collection'] = collection_name
 
