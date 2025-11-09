@@ -1,6 +1,6 @@
 # Chess Knowledge RAG System
 
-**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 357,957 chunks from 1,052 chess books.**
+**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 360,320 chunks from 1,052 chess books + 1,778 PGN games.**
 
 ---
 
@@ -13,26 +13,27 @@
 - **3-stage synthesis:** Creates coherent answer with chess diagrams
 - **Output:** Professional article with interactive chess positions
 
-### Current Status (November 8, 2025)
+### Current Status (November 9, 2025)
 - ✅ **ITEM-008 Complete:** Sicilian contamination bug eliminated (100% success rate)
 - ✅ **ITEM-011 Complete:** Monolithic refactoring (1,474 → 262 lines, -82.2%)
 - ✅ **ITEM-024.7 Complete:** JavaScript rendering architecture (Path B) - Restored clean separation between backend and frontend
-- ✅ **ITEM-024.8 Complete:** Dynamic diagram extraction restored - Reverted static 73-position bypass, now uses RAG-based extraction from 357,957 chunks
+- ✅ **ITEM-024.8 Complete:** Dynamic diagram extraction restored - Reverted static 73-position bypass, now uses RAG-based extraction from 360,320 chunks
 - ✅ **ITEM-027 Complete:** PGN ingestion system - All 1,778 games validated, 1,791 chunks in `chess_pgn_repertoire`, 100% query success
-- ✅ **ITEM-028 Phase 5.1 COMPLETE:** RRF Multi-Collection Merge - Core implementation done, all tests passing
+- ✅ **ITEM-028 Phase 5.1 COMPLETE:** RRF Multi-Collection Merge - Production-ready with UI integration
   - ✅ Query router with intent classification (8/8 tests passed)
   - ✅ RRF merger with k=60 and collection weights (8/8 tests passed)
   - ✅ Parallel multi-collection search with asyncio
   - ✅ /query_merged endpoint with complete pipeline (237 lines)
   - ✅ Mixed-media synthesis context (EPUB+PGN integration)
   - ✅ Module integration validated (5/5 tests passed)
+  - ✅ **UI Integration Complete:** Main page uses /query_merged with dual scores, collection badges, corpus stats
 - 🚀 **Next:** Phase 5.2 - Validation & Tuning (50-query test suite, MRR/NDCG metrics)
 - 🔧 **Architecture:** Clean modular design across 9 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 
 ### Critical System Facts
 - **Model:** GPT-5 (\`gpt-chatgpt-4o-latest-20250514\`)
-- **Corpus:** 358,529 chunks from 1,055 books (Qdrant vector DB)
+- **Corpus:** 360,320 total chunks (358,529 EPUB + 1,791 PGN) across 2 Qdrant collections
 - **Success Rate:** 100% on Phase 1 & Phase 2 validation queries
 - **Port:** Flask runs on port 5001
 - **Auth:** GitHub SSH (no token expiration issues)
