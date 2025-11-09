@@ -538,18 +538,23 @@ mv "Author, Name - Title [Publisher, Year].mobi" \
 ```bash
 source .venv/bin/activate
 
-# Set environment variable for OpenAI API
+# Set environment variables
 export OPENAI_API_KEY='your-key-here'
+export QDRANT_MODE=docker  # Use Docker Qdrant (recommended)
+export QDRANT_URL=http://localhost:6333
 
 # Add specific books to existing Qdrant database
-python add_books_to_corpus.py \
-  --books "book1.epub" "book2.epub" "book3.epub" \
-  --collection "chess_production" \
-  --qdrant-path "./qdrant_production_db"
+python add_books_to_corpus.py book1.epub book2.epub book3.epub
+
+# Alternative syntax:
+python add_books_to_corpus.py --books "book1.epub" "book2.epub" "book3.epub"
+
+# Add all books not yet in Qdrant:
+python add_books_to_corpus.py --all-new
 
 # Cost: ~$0.02-0.05 per book
 # Time: ~30-60 seconds per book
-# Result: Adds ~300-500 chunks per book to existing index
+# Result: Adds ~300-500 chunks per book to existing Docker Qdrant index
 ```
 
 **Method B: Full Corpus Rebuild (For major updates)**

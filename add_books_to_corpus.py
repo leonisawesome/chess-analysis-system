@@ -5,12 +5,26 @@ Incremental Book Addition to Chess RAG Corpus
 Add new books to existing Qdrant production database without rebuilding.
 
 Usage:
+    # Docker mode (default, recommended)
+    export QDRANT_MODE=docker
+    export QDRANT_URL=http://localhost:6333
+    export OPENAI_API_KEY='your-key-here'
     python add_books_to_corpus.py book1.epub book2.epub book3.epub
+
+    # Alternative syntax
     python add_books_to_corpus.py --books "book1.epub" "book2.epub"
-    python add_books_to_corpus.py --all-new  # Add all books not yet in Qdrant
+
+    # Add all books not yet in Qdrant
+    python add_books_to_corpus.py --all-new
+
+    # Local mode (not recommended for large collections)
+    export QDRANT_MODE=local
+    python add_books_to_corpus.py book1.epub book2.epub
 
 Requirements:
     - OPENAI_API_KEY environment variable set
+    - QDRANT_MODE environment variable ('docker' or 'local', default: 'docker')
+    - QDRANT_URL environment variable (default: 'http://localhost:6333')
     - Books must be in /Volumes/T7 Shield/epub/ directory
     - Books must be analyzed in epub_analysis.db
 """
@@ -42,6 +56,8 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_DIM = 1536
 COLLECTION_NAME = "chess_production"
 DB_PATH = "epub_analysis.db"
+QDRANT_MODE = os.getenv('QDRANT_MODE', 'docker')  # 'docker' or 'local'
+QDRANT_URL = os.getenv('QDRANT_URL', 'http://localhost:6333')
 QDRANT_PATH = "./qdrant_production_db"
 EPUB_DIR = "/Volumes/T7 Shield/epub"
 
@@ -407,7 +423,13 @@ Note: OPENAI_API_KEY environment variable must be set
     # Initialize clients
     print("\n1️⃣  Initializing clients...")
     openai_client = OpenAI(api_key=api_key)
-    qdrant_client = QdrantClient(path=QDRANT_PATH)
+
+    if QDRANT_MODE == 'docker':
+        qdrant_client = QdrantClient(url=QDRANT_URL)
+        print(f"   Using Docker Qdrant at {QDRANT_URL}")
+    else:
+        qdrant_client = QdrantClient(path=QDRANT_PATH)
+        print(f"   Using local Qdrant at {QDRANT_PATH}")
 
     # Check collection exists
     collections = qdrant_client.get_collections().collections
