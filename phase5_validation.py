@@ -168,15 +168,14 @@ def execute_query_rrf_merged(
     merged_results = merge_collections(
         epub_results=epub_ranked,
         pgn_results=pgn_ranked,
-        top_n=TOP_N_RESULTS,
-        k=60,  # RRF k-parameter
-        weights={'epub': 1.0, 'pgn': 1.0}  # Equal weights for now
+        query_type='mixed',  # Use equal weights for validation
+        k=60  # RRF k-parameter
     )
 
-    # Convert merged results to (candidate, score) tuples
+    # Take top N merged results and convert to (candidate, score) tuples
     # Use max_similarity (GPT-5 reranking score) as the score
     ranked_tuples = []
-    for merged_item in merged_results:
+    for merged_item in merged_results[:TOP_N_RESULTS]:
         # merged_item has the candidate and metadata
         # We need to extract the candidate object and use max_similarity as score
         candidate = merged_item  # The merged result contains all the original data
