@@ -1,6 +1,6 @@
 # Chess Knowledge RAG System
 
-**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 360,320 chunks from 938 chess books (692,187 extracted diagrams) + 1,778 PGN games.**
+**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 327,779 chunks from 979 chess books (724,062 extracted diagrams) + 1,778 PGN games.**
 
 ---
 
@@ -37,14 +37,16 @@
 - ✅ **ITEM-029 Phase 6.1a COMPLETE:** Static EPUB Diagram Extraction
   - **Extraction Pipeline:** COMPLETE ✅ (`extract_epub_diagrams.py` - 350+ lines)
   - **Test Results:** 2,046 diagrams from 3 books (100% success rate)
-  - **Full Extraction:** COMPLETE ✅ (938 books after data cleaning)
-  - **Final Stats:** 692,187 diagrams extracted, 15.28 GB metadata, 170 GB actual disk usage
+  - **Full Extraction:** COMPLETE ✅ (979 books total after all processing)
+  - **Final Stats:** 724,062 diagrams extracted, ~16.5 GB total disk usage
   - **Data Cleaning:** Removed 17 low-quality books (9 batch 1, 8 batch 2 including 1 duplicate)
+  - **.mobi Conversion:** 41 books converted from .mobi → EPUB, 31,875 diagrams extracted (avg 777/book)
+  - **Qdrant Cleanup:** Removed 32,150 duplicate .mobi chunks (collection: 359,929 → 327,779)
   - **Output:** `/Volumes/T7 Shield/books/images/{book_id}/`
   - **Evaluation Enhancement:** Added deletion prompts to `analyze_chess_books.py` for books scoring <40/100
-- 🎯 **Active Priority:** Phase 6.1a documentation complete, ready for Phase 6.1b or .mobi conversion
+- 🎯 **Active Priority:** Phase 6.1a complete with .mobi conversion. Next: Fix Qdrant metadata bug, then test static diagram display
 - 📦 **Future Work:**
-  - Convert .mobi files to EPUB format and extract diagrams
+  - **Bug Fix:** Add `book_title` field to Qdrant ingestion (currently only saves `book_name` filename)
   - Phase 6.1b: Dynamic diagram generation (after partner consult required)
   - PGN corpus expansion to 1M games, then resume Phase 5.2 validation
 - 🔧 **Architecture:** Clean modular design across 9 specialized modules

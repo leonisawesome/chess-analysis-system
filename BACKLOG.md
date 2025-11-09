@@ -232,13 +232,16 @@ System: [Searches PGN collection with context]
 - ✅ **Phase 6.1a: Static EPUB Diagram Extraction** (COMPLETE - November 9, 2025)
   - **Pipeline:** `extract_epub_diagrams.py` (350+ lines)
   - **Test:** 2,046 diagrams from 3 books (100% success)
-  - **Full Extraction:** COMPLETE (938 books after data cleaning)
-  - **Final Stats:** 692,187 diagrams extracted
-  - **Storage:** 15.28 GB metadata, 170 GB actual disk usage
+  - **Full Extraction:** COMPLETE (979 books total after all processing)
+  - **Final Stats:** 724,062 diagrams extracted, ~16.5 GB total disk usage
   - **Output:** `/Volumes/T7 Shield/books/images/{book_id}/`
-  - **Data Cleaning:** Removed 17 low-quality books (9 batch 1, 8 batch 2)
+  - **Data Cleaning:** Removed 17 low-quality books (9 batch 1, 8 batch 2 including 1 duplicate)
     - Batch 1: 9 books with <30 diagrams (7-29 range)
     - Batch 2: 7 books with 30-63 diagrams + 1 Silman duplicate (875 diagrams)
+  - **.mobi Conversion:** 41 books converted from .mobi → EPUB using Calibre
+    - Total: 31,875 diagrams extracted (avg 777/book, range 75-5,014)
+    - All books passed quality check (no removals needed)
+  - **Qdrant Cleanup:** Removed 32,150 duplicate .mobi chunks (collection: 359,929 → 327,779)
   - **Evaluation Enhancement:** Added deletion prompts to `analyze_chess_books.py` for books scoring <40/100
 
 **On Hold:**
@@ -249,8 +252,8 @@ System: [Searches PGN collection with context]
   - **Status:** RRF system working correctly, just needs more PGN data
 
 **Future Work:**
-- 📦 **Convert .mobi files:** Convert to EPUB format and extract diagrams
-- 🎯 **Phase 6.1b:** Dynamic diagram generation (after partner consult)
+- 🔧 **Bug Fix:** Add `book_title` field to Qdrant ingestion (currently only saves `book_name` filename)
+- 🎯 **Phase 6.1b:** Test static diagram display in UI, then dynamic diagram generation (after partner consult)
 - 📦 **PGN Corpus Expansion:** Scale from 1,778 → 1M games
 - 🔄 **Phase 5.2 Resume:** Re-validate RRF after PGN corpus expansion
 

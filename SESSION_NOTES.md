@@ -1571,3 +1571,162 @@ This session continued from Phase 5.1 RRF implementation completion. The core RR
 
 **Status:** ✅ Phase 5.1 UI Integration Complete
 
+
+---
+
+# Session: November 9, 2025 (Continued) - .mobi Conversion & Qdrant Cleanup
+
+## Context
+
+Continuing from Phase 6.1a completion. User requested to convert remaining .mobi files to EPUB format, extract diagrams, and clean up duplicate data from Qdrant.
+
+## Work Completed
+
+### 1. Duplicate .mobi Removal (Disk)
+- **Identified:** 113 .mobi files with corresponding .epub versions
+- **Removed:** All 113 duplicate .mobi files from `/Volumes/T7 Shield/books/epub/`
+- **Remaining:** 4 .mobi files (all converted successfully)
+- **Script:** `remove_duplicate_mobis.py`
+
+### 2. Duplicate Chunk Removal (Qdrant)
+- **Problem:** 102 .mobi files existed in Qdrant with duplicate .epub versions
+- **Solution:** Created `find_mobi_in_qdrant.py` to identify and remove .mobi chunks
+- **Result:** Removed 32,150 duplicate chunks
+- **Collection size:** 359,929 → 327,779 chunks (-8.9%)
+- **Script:** `find_mobi_in_qdrant.py`
+
+### 3. .mobi → EPUB Conversion
+- **Tool:** Calibre's `ebook-convert` (installed via Homebrew)
+- **Total files:** 41 unique .mobi files converted
+- **Script:** `convert_mobi_to_epub.sh`
+- **Issue encountered:** Initial version failed due to bash array space handling
+- **Fix:** Changed to `while read` loop with proper IFS handling
+- **Success rate:** 100% (41/41 successful conversions)
+
+### 4. Diagram Extraction from Converted EPUBs
+- **Challenge:** Avoid re-scanning 938 already-processed books
+- **Solution:** Created temp directory with only 41 new EPUBs
+- **Script:** `extract_new_mobi_books.sh`
+- **Processing time:** <2 minutes
+- **Results:**
+  - Total diagrams: 31,875
+  - Average: 777 diagrams/book
+  - Range: 75 - 5,014 diagrams
+  - Min diagram count: 75 (acceptable quality)
+  - Max diagram count: 5,014 (excellent)
+  - Storage: 1.15 GB
+
+### 5. Quality Check
+All 41 converted books passed quality check:
+- **Lowest 10:** 75-438 diagrams (all acceptable)
+- **Highest 10:** 939-5,014 diagrams (excellent)
+- **No removals needed**
+
+### 6. Qdrant Metadata Bug Identified
+**Issue:** Ingestion pipeline doesn't save `book_title` field
+- Only saves `book_name` (filename)
+- Makes it difficult to display human-readable titles
+- Workaround: Use `book_name` field for source tracking
+
+**Root cause:** `build_production_corpus.py` line 260-268
+```python
+payload={
+    'text': chunk['text'],
+    'book_name': chunk['book_name'],  # filename only
+    'book_tier': chunk['book_tier'],
+    'book_score': chunk['book_score'],
+    # Missing: 'book_title': extracted_title
+}
+```
+
+**Fix needed:** Extract actual book title from EPUB metadata and add to payload
+
+## Final Statistics
+
+### Corpus Totals
+- **Books:** 979 (was 938)
+  - Original EPUB extraction: 938 books
+  - New from .mobi conversion: +41 books
+- **Diagrams:** 724,062 (was 692,187)
+  - Original: 692,187 diagrams
+  - New from .mobi: +31,875 diagrams
+- **Storage:** ~16.5 GB total
+  - Original: ~15.3 GB
+  - New from .mobi: +1.15 GB
+- **Qdrant chunks:** 327,779 (was 359,929)
+  - Reduced by 32,150 after duplicate removal
+
+### Scripts Created
+1. `remove_duplicate_mobis.py` - Remove duplicate .mobi files from disk
+2. `find_mobi_in_qdrant.py` - Find and remove .mobi chunks from Qdrant
+3. `convert_mobi_to_epub.sh` - Batch convert .mobi to EPUB using Calibre
+4. `extract_new_mobi_books.sh` - Extract diagrams from only new EPUBs (avoid re-scanning)
+5. `sample_qdrant_payload.py` - Inspect Qdrant payload structure
+
+## Key Lessons
+
+1. **Avoid unnecessary scanning:** Instead of re-scanning 938 books, copy 41 new ones to temp directory
+2. **Bash space handling:** Use `while IFS= read -r` instead of arrays for paths with spaces
+3. **Duplicate detection:** Check both disk AND Qdrant for duplicates
+4. **Metadata validation:** Always verify payload structure before assuming field names
+5. **Quality checks:** Even "low" diagram counts (75) can be acceptable for certain books
+
+## Issues Encountered
+
+### 1. Bash Array Path Bug
+**Problem:** `convert_mobi_to_epub.sh` failed with space in path `/Volumes/T7 Shield/`
+
+**Error:**
+```
+Cannot read from /Volumes/T7
+Cannot read from Shield/books/epub/filename.mobi
+```
+
+**Solution:** Changed from array iteration to `while read` loop:
+```bash
+# Before (broken):
+mobi_files=($(find "$MOBI_DIR" -name "*.mobi"))
+for mobi_file in "${mobi_files[@]}"; do
+
+# After (fixed):
+find "$MOBI_DIR" -name "*.mobi" | while IFS= read -r mobi_file; do
+```
+
+### 2. Qdrant Scroll Query Initial Failure
+**Problem:** First duplicate check query returned 0 results
+
+**Cause:** Incorrect `with_payload` parameter (tried to access non-existent fields)
+
+**Solution:** Use `with_payload=True` to get all fields, then check actual structure
+
+### 3. Missing Python Dependencies
+**Problem:** `ebooklib`, `Pillow`, `beautifulsoup4`, `tqdm` not installed in current environment
+
+**Cause:** Different Python environment than original extraction
+
+**Solution:** Installed dependencies, but better approach: use existing extraction script
+
+## Next Steps
+
+1. **Fix Qdrant metadata bug:** Add `book_title` field to ingestion pipeline
+2. **Update Big 3 documentation** with .mobi conversion results
+3. **Commit to GitHub** with comprehensive commit message
+4. **Test static diagram display** in UI with new corpus
+5. **Phase 6.1b consideration:** Dynamic diagram generation (pending partner consult)
+
+## Code Changes
+
+### Modified Files
+- None (all new scripts, no existing code modified)
+
+### New Files Created
+1. `remove_duplicate_mobis.py` (147 lines)
+2. `find_mobi_in_qdrant.py` (108 lines)
+3. `convert_mobi_to_epub.sh` (52 lines)
+4. `extract_new_mobi_books.sh` (45 lines)
+5. `sample_qdrant_payload.py` (31 lines)
+6. `mobi_converted_epubs.txt` (41 filenames)
+7. `mobi_conversion.log` (conversion output)
+8. `mobi_extraction_output.log` (diagram extraction output)
+
+**Status:** ✅ Phase 6.1a .mobi Conversion Complete
