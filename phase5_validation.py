@@ -161,8 +161,21 @@ def execute_query_rrf_merged(
     )
 
     # 3. Rerank both collections
-    epub_ranked = gpt5_rerank(openai_client, query_text, epub_candidates, top_k=TOP_K_CANDIDATES)
-    pgn_ranked = gpt5_rerank(openai_client, query_text, pgn_candidates, top_k=TOP_K_CANDIDATES)
+    epub_ranked_tuples = gpt5_rerank(openai_client, query_text, epub_candidates, top_k=TOP_K_CANDIDATES)
+    pgn_ranked_tuples = gpt5_rerank(openai_client, query_text, pgn_candidates, top_k=TOP_K_CANDIDATES)
+
+    # Convert tuples to dicts for merge_collections
+    # gpt5_rerank returns (candidate_dict, gpt5_score) tuples
+    # We need to update the score field with the GPT-5 reranking score
+    epub_ranked = []
+    for candidate, gpt5_score in epub_ranked_tuples:
+        candidate['score'] = gpt5_score  # Update with GPT-5 reranking score
+        epub_ranked.append(candidate)
+
+    pgn_ranked = []
+    for candidate, gpt5_score in pgn_ranked_tuples:
+        candidate['score'] = gpt5_score  # Update with GPT-5 reranking score
+        pgn_ranked.append(candidate)
 
     # 4. Merge with RRF
     merged_results = merge_collections(
