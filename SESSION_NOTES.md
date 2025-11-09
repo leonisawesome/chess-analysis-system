@@ -1,9 +1,110 @@
 # Chess RAG System - Session Notes
-**Last Updated:** November 9, 2025 (Phase 5.2 Validation ON HOLD)
+**Last Updated:** November 9, 2025 (Bug Fix: book_title Field)
 
 ---
 
-# 🎯 LATEST SESSION: Phase 6.1a - Static EPUB Diagram Extraction (COMPLETE ✅)
+# 🎯 LATEST SESSION: Qdrant Metadata Bug Fix - book_title Field (COMPLETE ✅)
+**Date:** November 9, 2025
+**Session Focus:** Fix missing `book_title` field in Qdrant ingestion pipeline
+
+## Problem Identified
+
+During .mobi conversion work, discovered that `build_production_corpus.py` only saved `book_name` (filename) to Qdrant, not the human-readable book title extracted from EPUB metadata.
+
+**Impact:**
+- All 327,779 chunks in Qdrant have filenames instead of proper titles
+- Makes it difficult to display user-friendly source attribution in UI
+- Example: "unknown_author_0000_study_chess_with_tal.epub" instead of "Study Chess with Tal"
+
+## Solution Implemented
+
+**File Modified:** `build_production_corpus.py`
+
+### 1. Added imports (lines 30-31)
+```python
+import ebooklib
+from ebooklib import epub
+```
+
+### 2. Created title extraction function (lines 138-156)
+```python
+def extract_epub_title(epub_path: str) -> str:
+    """
+    Extract book title from EPUB metadata.
+    Falls back to filename if title not found.
+    """
+    try:
+        book = epub.read_epub(epub_path)
+        title = book.get_metadata('DC', 'title')
+
+        if title and len(title) > 0:
+            # get_metadata returns a list of tuples: [(title, {})]
+            return title[0][0] if isinstance(title[0], tuple) else title[0]
+
+        # Fallback to filename without extension
+        return Path(epub_path).stem
+
+    except Exception:
+        # Fallback to filename on any error
+        return Path(epub_path).stem
+```
+
+### 3. Updated chunk creation (line 192, 200)
+```python
+# Extract book title from EPUB metadata
+book_title = extract_epub_title(book_path)
+
+# Add metadata to each chunk
+chunk_data = {
+    'text': chunk_text,
+    'book_name': book_metadata['filename'],
+    'book_title': book_title,  # Human-readable title
+    'book_path': book_metadata['full_path'],
+    # ... rest of metadata
+}
+```
+
+### 4. Updated Qdrant payload (line 294)
+```python
+payload={
+    'text': chunk['text'],
+    'book_name': chunk['book_name'],
+    'book_title': chunk['book_title'],  # Human-readable title
+    'book_tier': chunk['book_tier'],
+    'book_score': chunk['book_score'],
+    # ... rest of payload
+}
+```
+
+## Testing Strategy
+
+**Note:** Existing Qdrant data (327,779 chunks) still has missing `book_title` field. This fix only applies to future ingestion runs.
+
+**To validate fix:**
+1. Run `build_production_corpus.py` on small test set
+2. Query Qdrant and verify `book_title` field exists in payload
+3. Confirm title is human-readable (not filename)
+
+**Future work:**
+- Option A: Re-ingest entire corpus (979 books, ~$15 OpenAI cost)
+- Option B: Write migration script to extract titles and update existing Qdrant points
+- Decision: Defer until needed for UI work
+
+## Files Modified
+
+- `build_production_corpus.py` (4 changes: imports, function, chunk metadata, Qdrant payload)
+- `README.md` (documented bug fix completion)
+- `backlog.md` (moved from Future Work to completed with details)
+- `SESSION_NOTES.md` (this entry)
+
+## Status
+
+✅ **Bug fix complete** - Future ingestion runs will include `book_title` field
+⏸️ **Existing data** - Not migrated yet (pending UI requirements)
+
+---
+
+# 🎯 PREVIOUS SESSION: Phase 6.1a - Static EPUB Diagram Extraction (COMPLETE ✅)
 **Date:** November 9, 2025
 **Session Focus:** EPUB diagram extraction pipeline, data cleaning, evaluation enhancement
 

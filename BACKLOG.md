@@ -252,7 +252,11 @@ System: [Searches PGN collection with context]
   - **Status:** RRF system working correctly, just needs more PGN data
 
 **Future Work:**
-- 🔧 **Bug Fix:** Add `book_title` field to Qdrant ingestion (currently only saves `book_name` filename)
+- ✅ **Bug Fix Complete:** Added `book_title` field to Qdrant ingestion (November 9, 2025)
+  - **Issue:** Pipeline only saved `book_name` (filename), not human-readable title
+  - **Fix:** Extract title from EPUB metadata using `ebooklib`, fallback to filename
+  - **Location:** `build_production_corpus.py` lines 138-156, 200, 294
+  - **Note:** Existing Qdrant data still has missing titles (re-ingestion required for historical data)
 - 🎯 **Phase 6.1b:** Test static diagram display in UI, then dynamic diagram generation (after partner consult)
 - 📦 **PGN Corpus Expansion:** Scale from 1,778 → 1M games
 - 🔄 **Phase 5.2 Resume:** Re-validate RRF after PGN corpus expansion

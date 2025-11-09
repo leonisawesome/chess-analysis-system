@@ -27,6 +27,8 @@ from qdrant_client.models import Distance, VectorParams, PointStruct
 # Import EPUB extraction
 from epub_to_analyzer import extract_epub_text
 import tiktoken
+import ebooklib
+from ebooklib import epub
 
 
 # ============================================================================
@@ -130,6 +132,31 @@ def chunk_text_by_tokens(text: str, chunk_size: int = 512, overlap: int = 64) ->
 
 
 # ============================================================================
+# EPUB METADATA EXTRACTION
+# ============================================================================
+
+def extract_epub_title(epub_path: str) -> str:
+    """
+    Extract book title from EPUB metadata.
+    Falls back to filename if title not found.
+    """
+    try:
+        book = epub.read_epub(epub_path)
+        title = book.get_metadata('DC', 'title')
+
+        if title and len(title) > 0:
+            # get_metadata returns a list of tuples: [(title, {})]
+            return title[0][0] if isinstance(title[0], tuple) else title[0]
+
+        # Fallback to filename without extension
+        return Path(epub_path).stem
+
+    except Exception:
+        # Fallback to filename on any error
+        return Path(epub_path).stem
+
+
+# ============================================================================
 # CHUNK EXTRACTION
 # ============================================================================
 
@@ -161,12 +188,16 @@ def extract_chunks_from_book(book_path: str, book_metadata: Dict) -> List[Dict]:
         if not chunks:
             return []
 
+        # Extract book title from EPUB metadata
+        book_title = extract_epub_title(book_path)
+
         # Add metadata to each chunk
         all_chunks = []
         for chunk_idx, chunk_text in enumerate(chunks):
             chunk_data = {
                 'text': chunk_text,
                 'book_name': book_metadata['filename'],
+                'book_title': book_title,  # Human-readable title
                 'book_path': book_metadata['full_path'],
                 'book_tier': book_metadata['tier'],
                 'book_score': book_metadata['score'],
@@ -260,6 +291,7 @@ def upload_to_qdrant(qdrant_client: QdrantClient, chunks: List[Dict]):
             payload={
                 'text': chunk['text'],
                 'book_name': chunk['book_name'],
+                'book_title': chunk['book_title'],  # Human-readable title
                 'book_tier': chunk['book_tier'],
                 'book_score': chunk['book_score'],
                 'chapter_title': chunk['chapter_title'],

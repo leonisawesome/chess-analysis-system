@@ -44,9 +44,13 @@
   - **Qdrant Cleanup:** Removed 32,150 duplicate .mobi chunks (collection: 359,929 → 327,779)
   - **Output:** `/Volumes/T7 Shield/books/images/{book_id}/`
   - **Evaluation Enhancement:** Added deletion prompts to `analyze_chess_books.py` for books scoring <40/100
-- 🎯 **Active Priority:** Phase 6.1a complete with .mobi conversion. Next: Fix Qdrant metadata bug, then test static diagram display
+- ✅ **Bug Fix Complete:** Added `book_title` field to Qdrant ingestion
+  - **Issue:** Ingestion pipeline only saved `book_name` (filename), not human-readable title
+  - **Fix:** Extract title from EPUB metadata using `ebooklib`, fallback to filename if missing
+  - **Location:** `build_production_corpus.py` lines 138-156 (extraction), 200 (chunk metadata), 294 (Qdrant payload)
+  - **Impact:** Future ingestion will include human-readable titles for better UX
+- 🎯 **Active Priority:** Test static diagram display in UI with 724,062 extracted diagrams
 - 📦 **Future Work:**
-  - **Bug Fix:** Add `book_title` field to Qdrant ingestion (currently only saves `book_name` filename)
   - Phase 6.1b: Dynamic diagram generation (after partner consult required)
   - PGN corpus expansion to 1M games, then resume Phase 5.2 validation
 - 🔧 **Architecture:** Clean modular design across 9 specialized modules
