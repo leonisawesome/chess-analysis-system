@@ -49,7 +49,8 @@ if not api_key:
 OPENAI_CLIENT = OpenAI(api_key=api_key)
 
 # Initialize Qdrant (support both local and Docker modes)
-QDRANT_MODE = os.getenv('QDRANT_MODE', 'local')  # 'local' or 'docker'
+# DEFAULT: Docker mode (better performance for large collections)
+QDRANT_MODE = os.getenv('QDRANT_MODE', 'docker')  # 'local' or 'docker'
 QDRANT_URL = os.getenv('QDRANT_URL', 'http://localhost:6333')
 
 if QDRANT_MODE == 'docker':
@@ -111,6 +112,11 @@ def index():
 def test_pgn_page():
     """PGN collection test interface."""
     return render_template('test_pgn.html')
+
+@app.route('/rrf_demo')
+def rrf_demo_page():
+    """Phase 5.1 RRF multi-collection demo interface."""
+    return render_template('rrf_demo.html')
 
 @app.route('/test', methods=['POST'])
 def test():
@@ -518,7 +524,8 @@ def query_merged():
             if book_name.endswith('.epub') or book_name.endswith('.mobi'):
                 book_name = book_name[:-5]
 
-            text = payload.get('text', '')
+            # Handle both EPUB ('text') and PGN ('content') fields
+            text = payload.get('text') or payload.get('content', '')
             chapter = payload.get('chapter_title', payload.get('opening', ''))
 
             # Extract chess positions if requested
@@ -526,7 +533,7 @@ def query_merged():
 
             # Format result with RRF metadata
             formatted = {
-                'score': round(result['rrf_score'] * 100, 1),  # Scale RRF score for display
+                'score': round(result['max_similarity'], 1),  # Use GPT-5 reranking score (0-10 scale)
                 'book_name': book_name,
                 'book': book_name,
                 'chapter_title': chapter,
