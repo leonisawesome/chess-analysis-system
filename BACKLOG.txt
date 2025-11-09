@@ -2429,3 +2429,128 @@ User reported example queries not randomizing - same 5 buttons every page load.
 - Decide: Merge collections or keep separate with RRF
 - Production deployment after validation
 
+
+---
+
+## ITEM-028 (continued): Phase 5.1 - RRF Multi-Collection Merge UI Integration ✅ COMPLETE (Nov 9, 2025)
+
+**Problem Addressed:**
+Phase 5.1 core RRF implementation was complete and tested, but not integrated into the main user interface. Users still accessed separate `/query` (EPUB only) and `/query_pgn` (PGN only) endpoints.
+
+**Goal:**
+Integrate RRF multi-collection merge into the main web interface so users transparently benefit from both EPUB and PGN collections in a single query.
+
+**Solution Implemented:**
+
+### 1. **Main Page Integration** (`templates/index.html`)
+   - **Endpoint Switch:** Changed from `/query` (EPUB only) to `/query_merged` (RRF multi-collection)
+   - **Dual Score Display:** Added both GPT-5 relevance score (0-10) and RRF fusion score
+   - **Collection Badges:** Visual indicators showing source type (📖 EPUB / ♟️ PGN)
+   - **Corpus Statistics:** Updated to show comprehensive stats for both collections
+   - **Performance Metrics:** Added RRF merge timing to performance panel
+
+### 2. **Score Display Evolution** (User Feedback Driven)
+   - **Initial Bug:** All scores showing 1.6/10 (displaying raw RRF scores * 100)
+   - **First Fix:** Switched to GPT-5 relevance scores (0-10 scale)
+   - **User Feedback:** "We care about both scores - relevance AND RRF fusion strength"
+   - **Final Solution:** Dual score format: "Relevance: (9/10) / RRF: (2.13)"
+   - **Rationale:** Relevance shows content quality, RRF shows cross-collection consensus
+
+### 3. **PGN Content Display Bug Fix** (`app.py`)
+   - **Problem:** PGN sources showing empty content sections
+   - **Root Cause:** Code only checked for EPUB 'text' field, PGN chunks use 'content' field
+   - **Fix:** `payload.get('text') or payload.get('content', '')` (line 527)
+   - **Result:** PGN game annotations now display correctly
+
+### 4. **Corpus Statistics Update** (User Request)
+   - **Before:** "357,957 chunks from 1,052 instructional chess books"
+   - **After:** "360,320 total chunks: 358,529 from 1,052 books (EPUB) + 1,791 from PGN games"
+   - **Locations Updated:** 
+     - Main subtitle (line 394)
+     - Loading message (line 418)
+   - **Shows:** Breakdown + cumulative total across both collections
+
+### 5. **Collection Attribution Badges** (`templates/index.html`)
+   - **Format:** Color-coded badges on each source card
+   - **EPUB:** Blue badge (📖 EPUB, #2196F3)
+   - **PGN:** Orange badge (♟️ PGN, #FF9800)
+   - **Purpose:** Users can instantly see which collection each result came from
+
+### 6. **Backend Bug Fixes**
+   - **Bug #1:** `semantic_search()` missing `collection_name` parameter
+     - Fix: Added optional parameter with default fallback (query_system_a.py)
+   - **Bug #2:** ScoredPoint immutability in collection tagging
+     - Fix: Modified to access mutable payload dict instead (rag_engine.py)
+   - **Bug #3:** PGN reranking not handling 'content' field
+     - Fix: Updated `gpt5_rerank()` to check both 'text' and 'content' (query_system_a.py line 86)
+
+**Files Modified:**
+
+1. **app.py** (+7 lines)
+   - Line 52: Changed QDRANT_MODE default to 'docker'
+   - Line 116: Added `/rrf_demo` route for demo interface
+   - Line 527: Fixed PGN content field handling
+   - Line 536: Changed score display to use GPT-5 relevance
+
+2. **templates/index.html** (+34 lines net)
+   - Line 394: Updated corpus statistics (EPUB + PGN breakdown)
+   - Line 418: Updated loading message with chunk breakdown
+   - Line 540: Changed endpoint to `/query_merged`
+   - Lines 632-651: Added performance stats panel
+   - Lines 677-694: Dual score display + collection badges
+
+3. **query_system_a.py** (+11 lines)
+   - Lines 38-59: Added `collection_name` parameter to `semantic_search()`
+   - Lines 84-89: Handle both 'text' and 'content' fields in reranking
+
+4. **rag_engine.py** (+15 lines)
+   - Lines 249-264: Fixed collection tagging for immutable ScoredPoint objects
+
+**Testing & Validation:**
+
+User tested with various queries and reported:
+- ✅ Style matches main interface (consistent light theme)
+- ✅ Dual scores displayed correctly with variance (not all 1.6)
+- ✅ PGN sources show full game annotations
+- ✅ Collection badges visible and correct
+- ✅ Corpus statistics show complete breakdown
+- ✅ Performance metrics include RRF merge timing
+
+**Git Workflow:**
+
+All changes committed to branch `phase-5.1-ui-integration`:
+1. Commit 1: Phase 5.1 bug fixes (semantic_search, RRF tagging)
+2. Commit 2: UI enhancements (dual scores, corpus stats, collection badges)
+
+**Key Metrics:**
+
+- **Corpus:** 360,320 total chunks (358,529 EPUB + 1,791 PGN)
+- **Collections:** 2 Qdrant collections (chess_production, chess_pgn_repertoire)
+- **Query Types:** Opening queries favor PGN (1.3x weight), concept queries favor EPUB (1.3x weight)
+- **RRF Algorithm:** k=60, reciprocal rank fusion with collection weights
+- **Performance:** ~50-60s total query time (includes both collections + RRF merge)
+
+**User Feedback Summary:**
+
+1. **Style Issue:** ✅ Resolved (was viewing /rrf_demo instead of main page)
+2. **Score Display:** ✅ Fixed (dual scores with parentheses)
+3. **PGN Content:** ✅ Fixed (handle 'content' field)
+4. **Corpus Stats:** ✅ Updated (show EPUB + PGN totals)
+
+**Production Status:**
+- ✅ Flask server running at http://localhost:5001
+- ✅ Main page uses RRF multi-collection merge
+- ✅ Both EPUB and PGN collections integrated
+- ✅ Dual scoring system (relevance + RRF fusion)
+- ✅ Collection attribution visible to users
+- ✅ Comprehensive corpus statistics displayed
+
+**Status:** ✅ Phase 5.1 UI Integration Complete - Ready for Phase 5.2 (Validation & Tuning)
+
+**Next Steps (Phase 5.2):**
+- Create 50-query test suite (opening/concept/mixed categories)
+- Implement MRR (Mean Reciprocal Rank) and NDCG (Normalized Discounted Cumulative Gain) metrics
+- A/B testing: EPUB-only vs RRF-merged results
+- Tune collection weights based on validation results
+- Document optimal query patterns and use cases
+

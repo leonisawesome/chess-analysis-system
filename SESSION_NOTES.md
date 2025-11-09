@@ -1161,3 +1161,162 @@ def infer_tactical_categories(query: str) -> Set[str]:
 - Integration: VERIFIED
 - SVG generation: WORKING
 - 100% accuracy for all tactical queries
+
+---
+
+# ITEM-028: Phase 5.1 - RRF Multi-Collection Merge UI Integration (2025-11-09)
+
+## Session Context
+
+This session continued from Phase 5.1 RRF implementation completion. The core RRF merge system was complete and tested (24/24 unit tests passing), but not yet integrated into the main web interface. Users still accessed separate EPUB-only and PGN-only endpoints.
+
+## Problem
+
+**User Request:** "I want to see the RRF system work in the browser. What URL do I go to and give me a query that proves it took data from both collections?"
+
+**Issues Discovered During Testing:**
+1. Main page still using `/query` (EPUB-only) instead of `/query_merged`
+2. All scores showing "1.6/10" with no variance
+3. PGN sources displaying empty content sections
+4. Corpus statistics only showing EPUB stats
+5. Missing performance metrics on main page
+6. No collection attribution badges
+
+## Solution: Iterative UI Integration with User Feedback
+
+### Round 1: Initial Integration
+- Created `/rrf_demo` endpoint with demo interface
+- User feedback: "Style doesn't match, not actionable, missing performance stats"
+- **Issue:** User was viewing demo page instead of main page
+
+### Round 2: Main Page Integration
+- Changed main page endpoint from `/query` to `/query_merged`
+- Added collection badges (📖 EPUB / ♟️ PGN)
+- Added performance metrics panel
+- Updated corpus statistics
+- User feedback: "PGN sections empty, all scores showing 1.6"
+
+### Round 3: Bug Fixes
+**Bug #1: PGN Content Missing**
+- Root cause: `payload.get('text')` only handles EPUB field
+- Fix: `payload.get('text') or payload.get('content', '')`
+- Location: app.py line 527
+
+**Bug #2: Score Display**
+- Root cause: Showing RRF scores (0.016 * 100 = 1.6)
+- Fix: Use GPT-5 relevance scores instead
+- User feedback: "We need BOTH scores - relevance and RRF fusion"
+
+### Round 4: Dual Score Display
+- Implemented dual scoring: "Relevance: (9/10) / RRF: (2.13)"
+- Rationale: Relevance shows content quality, RRF shows cross-collection consensus
+- User refinement: Added parentheses for clarity
+
+### Round 5: Corpus Statistics Update
+- Before: "357,957 chunks from 1,052 instructional chess books"
+- After: "360,320 total chunks: 358,529 from 1,052 books (EPUB) + 1,791 from PGN games"
+- Updated in header subtitle and loading message
+
+## Implementation Details
+
+**Files Modified:**
+
+1. **app.py** (+7 lines)
+   - Line 527: Handle both 'text' (EPUB) and 'content' (PGN) fields
+   - Line 536: Use GPT-5 relevance score for display
+   - Line 52: Changed QDRANT_MODE default to 'docker'
+   - Line 116: Added /rrf_demo route
+
+2. **templates/index.html** (+34 lines net)
+   - Line 540: Changed endpoint to `/query_merged`
+   - Lines 677-694: Dual score display + collection badges
+   - Lines 632-651: Performance stats panel
+   - Lines 394, 418: Updated corpus statistics
+
+3. **query_system_a.py** (+11 lines)
+   - Added `collection_name` parameter to `semantic_search()`
+   - Handle both 'text' and 'content' in reranking
+
+4. **rag_engine.py** (+15 lines)
+   - Fixed ScoredPoint immutability in collection tagging
+
+## Technical Challenges Resolved
+
+### Challenge 1: semantic_search() Parameter Mismatch
+**Error:** `TypeError: semantic_search() got an unexpected keyword argument 'collection_name'`
+**Solution:** Added optional parameter with default fallback to COLLECTION_NAME
+
+### Challenge 2: ScoredPoint Immutability
+**Error:** `TypeError: 'ScoredPoint' object does not support item assignment`
+**Solution:** Access mutable payload dict instead of trying to assign to ScoredPoint object
+
+### Challenge 3: Field Name Differences
+**Problem:** EPUB uses 'text', PGN uses 'content'
+**Solution:** Fallback chain: `payload.get('text') or payload.get('content', '')`
+
+### Challenge 4: Score Interpretation
+**Journey:**
+1. Initial: RRF scores only (1.6/10 everywhere)
+2. Fix attempt: GPT-5 relevance only (lost RRF information)
+3. User feedback: "We need both scores"
+4. Final: Dual display showing both metrics
+
+## Git Workflow
+
+**Branch:** `phase-5.1-ui-integration`
+
+**Commits:**
+1. "Phase 5.1: Bug fixes (semantic_search parameter, RRF collection tagging)"
+2. "Phase 5.1: UI enhancements (dual scores, corpus stats, collection badges)"
+
+**Documentation Updates:**
+- README.md: Updated corpus stats, current status, Phase 5.1 completion
+- backlog.txt: Added Phase 5.1 UI integration entry
+- session_notes.md: This entry
+
+## Key Metrics
+
+- **Corpus:** 360,320 total chunks
+  - EPUB: 358,529 chunks from 1,052 books
+  - PGN: 1,791 chunks from 1,778 games
+- **Collections:** 2 Qdrant collections (chess_production, chess_pgn_repertoire)
+- **RRF Algorithm:** k=60, reciprocal rank fusion with collection weights
+- **Query Types:** Opening (PGN 1.3x), Concept (EPUB 1.3x), Mixed (equal)
+
+## User Feedback Summary
+
+1. **Style consistency:** ✅ Resolved (URL confusion - demo vs main page)
+2. **PGN content display:** ✅ Fixed (handle 'content' field)
+3. **Score variance:** ✅ Fixed (use GPT-5 relevance scores)
+4. **Dual scores:** ✅ Implemented (relevance + RRF fusion)
+5. **Corpus statistics:** ✅ Updated (EPUB + PGN totals)
+6. **Collection badges:** ✅ Added (visual source attribution)
+
+## Production Status
+
+✅ Flask @ http://localhost:5001
+✅ Main page uses RRF multi-collection merge
+✅ Dual scoring system (relevance + RRF)
+✅ Collection badges visible
+✅ Comprehensive corpus statistics
+✅ Performance metrics displayed
+✅ Both EPUB and PGN collections integrated
+
+## Key Lessons
+
+1. **User testing reveals real issues:** Demo page looked fine, but user found 4 bugs immediately
+2. **Iterative refinement works:** Each round of feedback led to better solution
+3. **Field name assumptions break:** Different data sources use different field names
+4. **Multiple metrics provide context:** Single score insufficient, dual scores tell full story
+5. **Documentation critical:** Updated all Big 3 files as requested
+
+## Next Steps (Phase 5.2)
+
+- Create 50-query test suite (opening/concept/mixed)
+- Implement MRR and NDCG metrics
+- A/B testing: EPUB-only vs RRF-merged
+- Tune collection weights based on validation
+- Document optimal query patterns
+
+**Status:** ✅ Phase 5.1 UI Integration Complete
+
