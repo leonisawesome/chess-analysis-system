@@ -4,6 +4,8 @@
 *.pyc
 __pycache__/
 .DS_Store
+*.har
+*.rar
 
 # Output files
 *.csv
@@ -34,6 +36,7 @@ scripts/__pycache__/
 *.db
 *.sqlite
 qdrant_*_db/
+qdrant_docker_storage/
 
 # Large PGN files
 *.pgn

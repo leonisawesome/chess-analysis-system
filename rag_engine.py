@@ -6,9 +6,11 @@ Handles:
 - Result formatting for web display
 - Position extraction from retrieved chunks
 - Context preparation for synthesis
+- Multi-collection parallel search (Phase 5.1)
 """
 
 import time
+import asyncio
 from typing import List, Tuple, Dict, Any
 from openai import OpenAI
 from qdrant_client import QdrantClient
@@ -124,23 +126,45 @@ def prepare_synthesis_context(
     top_n: int = 8
 ) -> List[str]:
     """
-    Prepare context chunks for synthesis pipeline.
-    
+    Prepare context chunks for synthesis pipeline with structured source attribution.
+
+    NEW (Phase 5): Adds source type labels for mixed-media RAG (EPUB + PGN).
+
     Args:
         formatted_results: Formatted RAG results
         canonical_fen: Optional canonical FEN to inject at start
         top_n: Number of top results to include
-    
+
     Returns:
-        List of context strings
+        List of context strings with source attribution
     """
-    context_chunks = [r['text'] for r in formatted_results[:top_n]]
-    
+    context_chunks = []
+
+    for i, result in enumerate(formatted_results[:top_n], start=1):
+        # Detect source type based on available metadata
+        # EPUB results have 'book_name', PGN results will have 'source_file'
+        if 'source_file' in result:
+            # PGN source
+            source_type = "PGN"
+            title = result.get('source_file', 'Unknown Game')
+            if 'opening' in result:
+                title = f"{result['opening']} ({result['source_file']})"
+        else:
+            # EPUB source (default)
+            source_type = "Book"
+            title = result.get('book_name', 'Unknown Book')
+
+        content = result.get('text', '')
+
+        # Format with structured source label
+        formatted_chunk = f"[Source {i}: {source_type} - \"{title}\"]\n{content}"
+        context_chunks.append(formatted_chunk)
+
     # Inject canonical FEN if provided
     if canonical_fen:
         context_chunks.insert(0, f"[CANONICAL POSITION: {canonical_fen}]")
         print(f"📋 Injected canonical FEN into synthesis context")
-    
+
     return context_chunks
 
 
@@ -172,6 +196,76 @@ def collect_answer_positions(
             break
     
     return collected_positions
+
+
+async def search_multi_collection_async(
+    qdrant_client: QdrantClient,
+    query_vector: List[float],
+    collections: Dict[str, int],
+    search_func
+) -> Tuple[List, List]:
+    """
+    Search multiple Qdrant collections in parallel.
+
+    Phase 5.1: Parallel multi-collection search for RRF merge.
+
+    Args:
+        qdrant_client: Qdrant client instance
+        query_vector: Embedding vector (computed once, shared across searches)
+        collections: Dict mapping collection name to top_k limit
+                    e.g., {'chess_production': 50, 'chess_pgn_repertoire': 50}
+        search_func: Synchronous search function to wrap in async
+
+    Returns:
+        Tuple of (epub_results, pgn_results)
+
+    Example:
+        epub_results, pgn_results = await search_multi_collection_async(
+            qdrant_client,
+            query_vector,
+            {'chess_production': 50, 'chess_pgn_repertoire': 50},
+            search_func=semantic_search
+        )
+    """
+    # Run searches in parallel using asyncio
+    tasks = []
+    collection_names = []
+
+    for collection_name, top_k in collections.items():
+        # Wrap synchronous search in async using to_thread
+        task = asyncio.to_thread(
+            search_func,
+            qdrant_client,
+            query_vector,
+            top_k=top_k,
+            collection_name=collection_name
+        )
+        tasks.append(task)
+        collection_names.append(collection_name)
+
+    # Wait for all searches to complete
+    results_lists = await asyncio.gather(*tasks)
+
+    # Tag results with collection name
+    # Note: ScoredPoint objects are immutable, so we modify the payload dict directly
+    for collection_name, results in zip(collection_names, results_lists):
+        for result in results:
+            if isinstance(result, tuple):
+                # If results are (candidate, score) tuples, add to payload
+                candidate, score = result
+                if hasattr(candidate, 'payload') and isinstance(candidate.payload, dict):
+                    # Payload is a dict, we can modify it
+                    candidate.payload['collection'] = collection_name
+            elif hasattr(result, 'payload') and isinstance(result.payload, dict):
+                # ScoredPoint with mutable payload dict
+                result.payload['collection'] = collection_name
+            elif isinstance(result, dict):
+                # If results are dicts, add directly
+                result['collection'] = collection_name
+
+    # Return in order: EPUB, PGN
+    # Assuming collections dict has chess_production first, chess_pgn_repertoire second
+    return results_lists[0], results_lists[1]
 
 
 def debug_position_extraction(formatted_results: List[Dict[str, Any]], num_sources: int = 5):

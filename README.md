@@ -1,6 +1,6 @@
 # Chess Knowledge RAG System
 
-**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 357,957 chunks from 1,052 chess books.**
+**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 360,320 chunks from 1,052 chess books + 1,778 PGN games.**
 
 ---
 
@@ -13,19 +13,33 @@
 - **3-stage synthesis:** Creates coherent answer with chess diagrams
 - **Output:** Professional article with interactive chess positions
 
-### Current Status (November 8, 2025)
+### Current Status (November 9, 2025)
 - ✅ **ITEM-008 Complete:** Sicilian contamination bug eliminated (100% success rate)
 - ✅ **ITEM-011 Complete:** Monolithic refactoring (1,474 → 262 lines, -82.2%)
 - ✅ **ITEM-024.7 Complete:** JavaScript rendering architecture (Path B) - Restored clean separation between backend and frontend
-- ✅ **ITEM-024.8 Complete:** Dynamic diagram extraction restored - Reverted static 73-position bypass, now uses RAG-based extraction from 357,957 chunks
-- ✅ **ITEM-027 Phase 1+2 Complete:** PGN variation splitting - All 1,778 games validated, 0 failures, 0 chunks over limit (40 tests passing)
-- ✅ **ITEM-027 Phase 3 Complete:** Qdrant PGN collection - 17/17 test chunks uploaded, hierarchical ID bug fixed
-- 🔧 **Architecture:** Clean modular design across 6 specialized modules
+- ✅ **ITEM-024.8 Complete:** Dynamic diagram extraction restored - Reverted static 73-position bypass, now uses RAG-based extraction from 360,320 chunks
+- ✅ **ITEM-027 Complete:** PGN ingestion system - All 1,778 games validated, 1,791 chunks in `chess_pgn_repertoire`, 100% query success
+- ✅ **ITEM-028 Phase 5.1 COMPLETE:** RRF Multi-Collection Merge - Production-ready with UI integration
+  - ✅ Query router with intent classification (8/8 tests passed)
+  - ✅ RRF merger with k=60 and collection weights (8/8 tests passed)
+  - ✅ Parallel multi-collection search with asyncio
+  - ✅ /query_merged endpoint with complete pipeline (237 lines)
+  - ✅ Mixed-media synthesis context (EPUB+PGN integration)
+  - ✅ Module integration validated (5/5 tests passed)
+  - ✅ **UI Integration Complete:** Main page uses /query_merged with dual scores, collection badges, corpus stats
+- ✅ **ITEM-028 Phase 5.2 Framework COMPLETE:** Validation system ready (50-query test suite, MRR/NDCG/Precision metrics)
+  - ✅ Test suite: 50 curated queries (20 opening, 20 concept, 10 mixed)
+  - ✅ Metrics: MRR, NDCG@5/10, Precision@5/10, Recall@5/10, F1@5/10
+  - ✅ Framework: A/B testing script (EPUB vs PGN vs RRF comparison)
+  - ⏳ **Validation running:** Full 50-query validation in progress (~45-60 min)
+  - ⚠️ **Limitation:** Preliminary results with 1,778 PGN games (0.5% of final corpus). Must re-run when PGN scales to 1M games.
+- 🚀 **Next:** Analyze Phase 5.2 results, tune RRF parameters based on data
+- 🔧 **Architecture:** Clean modular design across 9 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 
 ### Critical System Facts
 - **Model:** GPT-5 (\`gpt-chatgpt-4o-latest-20250514\`)
-- **Corpus:** 358,529 chunks from 1,055 books (Qdrant vector DB)
+- **Corpus:** 360,320 total chunks (358,529 EPUB + 1,791 PGN) across 2 Qdrant collections
 - **Success Rate:** 100% on Phase 1 & Phase 2 validation queries
 - **Port:** Flask runs on port 5001
 - **Auth:** GitHub SSH (no token expiration issues)
@@ -34,24 +48,37 @@
 
 ## 📦 System Architecture
 
-### Module Overview (Post-ITEM-011 Refactoring)
+### Module Overview (Post-Phase 5.1)
 \`\`\`
 chess-analysis-system/
-├── app.py (262 lines)
-│   └── Flask routes, initialization, /query endpoint orchestration
+├── app.py (499 lines)
+│   ├── Flask routes, initialization
+│   ├── /query endpoint - EPUB-only queries
+│   ├── /query_pgn endpoint - PGN-only queries
+│   └── /query_merged endpoint - RRF multi-collection merge (NEW Phase 5.1)
 │
-├── rag_engine.py (215 lines)
+├── rag_engine.py (305 lines)
 │   ├── execute_rag_query() - Main RAG pipeline (embed → search → rerank)
 │   ├── format_rag_results() - Format search results for web display
-│   ├── prepare_synthesis_context() - Prepare context for synthesis
+│   ├── prepare_synthesis_context() - Context prep with source attribution (UPDATED)
 │   ├── collect_answer_positions() - Collect positions from top sources
+│   ├── search_multi_collection_async() - Parallel multi-collection search (NEW)
 │   └── debug_position_extraction() - Debug helper
 │
 ├── synthesis_pipeline.py (292 lines)
 │   ├── stage1_generate_outline() - Create structured outline (JSON)
-│   ├── stage2_expand_sections() - Expand with diagrams & ITEM-008 validation
+│   ├── stage2_expand_sections() - Expand with diagrams (UPDATED for mixed-media)
 │   ├── stage3_final_assembly() - Assemble with smooth transitions
 │   └── synthesize_answer() - Main orchestrator
+│
+├── rrf_merger.py (152 lines) - NEW Phase 5.1
+│   ├── reciprocal_rank_fusion() - Core RRF algorithm with k=60
+│   └── merge_collections() - Convenience wrapper for EPUB+PGN merge
+│
+├── query_router.py (136 lines) - NEW Phase 5.1
+│   ├── classify_query() - Intent classification (opening/concept/mixed)
+│   ├── get_collection_weights() - Collection-specific weights
+│   └── get_query_info() - Convenience function
 │
 ├── opening_validator.py (390 lines)
 │   ├── extract_contamination_details() - ITEM-008 feedback generation
@@ -75,7 +102,8 @@ chess-analysis-system/
     └── get_canonical_fen_for_query() - Classify query type & get canonical FEN
 \`\`\`
 
-**Total Code:** 1,641 lines across 6 focused modules (down from 1,474 monolithic lines)
+**Total Code:** ~2,256 lines across 9 focused modules
+**Phase 5.1 Additions:** +288 lines (rrf_merger.py, query_router.py), +237 lines (/query_merged endpoint)
 
 ---
 
@@ -510,18 +538,23 @@ mv "Author, Name - Title [Publisher, Year].mobi" \
 ```bash
 source .venv/bin/activate
 
-# Set environment variable for OpenAI API
+# Set environment variables
 export OPENAI_API_KEY='your-key-here'
+export QDRANT_MODE=docker  # Use Docker Qdrant (recommended)
+export QDRANT_URL=http://localhost:6333
 
 # Add specific books to existing Qdrant database
-python add_books_to_corpus.py \
-  --books "book1.epub" "book2.epub" "book3.epub" \
-  --collection "chess_production" \
-  --qdrant-path "./qdrant_production_db"
+python add_books_to_corpus.py book1.epub book2.epub book3.epub
+
+# Alternative syntax:
+python add_books_to_corpus.py --books "book1.epub" "book2.epub" "book3.epub"
+
+# Add all books not yet in Qdrant:
+python add_books_to_corpus.py --all-new
 
 # Cost: ~$0.02-0.05 per book
 # Time: ~30-60 seconds per book
-# Result: Adds ~300-500 chunks per book to existing index
+# Result: Adds ~300-500 chunks per book to existing Docker Qdrant index
 ```
 
 **Method B: Full Corpus Rebuild (For major updates)**
@@ -936,12 +969,29 @@ Re-analysis with comprehensive logging revealed:
     - Embedding cost: $0.0303
     - Chess Strategy Simplified: 133 chunks (all valid, no transpositions)
   - ✅ **Committed to GitHub:** All bug fixes + full ingestion
-- ⏳ **Phase 4 Pending:** Query integration & RRF merge
+- ✅ **Phase 4 Complete:** PGN Retrieval Testing & Web Interface (November 8, 2025)
+  - ✅ **Web interface created:** `/test_pgn` endpoint with dedicated HTML interface
+  - ✅ **Retrieval testing complete:** 100% successful queries against `chess_pgn_repertoire` collection
+    - Collection size: 1,791 chunks from 1,778 PGN games
+    - Test queries: 5/5 passed with semantic similarity scores 0.70-0.74 (normal range)
+    - Content preview optimized: Shows instructional annotations instead of PGN headers
+  - ✅ **Similarity score validation:** 0.70-0.74 range confirmed normal for semantic search
+    - EPUB collection baseline: 0.7388 for same query
+    - PGN collection: 0.7093 for same query
+    - Semantic mismatch between conversational queries and chess notation expected
+  - ✅ **Example queries feature:** Randomized clickable query suggestions
+    - Implemented in PGN interface (5 random queries from 20 options)
+    - Backported to EPUB interface (5 random queries from 20 options)
+    - Improves user discovery and engagement
+    - Bug fix: Replaced biased `sort()` with Fisher-Yates shuffle for true randomization
+  - ✅ **Style consistency:** PGN interface matches EPUB light theme
+    - Header: #2c3e50, Blue: #3498db, Background: #f5f5f5
+    - Responsive design with metadata grids
+    - 1000-character content previews with instructional focus
+- ⏳ **Phase 5 Pending:** RRF merge for cross-collection queries
   - Implement RRF (Reciprocal Rank Fusion) for multi-collection queries
   - Test cross-collection queries (EPUB + PGN)
   - Production deployment after validation
-- ⏳ Deploy to production Qdrant collection
-- ⏳ Integrate with Flask API
 
 **Production Estimates (1M PGNs):**
 - Based on sample: 0.2% oversized rate (very low)

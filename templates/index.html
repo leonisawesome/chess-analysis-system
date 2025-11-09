@@ -359,18 +359,49 @@
             margin-top: 10px;
             font-style: italic;
         }
+
+        .example-queries {
+            margin-bottom: 20px;
+        }
+
+        .example-queries h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .example-btn {
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 8px 16px;
+            margin: 5px 5px 5px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .example-btn:hover {
+            background: #bdc3c7;
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
             <h1>🏰 System A: Chess Knowledge Search</h1>
-            <p class="subtitle">357,957 chunks from 1,052 instructional chess books</p>
+            <p class="subtitle">361,720 total chunks: 359,929 from 1,056 books (EPUB/MOBI) + 1,791 from 1,778 PGN games</p>
         </div>
     </header>
 
     <div class="container">
         <div class="search-box">
+            <div class="example-queries">
+                <h3>Example Queries:</h3>
+                <div id="exampleButtons"></div>
+            </div>
+
             <input
                 type="text"
                 id="queryInput"
@@ -384,7 +415,7 @@
         </div>
 
         <div id="loading" class="loading" style="display: none;">
-            ⏳ Searching 357,957 chunks, reranking, and synthesizing answer with GPT-5... (this may take 50-60 seconds)
+            ⏳ Searching 361,720 chunks (359,929 EPUB/MOBI + 1,791 PGN from 1,778 games), reranking, and synthesizing answer with GPT-5... (this may take 50-60 seconds)
         </div>
 
         <div id="error" class="error" style="display: none;"></div>
@@ -430,6 +461,63 @@
 </script>
 
     <script>
+        // Example queries with random selection
+        const allExampleQueries = [
+            "How do I improve my calculation in the middlegame?",
+            "Explain the Italian Game opening",
+            "Best endgame techniques for rook endings",
+            "King's Indian Defense strategy",
+            "How to attack in the Sicilian Defense?",
+            "What is the main idea behind the London System?",
+            "Explain pawn structure in the French Defense",
+            "How to play knight endgames?",
+            "Ruy Lopez main line variations",
+            "Tactics in the Najdorf Sicilian",
+            "How to improve positional understanding?",
+            "Queen's Gambit Declined main plans",
+            "Bishop versus knight in endgames",
+            "Caro-Kann Defense strategy",
+            "How to handle isolated queen's pawn positions?",
+            "Attacking ideas in the King's Indian",
+            "Endgame principles for beginners",
+            "Slav Defense repertoire ideas",
+            "How to calculate forcing variations?",
+            "Nimzo-Indian Defense key concepts"
+        ];
+
+        // Fisher-Yates shuffle for proper randomization
+        function getRandomQueries(arr, n) {
+            const copy = [...arr];
+            const result = [];
+            for (let i = 0; i < n && copy.length > 0; i++) {
+                const randomIndex = Math.floor(Math.random() * copy.length);
+                result.push(copy[randomIndex]);
+                copy.splice(randomIndex, 1);
+            }
+            return result;
+        }
+
+        // Function to set query in input field
+        function setQuery(query) {
+            document.getElementById('queryInput').value = query;
+        }
+
+        // Generate random example buttons on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded fired at', new Date().getTime());
+            const exampleButtons = document.getElementById('exampleButtons');
+            const randomQueries = getRandomQueries(allExampleQueries, 5);
+            console.log('Random queries selected:', randomQueries);
+
+            randomQueries.forEach(query => {
+                const button = document.createElement('button');
+                button.className = 'example-btn';
+                button.textContent = query;
+                button.onclick = () => setQuery(query);
+                exampleButtons.appendChild(button);
+            });
+        });
+
         function search() {
             console.log("=== SEARCH FUNCTION CALLED ===");
             const query = document.getElementById('queryInput').value.trim();
@@ -446,10 +534,10 @@
             document.getElementById('results').innerHTML = '';
             document.getElementById('searchBtn').disabled = true;
 
-            console.log("Sending POST request to /query...");
+            console.log("Sending POST request to /query_merged...");
 
-            // Send query to backend
-            fetch('/query', {
+            // Send query to backend (RRF multi-collection merge)
+            fetch('/query_merged', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -541,9 +629,27 @@
                 sourcesList.appendChild(sourceCard);
             });
 
-            // Log timing if available
+            // Add performance stats if available
             if (data.timing) {
                 console.log('Query timing:', data.timing);
+                const perfSection = document.createElement('div');
+                perfSection.className = 'performance-stats';
+                perfSection.style.cssText = 'margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; font-size: 0.9em;';
+
+                const timing = data.timing;
+                perfSection.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 8px;">⏱️ Performance Metrics:</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                        ${timing.embedding ? `<div>Embedding: <strong>${timing.embedding}s</strong></div>` : ''}
+                        ${timing.search ? `<div>Search: <strong>${timing.search}s</strong></div>` : ''}
+                        ${timing.reranking ? `<div>Reranking: <strong>${timing.reranking}s</strong></div>` : ''}
+                        ${timing.rrf_merge ? `<div>RRF Merge: <strong>${timing.rrf_merge}s</strong></div>` : ''}
+                        ${timing.synthesis ? `<div>Synthesis: <strong>${timing.synthesis}s</strong></div>` : ''}
+                        ${timing.diagrams ? `<div>Diagrams: <strong>${timing.diagrams}s</strong></div>` : ''}
+                        ${timing.total ? `<div style="grid-column: 1 / -1; border-top: 1px solid #ddd; padding-top: 8px; margin-top: 8px;">Total: <strong>${timing.total}s</strong></div>` : ''}
+                    </div>
+                `;
+                resultsDiv.appendChild(perfSection);
             }
         }
 
@@ -570,13 +676,22 @@
 
             const bookName = source.book_name || source.book || 'Unknown Book';
             const score = source.score || 0;
-            const text = source.text || '';
+            const rrfScore = source.rrf_score ? (source.rrf_score * 100).toFixed(2) : '0.00';
+            const text = source.text || source.content || '';
             const chapterTitle = source.chapter_title || source.chapter || '';
+
+            // Determine collection type for badge
+            const collection = source.collection || '';
+            const isEpub = collection.includes('production');
+            const isPgn = collection.includes('pgn');
+            const collectionBadge = isPgn ? '♟️ PGN' : (isEpub ? '📖 EPUB' : '');
+            const badgeColor = isPgn ? '#FF9800' : '#2196F3';
 
             card.innerHTML = `
                 <div class="source-header">
                     <span class="source-number">${index + 1}.</span>
-                    <span class="source-score">${score}/10</span>
+                    <span class="source-score">Relevance: (${score}/10) / RRF: (${rrfScore})</span>
+                    ${collectionBadge ? `<span class="collection-badge" style="background: ${badgeColor}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85em; margin-left: 8px;">${collectionBadge}</span>` : ''}
                     <div class="source-book-info">
                         <div class="source-book">${escapeHtml(bookName)}</div>
                         ${chapterTitle ? `<div class="source-chapter">${escapeHtml(chapterTitle)}</div>` : ''}

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGN Collection Test - Chess Analysis System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .info-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .info-box strong {
+            color: #2c3e50;
+        }
+
+        .search-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .example-queries {
+            margin-bottom: 20px;
+        }
+
+        .example-queries h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .example-btn {
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 8px 16px;
+            margin: 5px 5px 5px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .example-btn:hover {
+            background: #bdc3c7;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .search-btn {
+            background: #3498db;
+            color: white;
+            padding: 15px 40px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #2980b9;
+        }
+
+        .search-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+
+        .summary {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .summary strong {
+            color: #3498db;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .rank {
+            background: #3498db;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .score {
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .course-name {
+            color: #2c3e50;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .metadata-item {
+            font-size: 14px;
+        }
+
+        .metadata-label {
+            color: #7f8c8d;
+            font-weight: 600;
+            display: inline-block;
+            min-width: 80px;
+        }
+
+        .content-preview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            color: #2c3e50;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            border-left: 3px solid #3498db;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>♟️ PGN Collection Test</h1>
+            <p class="subtitle">Testing retrieval from chess_pgn_repertoire collection</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="info-box">
+            <strong>Collection:</strong> chess_pgn_repertoire<br>
+            <strong>Total Points:</strong> 1,791 chunks<br>
+            <strong>Source:</strong> 1,778 PGN games from ZListo courses
+        </div>
+
+        <div class="search-box">
+            <div class="example-queries">
+                <h3>Example Queries:</h3>
+                <div id="exampleButtons"></div>
+            </div>
+
+            <input
+                type="text"
+                class="search-input"
+                id="queryInput"
+                placeholder="Enter your chess query (e.g., Benko Gambit opening repertoire)"
+            />
+            <button class="search-btn" onclick="submitQuery()" id="submitBtn">Search PGN Collection</button>
+        </div>
+
+        <div id="summary" class="summary" style="display: none;"></div>
+        <div id="loading" class="loading" style="display: none;">Searching...</div>
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        // Example queries with random selection
+        const allExampleQueries = [
+            "Benko Gambit opening repertoire",
+            "Najdorf Sicilian model games",
+            "London System against d5",
+            "Rook endgame technique",
+            "Middlegame plans in closed positions",
+            "King's Indian Defense main lines",
+            "Caro-Kann Defense strategy",
+            "French Defense Winawer variation",
+            "Sicilian Dragon repertoire",
+            "Queen's Gambit Declined setups",
+            "Dutch Defense tactical ideas",
+            "Grünfeld Defense positional play",
+            "English Opening systems",
+            "Nimzo-Indian Defense key plans",
+            "Slav Defense main variations",
+            "Catalan Opening theory",
+            "Benoni Defense dynamics",
+            "Pirc Defense formations",
+            "Modern Defense counterplay",
+            "Scotch Game critical lines"
+        ];
+
+        // Fisher-Yates shuffle for proper randomization
+        function getRandomQueries(arr, n) {
+            const copy = [...arr];
+            const result = [];
+            for (let i = 0; i < n && copy.length > 0; i++) {
+                const randomIndex = Math.floor(Math.random() * copy.length);
+                result.push(copy[randomIndex]);
+                copy.splice(randomIndex, 1);
+            }
+            return result;
+        }
+
+        function setQuery(query) {
+            document.getElementById('queryInput').value = query;
+        }
+
+        // Generate random example buttons on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded fired at', new Date().getTime());
+            const exampleButtons = document.getElementById('exampleButtons');
+            const randomQueries = getRandomQueries(allExampleQueries, 5);
+            console.log('Random queries selected:', randomQueries);
+
+            randomQueries.forEach(query => {
+                const button = document.createElement('button');
+                button.className = 'example-btn';
+                button.textContent = query;
+                button.onclick = () => setQuery(query);
+                exampleButtons.appendChild(button);
+            });
+        });
+
+        function submitQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const summary = document.getElementById('summary');
+
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            results.innerHTML = '';
+            summary.style.display = 'none';
+
+            fetch('/query_pgn', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+
+                if (data.error) {
+                    results.innerHTML = `<div class="result-card"><strong>Error:</strong> ${data.error}</div>`;
+                    return;
+                }
+
+                // Show summary
+                summary.style.display = 'block';
+                summary.innerHTML = `
+                    <strong>Query:</strong> "${data.query}"<br>
+                    <strong>Results Found:</strong> ${data.total_results} games
+                `;
+
+                // Show results
+                if (data.results.length === 0) {
+                    results.innerHTML = '<div class="no-results">No results found.</div>';
+                    return;
+                }
+
+                data.results.forEach(result => {
+                    const card = document.createElement('div');
+                    card.className = 'result-card';
+
+                    const metadataHtml = `
+                        <div class="metadata">
+                            <div class="metadata-item">
+                                <span class="metadata-label">File:</span> ${result.source_file}
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Game #:</span> ${result.game_number}
+                            </div>
+                            ${result.chapter ? `
+                            <div class="metadata-item">
+                                <span class="metadata-label">Chapter:</span> ${result.chapter}
+                            </div>
+                            ` : ''}
+                            ${result.opening ? `
+                            <div class="metadata-item">
+                                <span class="metadata-label">Opening:</span> ${result.eco} ${result.opening}
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+
+                    card.innerHTML = `
+                        <div class="result-header">
+                            <span class="rank">#${result.rank}</span>
+                            <span class="score">Similarity: ${result.score}</span>
+                        </div>
+
+                        <div class="course-name">${result.course_name || result.source_file}</div>
+
+                        ${metadataHtml}
+
+                        <div class="content-preview">${result.content_preview}</div>
+                    `;
+
+                    results.appendChild(card);
+                });
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+                results.innerHTML = `<div class="result-card"><strong>Error:</strong> ${error.message}</div>`;
+            });
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('queryInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitQuery();
+            }
+        });
+    </script>
+</body>
+</html>

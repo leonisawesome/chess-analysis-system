@@ -1,5 +1,5 @@
 CHESS RAG SYSTEM - BACKLOG
-Last Updated: November 7, 2025 (Docker Migration COMPLETED - ITEM-025)
+Last Updated: November 8, 2025 (Phase 5.1 RRF Implementation COMPLETED - ITEM-028)
 
 Purpose: Active work items for both humans and future Claude instances
 Context: Provides current status and next steps for system development
@@ -17,6 +17,223 @@ no reliable sense of time passage. Complexity assessed during execution.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ACTIVE ITEMS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ITEM-028: Phase 5 - RRF Multi-Collection Merge [P0 - CRITICAL]
+Status: PHASE 5.1 COMPLETE - Core RRF Implementation DONE
+Priority: CRITICAL (Unlocks unified EPUB+PGN knowledge)
+Date Added: November 8, 2025
+Date Completed (5.1): November 8, 2025
+Planning Doc: RRF_PHASE5_SYNTHESIS.md
+
+Problem:
+  Two separate Qdrant collections operating in silos:
+  - EPUB Collection: 358,529 chunks from 1,052 chess books (theory, strategy)
+  - PGN Collection: 1,791 chunks from 1,778 game files (practical lines, examples)
+
+  Current: User must choose between /query (books) or /query_pgn (games)
+  Goal: Unified /query_merged that intelligently combines both sources
+
+Partner Consultation: COMPLETE (Nov 8, 2025)
+  - ChatGPT: Implementation-ready code, feature-rich approach
+  - Gemini: Phased strategy, identified synthesis prompt blind spot
+  - Grok: Graceful degradation, performance optimization
+  - Consensus: 100% unanimous on core architecture
+
+Decision: Option A - New /query_merged Endpoint
+  ✅ Unanimous recommendation (3/3 partners)
+  ✅ Clean separation of concerns
+  ✅ Backward compatible (existing endpoints unchanged)
+  ✅ Testable (A/B compare /query vs /query_pgn vs /query_merged)
+  ✅ Future-proof (easy to add more collections)
+
+CRITICAL BLIND SPOT IDENTIFIED (Gemini):
+  Synthesis prompt MUST be updated for mixed-media sources.
+  Current prompt tuned for book prose, will fail with PGN chunks.
+  Solution: Structured source formatting in synthesis_pipeline.py
+  Priority: 1A (before RRF implementation)
+
+Core Parameters (Unanimous):
+  - RRF k value: 60 (standard from literature)
+  - Retrieval balance: 50 EPUB + 50 PGN (CRITICAL FIX from 100+10)
+  - Collection weights: 1.0 vs 1.3 (via intent router)
+  - No score normalization (RRF is rank-based)
+  - Parallel searches with asyncio.gather()
+
+Phase 5.1: Core RRF Implementation (Week 1)
+  Files to Create:
+    - rrf_merger.py (NEW) - RRF algorithm implementation
+    - query_router.py (NEW) - Intent classification (regex-based)
+
+  Files to Modify:
+    - rag_engine.py - Add search_multi_collection_async()
+    - synthesis_pipeline.py - CRITICAL: Update all 3 stage prompts
+    - app.py - Add /query_merged endpoint
+
+  Tasks:
+    1. ✅ Update synthesis prompts with structured source formatting (Priority 1A) - COMPLETE
+    2. ✅ Create rrf_merger.py with k=60, source weights - COMPLETE
+    3. ✅ Create query_router.py with opening/concept classification - COMPLETE
+    4. ✅ Modify rag_engine.py for parallel search (50+50) - COMPLETE
+    5. ✅ Add /query_merged endpoint in app.py - COMPLETE
+
+  Progress (All Tasks Complete - Nov 8, 2025):
+    ✅ TASK 1: Modified rag_engine.py:prepare_synthesis_context()
+       - Added structured source attribution
+       - Format: [Source N: Book/PGN - "Title"]
+       - Detects source type from metadata (book_name vs source_file)
+       - Preserves content exactly as provided
+
+    ✅ TASK 1: Modified synthesis_pipeline.py (all 3 stages):
+       - Stage 1: Updated context description
+       - Stage 2: Added CRITICAL mixed-media instructions
+         * Explains Book sources (strategic concepts)
+         * Explains PGN sources (concrete variations)
+         * Instructions on how to integrate both types
+       - Stage 3: Added note about maintaining integration
+
+    ✅ TASK 1: Created test_mixed_context_formatting.py:
+       - Tests context preparation with 2 EPUB + 2 PGN sources
+       - Validates source labeling (Book vs PGN)
+       - Validates content preservation
+       - ALL 7 checks PASSED
+
+    ✅ TASK 2: Created rrf_merger.py (152 lines):
+       - reciprocal_rank_fusion() - Core RRF algorithm
+       - merge_collections() - Convenience function for EPUB+PGN
+       - k=60 (standard from literature)
+       - Collection-specific weight application
+       - Tie-breaking: RRF score → best_rank → max_similarity
+       - Created test_rrf_merger.py with 8 unit tests - ALL PASSED
+
+    ✅ TASK 3: Created query_router.py (136 lines):
+       - classify_query() - Regex-based intent classification
+       - get_collection_weights() - Returns weights based on query type
+       - OPENING_PATTERN - ECO codes, SAN notation, repertoire keywords
+       - CONCEPT_PATTERN - explain, strategy, plans, why, how to
+       - Query types: 'opening' (PGN 1.3x), 'concept' (EPUB 1.3x), 'mixed' (1.0)
+       - Created test_query_router.py with 8 unit tests - ALL PASSED
+
+    ✅ TASK 4: Modified rag_engine.py (added search_multi_collection_async):
+       - Parallel search using asyncio.gather()
+       - asyncio.to_thread() wraps synchronous Qdrant searches
+       - Returns tuple of (epub_results, pgn_results)
+       - Tags results with collection name for RRF
+       - Balanced retrieval: 50 EPUB + 50 PGN (critical fix)
+
+    ✅ TASK 5: Added /query_merged endpoint in app.py (237 lines):
+       - Complete RRF pipeline implementation
+       - Query classification with get_query_info()
+       - Single embedding generation (shared across collections)
+       - Parallel searches with search_multi_collection_async()
+       - Independent GPT-5 reranking per collection
+       - RRF merge with collection weights
+       - Mixed-media synthesis context preparation
+       - Returns detailed timing and RRF metadata
+
+    ✅ TESTING: Created test suite:
+       - test_phase5_module_integration.py - Module integration tests
+       - test_phase5_integration.py - Full E2E test (requires API/Qdrant)
+       - All module integration tests PASSED (5/5)
+
+  Success Criteria:
+    ✅ /query_merged endpoint implemented and integrated
+    ✅ RRF algorithm implemented and tested (8/8 tests passed)
+    ✅ Intent router implemented and tested (8/8 tests passed)
+    ✅ Parallel search implemented with asyncio
+    ✅ Synthesis handles mixed EPUB+PGN sources (tested and validated)
+    ✅ Response includes source attribution and RRF metadata
+    ✅ Module integration validated (5/5 tests passed)
+    ⏳ Live E2E test with API/Qdrant (requires OPENAI_API_KEY)
+    ⏳ Production testing with real queries
+
+Phase 5.2: Validation & Tuning (Week 2)
+  Tasks:
+    1. Create 50 test queries with ground truth
+       - 20 opening-specific (expect PGN bias)
+       - 20 strategy/concept (expect EPUB bias)
+       - 10 mixed/ambiguous
+    2. Manually identify 3-5 "perfect" chunk IDs per query
+    3. Build validate_rrf.py script
+    4. Calculate MRR and NDCG@10 for all endpoints
+    5. Tune parameters if needed (k, weights, limits)
+
+  Success Criteria:
+    ✅ 50-query test suite created
+    ✅ /query_merged has higher MRR than single-collection
+    ✅ NDCG@10 shows improvement
+    ✅ Source diversity: ≥1 PGN in top-10 for opening queries
+    ✅ Source diversity: ≥1 EPUB in top-10 for concept queries
+
+Phase 5.3: UI/UX Improvements (Week 3)
+  Tasks:
+    1. Add source badges (📖 for books, ♟️ for PGN)
+    2. Add filter pills: "All | Books | PGN"
+    3. Display source-specific metadata
+       - EPUB: book_title, author, chapter
+       - PGN: source_file, opening, ECO code
+    4. Show source attribution in synthesis
+
+  Success Criteria:
+    ✅ Visual distinction between EPUB and PGN results
+    ✅ Filter controls work correctly
+    ✅ Metadata displays correctly
+    ✅ No regressions in existing UI
+
+Phase 6: Advanced Features (Future)
+  Deferred based on Gemini's recommendation:
+    - MMR diversity (ChatGPT's implementation available)
+    - Type-aware deduplication
+    - Cross-encoder reranking
+    - Answer template adaptation
+
+  Trigger: Only add if Phase 5.2 validation shows specific need
+
+Implementation Order (Gemini's Phased Approach):
+  1. Core RRF only (validate foundation first)
+  2. Test suite + metrics (prove it works)
+  3. UI polish (user-facing improvements)
+  4. Advanced features IF validation reveals need
+
+  Rationale: Avoid action bias, validate before building
+
+Key Risks & Mitigations:
+  Risk: Synthesis quality degrades with mixed sources
+    Mitigation: Synthesis prompt update (Priority 1A)
+
+  Risk: RRF doesn't improve quality
+    Mitigation: Build validation suite BEFORE implementing
+
+  Risk: Latency increases unacceptably
+    Mitigation: Parallel searches, timeout limits, graceful degradation
+
+  Risk: Collection size imbalance causes bias
+    Mitigation: Balanced retrieval (50+50), source coverage metrics
+
+Principal Architect's Opinion (Claude Code):
+  - Assessment: "This is your best-designed phase yet"
+  - Recommendation: Start with Gemini's phased approach (not ChatGPT's feature-rich)
+  - Priority: Synthesis prompt BEFORE RRF implementation
+  - Confidence: 95% (unanimous partner consensus, well-designed)
+  - Prediction: Takes 2.5 weeks, will add MMR from ChatGPT anyway
+
+  Key Insight: "You're building something genuinely novel - a multi-modal
+  chess knowledge engine that combines theory + practice"
+
+Documentation:
+  - RRF_PHASE5_SYNTHESIS.md (1,147 lines) - Complete implementation guide
+  - PARTNER_CONSULT_RRF_PHASE5.md - All partner responses
+  - Technical specs, code samples, validation strategy
+
+Next Session:
+  1. Create rrf_merger.py with exact code from synthesis doc
+  2. Write 3 unit tests for RRF
+  3. Create query_router.py with regex patterns
+  4. Write 10 test queries, verify classification
+  5. STOP - Update synthesis prompts next session
+
+Status: ✅ PLANNING COMPLETE, READY FOR IMPLEMENTATION
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ITEM-019: Diagram Quality - Contextual Relevance [P1]
@@ -1776,9 +1993,9 @@ With 99.8% success rate, system is ready for 1M PGN scale-up after implementing 
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ITEM-027: PGN Variation Splitting Implementation [P1 - HIGH] 🔧 IN PROGRESS
+ITEM-027: PGN Variation Splitting Implementation [P1 - HIGH] ✅ PHASE 4 COMPLETE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Status: 🔧 IN PROGRESS - Phase 1+2 Complete (November 8, 2025)
+Status: ✅ Phase 1+2+3+4 Complete (November 8, 2025) - Ready for Phase 5 (RRF Merge)
 Priority: HIGH (Blocking PGN production scale-up)
 Date Added: November 8, 2025
 Branch: feature/pgn-variation-splitting
@@ -2113,4 +2330,361 @@ Collection status: green
 5. Graceful degradation better than hard failures
 
 **Status:** ✅ Phase 3 Complete - Full corpus (1,778 games, 1,791 chunks) ingested to Qdrant
+
+**Phase 4: PGN Retrieval Testing & Web Interface** ✅ COMPLETE (Nov 8, 2025)
+
+**Problem Addressed:**
+Before implementing RRF merge, needed to validate that basic PGN retrieval works and understand similarity score ranges.
+
+**Solution Implemented:**
+
+1. **Web Interface Created** (`/test_pgn` endpoint)
+   - Template: `templates/test_pgn.html` (380 lines)
+   - Light theme matching EPUB interface (#2c3e50 header, #3498db blue, #f5f5f5 background)
+   - Responsive metadata grid layout
+   - 1000-character content previews
+   - Emoji changed from 🎮 to ♟️ per user request
+
+2. **Content Preview Optimization** (`app.py` `/query_pgn` endpoint)
+   - Skip PGN headers to show instructional annotations
+   - Parse PGN to find where actual game/annotations begin
+   - Increased preview from 300 to 1000 characters
+   - Shows teaching content instead of just metadata
+
+3. **Example Queries Feature** (UX Innovation)
+   - Randomized clickable query buttons (5 random from 20 options)
+   - JavaScript-based random selection on page load
+   - Improves user discovery and engagement
+   - **Backported to EPUB interface** (`templates/index.html`)
+
+**Retrieval Testing Results:**
+```
+Collection:      chess_pgn_repertoire
+Total Points:    1,791 chunks from 1,778 PGN games
+Test Queries:    5/5 passed
+Similarity Scores: 0.70-0.74 (normal range)
+  - Benko Gambit:  0.71-0.72 (all results from correct course)
+  - EPUB baseline: 0.7388 for same query
+  - PGN:          0.7093 for same query
+```
+
+**Similarity Score Validation:**
+User questioned why "Benko Gambit" query against Benko Gambit course only scored 0.72.
+Investigation revealed:
+- 0.70-0.74 is NORMAL for semantic search
+- Semantic mismatch between conversational queries and technical chess notation
+- EPUB collection scores similarly (0.7388 vs 0.7093)
+- 0.90+ requires near-identical semantic meaning (very rare)
+- All 10 results correctly from Benko Gambit course = what matters
+
+**Files Modified:**
+- `app.py`: Added `/query_pgn` endpoint (lines 392-459) and `/test_pgn` route (lines 105-108)
+- `templates/test_pgn.html`: Created from scratch (380 lines)
+- `templates/index.html`: Backported example queries feature (+47 lines CSS/HTML/JS)
+
+**Files Created:**
+- `test_pgn_retrieval.py`: Command-line retrieval testing script (206 lines)
+
+**UX Enhancements:**
+✅ Example queries with random selection (20 query pool)
+✅ Clickable buttons populate search input
+✅ Same feature backported to EPUB interface
+✅ Improves discoverability and user engagement
+
+**Style Consistency:**
+✅ PGN interface matches EPUB light theme
+✅ Consistent header colors, button styles, shadows
+✅ Professional, accessible design
+✅ Responsive metadata grids
+
+**Success Metrics:**
+- ✅ 100% query success rate (5/5 queries)
+- ✅ Content preview shows instructional text (not just headers)
+- ✅ Similarity scores validated as normal
+- ✅ Web interface deployed and tested
+- ✅ Example queries feature backported to main interface
+- ✅ User tested and approved interface
+
+**Key Lesson:**
+Don't implement complex features (like RRF merge) without first validating basic functionality and understanding baseline performance metrics.
+
+**Status:** ✅ Phase 4 Complete - PGN retrieval validated, web interface deployed, ready for Phase 5 (RRF merge)
+
+**Bug Fix (Nov 8, Evening):**
+User reported example queries not randomizing - same 5 buttons every page load.
+
+**Root Causes:**
+1. Unreliable shuffle: `sort(() => Math.random() - 0.5)` produces biased results
+2. Missing from test_pgn.html: Only implemented on index.html
+
+**Solution:**
+- Replaced with Fisher-Yates shuffle algorithm (proper randomization)
+- Applied to both templates (index.html and test_pgn.html)
+- Added debug console logging
+- User confirmed fix working ✅
+
+**Next Steps (Phase 5):**
+- Implement RRF (Reciprocal Rank Fusion) for multi-collection queries
+- Test cross-collection queries (EPUB + PGN)
+- Decide: Merge collections or keep separate with RRF
+- Production deployment after validation
+
+
+---
+
+## ITEM-028 (continued): Phase 5.1 - RRF Multi-Collection Merge UI Integration ✅ COMPLETE (Nov 9, 2025)
+
+**Problem Addressed:**
+Phase 5.1 core RRF implementation was complete and tested, but not integrated into the main user interface. Users still accessed separate `/query` (EPUB only) and `/query_pgn` (PGN only) endpoints.
+
+**Goal:**
+Integrate RRF multi-collection merge into the main web interface so users transparently benefit from both EPUB and PGN collections in a single query.
+
+**Solution Implemented:**
+
+### 1. **Main Page Integration** (`templates/index.html`)
+   - **Endpoint Switch:** Changed from `/query` (EPUB only) to `/query_merged` (RRF multi-collection)
+   - **Dual Score Display:** Added both GPT-5 relevance score (0-10) and RRF fusion score
+   - **Collection Badges:** Visual indicators showing source type (📖 EPUB / ♟️ PGN)
+   - **Corpus Statistics:** Updated to show comprehensive stats for both collections
+   - **Performance Metrics:** Added RRF merge timing to performance panel
+
+### 2. **Score Display Evolution** (User Feedback Driven)
+   - **Initial Bug:** All scores showing 1.6/10 (displaying raw RRF scores * 100)
+   - **First Fix:** Switched to GPT-5 relevance scores (0-10 scale)
+   - **User Feedback:** "We care about both scores - relevance AND RRF fusion strength"
+   - **Final Solution:** Dual score format: "Relevance: (9/10) / RRF: (2.13)"
+   - **Rationale:** Relevance shows content quality, RRF shows cross-collection consensus
+
+### 3. **PGN Content Display Bug Fix** (`app.py`)
+   - **Problem:** PGN sources showing empty content sections
+   - **Root Cause:** Code only checked for EPUB 'text' field, PGN chunks use 'content' field
+   - **Fix:** `payload.get('text') or payload.get('content', '')` (line 527)
+   - **Result:** PGN game annotations now display correctly
+
+### 4. **Corpus Statistics Update** (User Request)
+   - **Before:** "357,957 chunks from 1,052 instructional chess books"
+   - **After:** "360,320 total chunks: 358,529 from 1,052 books (EPUB) + 1,791 from PGN games"
+   - **Locations Updated:** 
+     - Main subtitle (line 394)
+     - Loading message (line 418)
+   - **Shows:** Breakdown + cumulative total across both collections
+
+### 5. **Collection Attribution Badges** (`templates/index.html`)
+   - **Format:** Color-coded badges on each source card
+   - **EPUB:** Blue badge (📖 EPUB, #2196F3)
+   - **PGN:** Orange badge (♟️ PGN, #FF9800)
+   - **Purpose:** Users can instantly see which collection each result came from
+
+### 6. **Backend Bug Fixes**
+   - **Bug #1:** `semantic_search()` missing `collection_name` parameter
+     - Fix: Added optional parameter with default fallback (query_system_a.py)
+   - **Bug #2:** ScoredPoint immutability in collection tagging
+     - Fix: Modified to access mutable payload dict instead (rag_engine.py)
+   - **Bug #3:** PGN reranking not handling 'content' field
+     - Fix: Updated `gpt5_rerank()` to check both 'text' and 'content' (query_system_a.py line 86)
+
+**Files Modified:**
+
+1. **app.py** (+7 lines)
+   - Line 52: Changed QDRANT_MODE default to 'docker'
+   - Line 116: Added `/rrf_demo` route for demo interface
+   - Line 527: Fixed PGN content field handling
+   - Line 536: Changed score display to use GPT-5 relevance
+
+2. **templates/index.html** (+34 lines net)
+   - Line 394: Updated corpus statistics (EPUB + PGN breakdown)
+   - Line 418: Updated loading message with chunk breakdown
+   - Line 540: Changed endpoint to `/query_merged`
+   - Lines 632-651: Added performance stats panel
+   - Lines 677-694: Dual score display + collection badges
+
+3. **query_system_a.py** (+11 lines)
+   - Lines 38-59: Added `collection_name` parameter to `semantic_search()`
+   - Lines 84-89: Handle both 'text' and 'content' fields in reranking
+
+4. **rag_engine.py** (+15 lines)
+   - Lines 249-264: Fixed collection tagging for immutable ScoredPoint objects
+
+**Testing & Validation:**
+
+User tested with various queries and reported:
+- ✅ Style matches main interface (consistent light theme)
+- ✅ Dual scores displayed correctly with variance (not all 1.6)
+- ✅ PGN sources show full game annotations
+- ✅ Collection badges visible and correct
+- ✅ Corpus statistics show complete breakdown
+- ✅ Performance metrics include RRF merge timing
+
+**Git Workflow:**
+
+All changes committed to branch `phase-5.1-ui-integration`:
+1. Commit 1: Phase 5.1 bug fixes (semantic_search, RRF tagging)
+2. Commit 2: UI enhancements (dual scores, corpus stats, collection badges)
+
+**Key Metrics:**
+
+- **Corpus:** 360,320 total chunks (358,529 EPUB + 1,791 PGN)
+- **Collections:** 2 Qdrant collections (chess_production, chess_pgn_repertoire)
+- **Query Types:** Opening queries favor PGN (1.3x weight), concept queries favor EPUB (1.3x weight)
+- **RRF Algorithm:** k=60, reciprocal rank fusion with collection weights
+- **Performance:** ~50-60s total query time (includes both collections + RRF merge)
+
+**User Feedback Summary:**
+
+1. **Style Issue:** ✅ Resolved (was viewing /rrf_demo instead of main page)
+2. **Score Display:** ✅ Fixed (dual scores with parentheses)
+3. **PGN Content:** ✅ Fixed (handle 'content' field)
+4. **Corpus Stats:** ✅ Updated (show EPUB + PGN totals)
+
+**Production Status:**
+- ✅ Flask server running at http://localhost:5001
+- ✅ Main page uses RRF multi-collection merge
+- ✅ Both EPUB and PGN collections integrated
+- ✅ Dual scoring system (relevance + RRF fusion)
+- ✅ Collection attribution visible to users
+- ✅ Comprehensive corpus statistics displayed
+
+**Status:** ✅ Phase 5.1 UI Integration Complete - Ready for Phase 5.2 (Validation & Tuning)
+
+**Next Steps (Phase 5.2):**
+- Create 50-query test suite (opening/concept/mixed categories)
+- Implement MRR (Mean Reciprocal Rank) and NDCG (Normalized Discounted Cumulative Gain) metrics
+- A/B testing: EPUB-only vs RRF-merged results
+- Tune collection weights based on validation results
+- Document optimal query patterns and use cases
+
+
+---
+
+## ITEM-028 (continued): Phase 5.2 - Validation Framework ✅ COMPLETE (Nov 9, 2025)
+
+**Problem Addressed:**
+Phase 5.1 RRF multi-collection merge was deployed to production (main page) without validation. We don't know if RRF actually improves results vs EPUB-only, or if we're degrading quality by mixing PGN into concept queries.
+
+**Goal:**
+Build comprehensive validation system to:
+1. Measure if RRF improves retrieval vs single-collection approaches
+2. Identify which query types benefit from RRF merge
+3. Optimize RRF parameters (k=60, collection weights=1.3x)
+4. Provide data-driven evidence for production deployment decision
+
+**Solution Implemented:**
+
+### 1. **Test Suite Creation** (`validation_test_suite.json`)
+   - **50 curated queries** across 3 categories:
+     - 20 opening queries (expected: PGN best) - e.g., "Benko Gambit mainline", "Najdorf Poisoned Pawn"
+     - 20 concept queries (expected: EPUB best) - e.g., "How to improve calculation", "Rook endgame technique"
+     - 10 mixed queries (expected: RRF best) - e.g., "How to play against London System", "Typical plans in Sicilian Dragon"
+   - Each query labeled with expected best collection
+   - **Metadata note:** PRELIMINARY validation with 1,778 PGN games (0.5% of corpus)
+   - **CRITICAL:** Must re-run when PGN collection scales to 1M games (will be 74% of corpus)
+
+### 2. **Evaluation Metrics Module** (`evaluation_metrics.py` - 340 lines)
+   Implemented standard Information Retrieval metrics:
+   - **MRR (Mean Reciprocal Rank):** Position of first relevant result
+   - **NDCG@5, NDCG@10:** Ranking quality (Normalized Discounted Cumulative Gain)
+   - **Precision@5, Precision@10:** Fraction of top-K results that are relevant
+   - **Recall@5, Recall@10:** Fraction of relevant results found in top-K
+   - **F1@5, F1@10:** Harmonic mean of Precision and Recall
+   - All metrics use GPT-5 relevance scores (0-10 scale, threshold ≥7.0 = relevant)
+   - `compare_approaches()` function for A/B testing across EPUB/PGN/RRF
+
+### 3. **Validation Framework Script** (`phase5_validation.py` - 520 lines)
+   Comprehensive A/B testing pipeline:
+   - Runs each query through all 3 approaches:
+     - EPUB-only (`execute_query_epub_only`)
+     - PGN-only (`execute_query_pgn_only`)
+     - RRF-merged (`execute_query_rrf_merged`)
+   - Calculates metrics for each approach
+   - Determines winner per query (based on NDCG@10)
+   - Generates aggregate comparison report
+   - Saves detailed results to JSON
+
+**Usage:**
+```bash
+# Full validation (50 queries, ~45-60 min, ~$1.50-2.00)
+python phase5_validation.py
+
+# Quick test (10 queries, ~15 min, ~$0.30)
+python phase5_validation.py --quick
+
+# Category-specific
+python phase5_validation.py --category opening
+
+# Custom output file
+python phase5_validation.py --output my_results.json
+```
+
+**Cost Analysis (corrected):**
+- Per query execution: ~$0.01 (embedding + GPT-5 reranking)
+- Full 50 queries × 3 approaches = 150 executions
+- **Total cost: ~$1.50-2.00** (not $15-20 as originally estimated)
+
+**Critical Limitation:**
+Current corpus is **heavily skewed toward EPUB**:
+- EPUB: 358,529 chunks (99.5%)
+- PGN: 1,791 chunks (0.5%)
+
+When PGN scales to 1M games:
+- EPUB: 358,529 chunks (~26%)
+- PGN: ~1,000,000 chunks (~74%)
+
+**Results will be dramatically different at scale.** This is a preliminary validation with small PGN corpus. Phase 5.2 MUST be re-run when PGN collection reaches production scale.
+
+**Implementation Details:**
+
+Files Created:
+1. **validation_test_suite.json** (50 queries)
+   - Structured as JSON with metadata and query objects
+   - Each query has: id, category, query text, expected_best, rationale
+   - Metadata warns about preliminary nature of validation
+
+2. **evaluation_metrics.py** (340 lines)
+   - `mean_reciprocal_rank()` - MRR calculation
+   - `dcg_at_k()`, `ndcg_at_k()` - NDCG metrics
+   - `precision_at_k()`, `recall_at_k()`, `f1_at_k()` - Classification metrics
+   - `calculate_all_metrics()` - Compute all metrics for results
+   - `compare_approaches()` - A/B test EPUB vs PGN vs RRF
+   - `determine_winner()` - Pick best approach based on primary metric
+
+3. **phase5_validation.py** (520 lines)
+   - `execute_query_epub_only()` - Search EPUB collection only
+   - `execute_query_pgn_only()` - Search PGN collection only  
+   - `execute_query_rrf_merged()` - Full RRF pipeline (both collections + merge)
+   - `run_validation()` - Main loop running all queries through all approaches
+   - `aggregate_metrics_per_approach()` - Average metrics across queries
+   - `print_summary()` - Console output with winner breakdown
+   - `save_results()` - JSON export of detailed results
+   - Supports --quick, --category, --output CLI flags
+
+**Git Workflow:**
+- Branch: `phase-5.1-ui-integration`
+- Commit: "Phase 5.2: Add validation framework for RRF multi-collection merge"
+- Files: 3 new files, 1,177 lines added
+- Status: ✅ Pushed to GitHub
+
+**Validation Execution Status:**
+- Framework: ✅ Complete and ready
+- Qdrant: ✅ Restarted (was unhealthy, now healthy)
+- Full 50-query run: ⏳ In progress (running in background)
+- Expected completion: ~45-60 minutes
+- Results will be saved to: `validation_results_YYYYMMDD_HHMMSS.json`
+
+**Next Steps (Phase 5.3 - pending validation results):**
+1. Analyze validation results
+2. Compare EPUB vs PGN vs RRF performance across categories
+3. Identify optimal RRF parameters (k, collection weights)
+4. Document query patterns and recommendations
+5. Make data-driven decision about production deployment
+6. **Schedule Phase 5.2 re-run when PGN collection reaches 1M games**
+
+**Future Work (CRITICAL):**
+Add to backlog: **ITEM-029 - Phase 5.2 Re-validation at Scale**
+- Re-run full 50-query validation when PGN collection reaches 1M games
+- Compare preliminary results (0.5% PGN) vs production results (74% PGN)
+- Adjust RRF parameters based on production-scale corpus
+- Document how results changed with scale
+
+**Status:** ✅ Phase 5.2 Framework Complete - Validation running
 

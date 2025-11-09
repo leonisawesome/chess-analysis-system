@@ -25,9 +25,14 @@ from chess_positions import detect_fen, parse_moves_to_fen, extract_chess_positi
 from diagram_processor import extract_moves_from_description, extract_diagram_markers, replace_markers_with_ids, wrap_bare_fens
 from opening_validator import extract_contamination_details, generate_section_with_retry, validate_stage2_diagrams, validate_and_fix_diagrams
 from synthesis_pipeline import stage1_generate_outline, stage2_expand_sections, stage3_final_assembly, synthesize_answer
-from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction
+from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction, search_multi_collection_async
 from tactical_query_detector import is_tactical_query, inject_canonical_diagrams, strip_diagram_markers
 # from backend_html_renderer import apply_backend_html_rendering  # FIXME: Module doesn't exist
+
+# Phase 5.1: RRF multi-collection merge
+import asyncio
+from rrf_merger import merge_collections
+from query_router import get_query_info
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
@@ -44,7 +49,8 @@ if not api_key:
 OPENAI_CLIENT = OpenAI(api_key=api_key)
 
 # Initialize Qdrant (support both local and Docker modes)
-QDRANT_MODE = os.getenv('QDRANT_MODE', 'local')  # 'local' or 'docker'
+# DEFAULT: Docker mode (better performance for large collections)
+QDRANT_MODE = os.getenv('QDRANT_MODE', 'docker')  # 'local' or 'docker'
 QDRANT_URL = os.getenv('QDRANT_URL', 'http://localhost:6333')
 
 if QDRANT_MODE == 'docker':
@@ -101,6 +107,16 @@ import json
 def index():
     """Main page."""
     return render_template('index.html')
+
+@app.route('/test_pgn')
+def test_pgn_page():
+    """PGN collection test interface."""
+    return render_template('test_pgn.html')
+
+@app.route('/rrf_demo')
+def rrf_demo_page():
+    """Phase 5.1 RRF multi-collection demo interface."""
+    return render_template('rrf_demo.html')
 
 @app.route('/test', methods=['POST'])
 def test():
@@ -373,6 +389,247 @@ def query():
         print(error_details)
         return jsonify({'error': str(e), 'details': error_details}), 500
 
+
+@app.route('/query_merged', methods=['POST'])
+def query_merged():
+    """
+    Phase 5.1: RRF multi-collection merge endpoint.
+
+    Handles queries across both EPUB books and PGN game collections using
+    Reciprocal Rank Fusion to merge results.
+
+    Features:
+    - Intent-based query classification (opening vs concept)
+    - Parallel multi-collection search
+    - Collection-specific weighting based on query type
+    - Mixed-media synthesis (books + games)
+    """
+    print("=" * 80)
+    print("QUERY_MERGED ENDPOINT CALLED (Phase 5.1 - RRF)")
+    print("=" * 80)
+
+    try:
+        start = time.time()
+
+        # Step 1: Parse request
+        data = request.get_json()
+        query_text = data.get('query', '').strip()
+        t1 = time.time()
+        print(f"⏱  Request parsing: {t1-start:.2f}s")
+
+        if not query_text:
+            return jsonify({'error': 'Query cannot be empty'}), 400
+
+        # Step 2: Classify query and determine collection weights
+        print(f"📋 Classifying query intent...")
+        query_type, weights = get_query_info(query_text)
+        print(f"   Query type: {query_type}")
+        print(f"   Collection weights: {weights}")
+
+        # Step 3: Generate embedding (compute once, shared across collections)
+        print(f"⏱  Generating embedding...")
+        embed_start = time.time()
+        query_vector = embed_query(OPENAI_CLIENT, query_text)
+        embed_time = time.time() - embed_start
+        print(f"   Embedding: {embed_time:.2f}s")
+
+        # Step 4: Parallel search across collections
+        print(f"⏱  Searching collections in parallel...")
+        search_start = time.time()
+
+        # Define collections with balanced retrieval (50+50)
+        collections = {
+            'chess_production': 50,         # EPUB books
+            'chess_pgn_repertoire': 50      # PGN games
+        }
+
+        # Run parallel searches using asyncio
+        epub_results, pgn_results = asyncio.run(
+            search_multi_collection_async(
+                QDRANT_CLIENT,
+                query_vector,
+                collections,
+                search_func=semantic_search
+            )
+        )
+
+        search_time = time.time() - search_start
+        print(f"   Parallel search: {search_time:.2f}s")
+        print(f"   EPUB candidates: {len(epub_results)}")
+        print(f"   PGN candidates: {len(pgn_results)}")
+
+        # Step 5: Rerank each collection independently with GPT-5
+        print(f"⏱  Reranking collections...")
+        rerank_start = time.time()
+
+        # Rerank EPUB results
+        ranked_epub = gpt5_rerank(OPENAI_CLIENT, query_text, epub_results, top_k=50)
+
+        # Rerank PGN results
+        ranked_pgn = gpt5_rerank(OPENAI_CLIENT, query_text, pgn_results, top_k=50)
+
+        rerank_time = time.time() - rerank_start
+        print(f"   Reranking: {rerank_time:.2f}s")
+
+        # Step 6: Format results for RRF merger
+        print(f"⏱  Formatting results for RRF...")
+
+        # Convert reranked results to dict format for RRF
+        epub_formatted = []
+        for i, (candidate, score) in enumerate(ranked_epub):
+            payload = candidate.payload
+            epub_formatted.append({
+                'id': f"epub_{payload.get('book_name', '')}_{payload.get('chapter_title', '')}_{i}",
+                'score': score,
+                'collection': 'chess_production',
+                'payload': payload
+            })
+
+        pgn_formatted = []
+        for i, (candidate, score) in enumerate(ranked_pgn):
+            payload = candidate.payload
+            pgn_formatted.append({
+                'id': f"pgn_{payload.get('source_file', '')}_{i}",
+                'score': score,
+                'collection': 'chess_pgn_repertoire',
+                'payload': payload
+            })
+
+        # Step 7: Apply RRF merge with collection weights
+        print(f"⏱  Applying RRF merge (k=60)...")
+        merge_start = time.time()
+
+        merged_results = merge_collections(
+            epub_formatted,
+            pgn_formatted,
+            query_type=query_type,
+            k=60
+        )
+
+        merge_time = time.time() - merge_start
+        print(f"   RRF merge: {merge_time:.2f}s")
+        print(f"   Merged results: {len(merged_results)}")
+
+        # Step 8: Take top 10 after RRF merge
+        top_merged = merged_results[:10]
+
+        # Step 9: Convert back to format_rag_results format
+        print(f"⏱  Final formatting...")
+        final_results = []
+        for result in top_merged:
+            payload = result['payload']
+
+            # Extract metadata (handle both EPUB and PGN formats)
+            book_name = payload.get('book_name', payload.get('source_file', 'Unknown'))
+            if book_name.endswith('.epub') or book_name.endswith('.mobi'):
+                book_name = book_name[:-5]
+
+            # Handle both EPUB ('text') and PGN ('content') fields
+            text = payload.get('text') or payload.get('content', '')
+            chapter = payload.get('chapter_title', payload.get('opening', ''))
+
+            # Extract chess positions if requested
+            positions = extract_chess_positions(text, query=query_text)
+
+            # Format result with RRF metadata
+            formatted = {
+                'score': round(result['max_similarity'], 1),  # Use GPT-5 reranking score (0-10 scale)
+                'book_name': book_name,
+                'book': book_name,
+                'chapter_title': chapter,
+                'chapter': chapter,
+                'text': text,
+                'positions': positions,
+                'has_positions': len(positions) > 0,
+                'collection': result['collection'],
+                'rrf_score': result['rrf_score'],
+                'best_rank': result['best_rank'],
+                'fusion_sources': result['fusion_sources']
+            }
+            final_results.append(formatted)
+
+        # Step 10: Prepare synthesis context with mixed-media support
+        print(f"⏱  Preparing synthesis context...")
+        context_chunks = prepare_synthesis_context(final_results, canonical_fen=None, top_n=8)
+
+        # Step 11: Synthesize answer using 3-stage pipeline
+        print(f"⏱  Starting 3-stage synthesis pipeline...")
+        synthesis_start = time.time()
+
+        synthesized_answer = synthesize_answer(
+            OPENAI_CLIENT,
+            query_text,
+            "\n\n".join(context_chunks),
+            opening_name=None,
+            expected_signature=None,
+            validate_stage2_diagrams_func=validate_stage2_diagrams,
+            generate_section_with_retry_func=generate_section_with_retry,
+            canonical_fen=None
+        )
+
+        synthesis_time = time.time() - synthesis_start
+        print(f"⏱  3-stage synthesis complete: {synthesis_time:.2f}s")
+
+        # Step 12: Post-processing
+        print(f"🔧 Post-processing: Wrapping bare FEN strings...")
+        synthesized_answer = wrap_bare_fens(synthesized_answer)
+
+        # Step 13: Extract diagram markers
+        print(f"⏱  Extracting diagram markers...")
+        diagram_start = time.time()
+
+        diagram_positions = extract_diagram_markers(synthesized_answer)
+        synthesized_answer = replace_markers_with_ids(synthesized_answer, diagram_positions)
+
+        diagram_time = time.time() - diagram_start
+        print(f"⏱  Diagram extraction complete: {diagram_time:.2f}s")
+        print(f"📋 Extracted {len(diagram_positions)} diagram positions")
+
+        # Step 14: Collect positions from top sources
+        synthesized_positions = collect_answer_positions(final_results, max_positions=2)
+
+        total = time.time() - start
+        print(f"🎯 TOTAL: {total:.2f}s")
+        print("=" * 80)
+
+        # Prepare response
+        response_data = {
+            'success': True,
+            'query': query_text,
+            'answer': synthesized_answer,
+            'positions': synthesized_positions,
+            'diagram_positions': diagram_positions,
+            'sources': final_results[:5],
+            'results': final_results,
+            'timing': {
+                'embedding': round(embed_time, 2),
+                'search': round(search_time, 2),
+                'reranking': round(rerank_time, 2),
+                'rrf_merge': round(merge_time, 2),
+                'synthesis': round(synthesis_time, 2),
+                'diagrams': round(diagram_time, 2),
+                'total': round(total, 2)
+            },
+            'rrf_metadata': {
+                'query_type': query_type,
+                'collection_weights': weights,
+                'epub_candidates': len(epub_results),
+                'pgn_candidates': len(pgn_results),
+                'merged_count': len(merged_results),
+                'top_n': len(top_merged)
+            }
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR IN /query_merged ENDPOINT:")
+        print(error_details)
+        return jsonify({'error': str(e), 'details': error_details}), 500
+
+
 @app.route('/fen_to_lichess', methods=['POST'])
 def fen_to_lichess():
     """Convert FEN to Lichess URL."""
@@ -388,6 +645,94 @@ def fen_to_lichess():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/query_pgn', methods=['POST', 'GET'])
+def query_pgn():
+    """Test endpoint for querying PGN collection only."""
+    try:
+        # Get query from POST or GET
+        if request.method == 'POST':
+            data = request.get_json()
+            query_text = data.get('query', '')
+        else:
+            query_text = request.args.get('query', '')
+
+        if not query_text:
+            return jsonify({'error': 'Query cannot be empty'}), 400
+
+        print(f"\n{'='*80}")
+        print(f"PGN TEST QUERY: {query_text}")
+        print(f"{'='*80}\n")
+
+        # Generate embedding
+        print("Generating embedding...")
+        response = OPENAI_CLIENT.embeddings.create(
+            model="text-embedding-3-small",
+            input=[query_text]
+        )
+        query_vector = response.data[0].embedding
+
+        # Search PGN collection
+        print("Searching chess_pgn_repertoire collection...")
+        results = QDRANT_CLIENT.search(
+            collection_name="chess_pgn_repertoire",
+            query_vector=query_vector,
+            limit=10
+        )
+
+        # Format results
+        formatted_results = []
+        for i, hit in enumerate(results, 1):
+            payload = hit.payload
+
+            # Get content and skip PGN headers to show instructional content
+            full_content = payload.get('content', '')
+
+            # Find where the actual game starts (after headers)
+            lines = full_content.split('\n')
+            content_start = 0
+            for idx, line in enumerate(lines):
+                # Skip header lines that start with [
+                if not line.strip().startswith('['):
+                    content_start = idx
+                    break
+
+            # Get content starting from where moves/annotations begin
+            instructional_content = '\n'.join(lines[content_start:])
+            preview = instructional_content[:1000].strip()
+            if len(instructional_content) > 1000:
+                preview += '...'
+
+            formatted_results.append({
+                'rank': i,
+                'score': round(hit.score, 4),
+                'source_file': payload.get('source_file', 'Unknown'),
+                'game_number': payload.get('game_number', '?'),
+                'course_name': payload.get('course_name', ''),
+                'chapter': payload.get('chapter', ''),
+                'section': payload.get('section', ''),
+                'eco': payload.get('eco', ''),
+                'opening': payload.get('opening', ''),
+                'white': payload.get('white', ''),
+                'black': payload.get('black', ''),
+                'content_preview': preview
+            })
+
+        print(f"✓ Found {len(results)} results\n")
+
+        return jsonify({
+            'query': query_text,
+            'collection': 'chess_pgn_repertoire',
+            'total_results': len(results),
+            'results': formatted_results
+        })
+
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR IN /query_pgn ENDPOINT:")
+        print(error_details)
+        return jsonify({'error': str(e), 'details': error_details}), 500
 
 if __name__ == '__main__':
     # Check for API key
