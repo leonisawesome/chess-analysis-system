@@ -27,13 +27,14 @@
   - ✅ Mixed-media synthesis context (EPUB+PGN integration)
   - ✅ Module integration validated (5/5 tests passed)
   - ✅ **UI Integration Complete:** Main page uses /query_merged with dual scores, collection badges, corpus stats
-- ✅ **ITEM-028 Phase 5.2 Framework COMPLETE:** Validation system ready (50-query test suite, MRR/NDCG/Precision metrics)
+- ✅ **ITEM-028 Phase 5.2 COMPLETE:** Validation complete (28/50 queries - early termination)
   - ✅ Test suite: 50 curated queries (20 opening, 20 concept, 10 mixed)
   - ✅ Metrics: MRR, NDCG@5/10, Precision@5/10, Recall@5/10, F1@5/10
   - ✅ Framework: A/B testing script (EPUB vs PGN vs RRF comparison)
-  - ⏳ **Validation running:** Full 50-query validation in progress (~45-60 min)
-  - ⚠️ **Limitation:** Preliminary results with 1,778 PGN games (0.5% of final corpus). Must re-run when PGN scales to 1M games.
-- 🚀 **Next:** Analyze Phase 5.2 results, tune RRF parameters based on data
+  - ✅ **Results:** EPUB wins 28/28 (100%), PGN corpus too small (1,778 vs 1M target)
+  - ✅ **Findings:** PGN scored 0.000 on 25% of openings, RRF merge underperforms EPUB alone
+  - ⚠️ **Validated:** Current PGN corpus inadequate. Must scale to 1M games and re-validate.
+- 🚀 **Next:** Phase 6.1 - Fix static diagram rendering (EPUB image extraction)
 - 🔧 **Architecture:** Clean modular design across 9 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 
