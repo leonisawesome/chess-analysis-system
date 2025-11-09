@@ -85,9 +85,46 @@
 2. Commit 8f4daa0: Partial fix (corrected ordering but wrong phase definitions)
 3. Commit PENDING: Major correction (true state: no diagrams working, starting static extraction)
 
-**Status:** Phase 6.1a IN PROGRESS - Static EPUB diagram extraction architecture
+**Status:** Phase 6.1a EXTRACTION PIPELINE WORKING ✅
 
-### 4. Directory Structure Housekeeping (November 9, 2025)
+### 4. Extraction Pipeline Built and Tested (November 9, 2025)
+
+**Achievement:** EPUB diagram extraction pipeline complete and working
+
+**Test Results (3 books):**
+- Hippopotamus Defence: 889 diagrams extracted
+- Keep it Simple 1.e4: 791 diagrams extracted
+- Morphy Move by Move: 366 diagrams extracted
+- **Total: 2,046 diagrams (65 MB)**
+
+**Technical Implementation:**
+- **File:** `extract_epub_diagrams.py` (350+ lines)
+- **URL decoding:** Fixed %20, %2019 encoding issues with urllib.parse.unquote()
+- **Context extraction:** Captures text before/after each diagram
+- **Metadata:** Comprehensive tracking for Qdrant integration
+- **Organization:** Book-specific directories with unique IDs
+
+**Metadata Structure:**
+```python
+{
+  "diagram_id": "book_{hash}_{index:04d}",
+  "book_id": "book_{hash}",
+  "book_title": "...",
+  "file_path": "/Volumes/T7 Shield/books/images/{book_id}/{diagram_id}.png",
+  "context_before": "1.e4 e5 2.Nf3 Nc6...",  # For Qdrant linking
+  "context_after": "In this position...",
+  "html_document": "index_split_014.html",
+  "position_in_document": 5
+}
+```
+
+**Projection:**
+- 1,055 books × ~682 diagrams/book = **~720,000 total diagrams**
+- Estimated storage: 25-30 GB
+
+**Git Commit:** `4708340`
+
+### 5. Directory Structure Housekeeping (November 9, 2025)
 
 **Change:** Consolidated all book-related data under new directory structure
 
