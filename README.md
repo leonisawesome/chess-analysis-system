@@ -34,13 +34,14 @@
   - ✅ **Results:** Early termination after 28/50 queries - EPUB wins 28/28 (100%)
   - ⚠️ **Findings:** PGN corpus too small (1,778 vs 1M target), scored 0.000 on 25% of openings
   - 📊 **Status:** RRF system working correctly, validation paused until PGN corpus scaled to 1M games
-- 🔧 **ITEM-029 Phase 6.1a IN PROGRESS:** Static EPUB Diagram Extraction
-  - **Goal:** Extract diagrams from 1,055 EPUB files and link to chunks
-  - **Reality:** Dynamic diagrams NEVER worked properly, starting fresh with static extraction
-  - **Current State:** NO diagrams extracted, `static/diagrams/` empty, no extraction code exists
-  - **Expected:** Thousands of diagrams in books, need extraction pipeline
-  - **Status:** Building EPUB diagram extraction architecture
-- 🎯 **Active Priority:** Phase 6.1a - Extract static diagrams from EPUB files
+- 🔄 **ITEM-029 Phase 6.1a RUNNING:** Static EPUB Diagram Extraction
+  - **Extraction Pipeline:** COMPLETE ✅ (`extract_epub_diagrams.py` - 350+ lines)
+  - **Test Results:** 2,046 diagrams from 3 books (100% success rate)
+  - **Full Extraction:** RUNNING (957 books, ETA ~30 minutes)
+  - **Progress:** 4/957 books processed, ~1.6s per book
+  - **Output:** `/Volumes/T7 Shield/books/images/{book_id}/`
+  - **Projection:** ~650,000 diagrams, ~25 GB total
+- 🎯 **Active Priority:** Phase 6.1a - Full corpus extraction running in background
 - 📦 **Future Work:**
   - Phase 6.1b: Dynamic diagram generation (after 6.1a complete + partner consult required)
   - PGN corpus expansion to 1M games, then resume Phase 5.2 validation

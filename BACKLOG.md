@@ -231,11 +231,14 @@ System: [Searches PGN collection with context]
 - ✅ Phase 5.2: Validation framework created (early termination after 28/50 queries)
 
 **Active Work:**
-- 🔧 **Phase 6.1a: Static EPUB Diagram Extraction** (IN PROGRESS)
-  - **Focus:** Extract diagrams from 1,055 EPUB files and link to chunks
-  - **Reality:** Dynamic diagrams NEVER worked, starting with static extraction
-  - **Goal:** Thousands of book diagrams accessible in search results
-  - **Next:** Phase 6.1b (dynamic generation) after 6.1a complete + partner consult
+- 🔄 **Phase 6.1a: Static EPUB Diagram Extraction** (RUNNING)
+  - **Pipeline:** COMPLETE ✅ - `extract_epub_diagrams.py` (350+ lines)
+  - **Test:** 2,046 diagrams from 3 books (100% success)
+  - **Full Extraction:** RUNNING in background (957 books, ~40 min ETA)
+  - **Progress:** 12/957 books, ~2.5s per book
+  - **Output:** `/Volumes/T7 Shield/books/images/{book_id}/`
+  - **Monitor:** `./monitor_extraction.sh` for live updates
+  - **Next:** Qdrant schema update after extraction complete
 
 **On Hold:**
 - ⏸️ **Phase 5.2 Validation:** Paused pending larger PGN corpus

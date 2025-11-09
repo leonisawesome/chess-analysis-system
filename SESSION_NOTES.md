@@ -85,7 +85,7 @@
 2. Commit 8f4daa0: Partial fix (corrected ordering but wrong phase definitions)
 3. Commit PENDING: Major correction (true state: no diagrams working, starting static extraction)
 
-**Status:** Phase 6.1a EXTRACTION PIPELINE WORKING ✅
+**Status:** Phase 6.1a FULL EXTRACTION RUNNING 🔄
 
 ### 4. Extraction Pipeline Built and Tested (November 9, 2025)
 
