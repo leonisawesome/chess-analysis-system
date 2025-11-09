@@ -6,12 +6,29 @@
 
 ## MUST-HAVE FEATURES (Priority Order)
 
-### Phase 6.1b: Fix Static EPUB Diagrams ⭐ ACTIVE
-**Goal:** Extract and render diagrams from EPUB files correctly
+### Phase 6.1a: Interactive Chess Diagrams ⭐ ACTIVE
+**Goal:** Get chess diagrams rendering correctly in the web interface
 
 **Status:** IN PROGRESS (November 9, 2025)
 
-**Priority:** Focus on EPUB diagram extraction architecture before dynamic query generation
+**Priority:** Fix diagram rendering architecture before moving to static EPUB extraction
+
+**The Problem (Honest Assessment):**
+- Diagrams not rendering correctly in browser
+- Previous approach was band-aiding individual queries instead of fixing architecture
+- Need architectural fix for diagram generation and display
+
+**Current Approach:**
+- Focus on getting ANY diagrams working first (query-generated)
+- Then move to static EPUB diagram extraction (Phase 6.1b)
+- Dynamic query optimization will require partner consult later
+
+---
+
+### Phase 6.1b: Fix Static EPUB Diagrams (FUTURE)
+**Goal:** Extract and render diagrams from EPUB files correctly
+
+**Status:** PENDING (awaiting 6.1a completion)
 
 **The Problem (Honest Assessment):**
 1. Diagrams extracted from EPUBs are often:
@@ -206,11 +223,11 @@ System: [Searches PGN collection with context]
 - ✅ Phase 5.2: Validation framework created (early termination after 28/50 queries)
 
 **Active Work:**
-- 🔧 **Phase 6.1b: EPUB Diagram Extraction** (IN PROGRESS)
-  - **Focus:** Fix architectural issues with EPUB diagram extraction
-  - **Approach:** Extract diagrams from EPUB files (269 PNGs found in audit)
-  - **Note:** Previous approach was band-aiding individual queries, need architectural fix
-  - **Future:** Dynamic query diagrams will require partner consult after EPUB extraction working
+- 🔧 **Phase 6.1a: Interactive Chess Diagrams** (IN PROGRESS)
+  - **Focus:** Fix architectural issues with diagram rendering in web interface
+  - **Problem:** Diagrams not displaying correctly, previous approach was band-aiding queries
+  - **Approach:** Fix diagram generation and display architecture first
+  - **Next:** Phase 6.1b (static EPUB extraction) after 6.1a working
 
 **On Hold:**
 - ⏸️ **Phase 5.2 Validation:** Paused pending larger PGN corpus
@@ -220,9 +237,10 @@ System: [Searches PGN collection with context]
   - **Status:** RRF system working correctly, just needs more PGN data
 
 **Future Work:**
+- 🎯 **Phase 6.1b:** Static EPUB diagram extraction (after 6.1a complete)
 - 📦 **PGN Corpus Expansion:** Scale from 1,778 → 1M games
 - 🔄 **Phase 5.2 Resume:** Re-validate RRF after PGN corpus expansion
-- 🎯 **Phase 6.1c:** Dynamic query diagram generation (requires partner consult)
+- 🤖 **Dynamic Diagram Optimization:** Partner consult for query-based diagram generation
 
 ---
 

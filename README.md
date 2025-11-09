@@ -34,14 +34,15 @@
   - ✅ **Results:** Early termination after 28/50 queries - EPUB wins 28/28 (100%)
   - ⚠️ **Findings:** PGN corpus too small (1,778 vs 1M target), scored 0.000 on 25% of openings
   - 📊 **Status:** RRF system working correctly, validation paused until PGN corpus scaled to 1M games
-- 🔧 **ITEM-029 Phase 6.1b IN PROGRESS:** EPUB Diagram Extraction
-  - **Goal:** Fix architectural issues with EPUB diagram extraction
-  - **Approach:** Extract static diagrams from EPUB files (269 PNGs found in audit)
+- 🔧 **ITEM-029 Phase 6.1a IN PROGRESS:** Interactive Chess Diagrams
+  - **Goal:** Fix architectural issues with diagram rendering in web interface
+  - **Problem:** Diagrams not displaying correctly in browser
   - **Note:** Previous approach was band-aiding individual queries instead of fixing architecture
-  - **Status:** Working on extraction pipeline before dynamic query generation
-- 🎯 **Active Priority:** Phase 6.1b - EPUB diagram extraction architecture
+  - **Status:** Working on diagram generation and display architecture
+- 🎯 **Active Priority:** Phase 6.1a - Get ANY diagrams working first
 - 📦 **Future Work:**
-  - Phase 6.1c: Dynamic query diagram generation (requires partner consult)
+  - Phase 6.1b: Static EPUB diagram extraction (after 6.1a complete)
+  - Dynamic diagram optimization (requires partner consult)
   - PGN corpus expansion to 1M games, then resume Phase 5.2 validation
 - 🔧 **Architecture:** Clean modular design across 9 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001

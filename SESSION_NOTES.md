@@ -3,9 +3,9 @@
 
 ---
 
-# 🎯 LATEST SESSION: Phase 6.1b - EPUB Diagram Extraction (IN PROGRESS)
+# 🎯 LATEST SESSION: Phase 6.1a - Interactive Chess Diagrams (IN PROGRESS)
 **Date:** November 9, 2025
-**Session Focus:** Documentation updates and starting EPUB diagram extraction architecture work
+**Session Focus:** Documentation corrections and diagram rendering architecture work
 
 ## Session Summary
 
@@ -29,44 +29,54 @@
 - ✅ System architecture validated
 - ⚠️ Simply needs more PGN data to demonstrate value
 
-### 2. Phase 6.1a Status Correction
+### 2. Phase Sequencing Correction
 
-**Clarification:** Phase 6.1a (client-side interactive diagrams) was NOT completed as previously documented.
+**Critical Fix:** Cannot work on Phase 6.1b (EPUB diagram extraction) before 6.1a (interactive diagrams) is working.
 
-**Current Work:** Phase 6.1b - EPUB diagram extraction
+**Corrected Status:**
+- Phase 6.1a: IN PROGRESS (diagram rendering in browser not working)
+- Phase 6.1b: PENDING (awaiting 6.1a completion)
 
-### 3. Current Focus: EPUB Diagram Extraction Architecture
+### 3. Current Focus: Interactive Chess Diagrams Architecture
 
-**Goal:** Extract and render diagrams from EPUB files correctly
+**Goal:** Get chess diagrams rendering correctly in the web interface
+
+**Problem:**
+- Diagrams not displaying correctly in browser
+- Previous approach was band-aiding individual queries instead of fixing architecture
+- Need architectural fix for diagram generation and display
 
 **Approach:**
-- Focus on EPUB diagram extraction first (269 PNGs found in audit)
-- Fix architectural issues (previous approach was band-aiding individual queries)
-- Dynamic query diagram generation will come later with partner consult
+1. Fix diagram generation and display architecture first (6.1a)
+2. Then move to static EPUB diagram extraction (6.1b)
+3. Dynamic query optimization will require partner consult later
 
-**Key Insight:** Need to fix the extraction pipeline architecture rather than patching individual query issues.
+**Key Insight:** Must get ANY diagrams working first before moving to EPUB-specific extraction.
 
 ### Next Steps
 
 **Immediate Priority:**
-1. **EPUB Diagram Extraction:** Build proper extraction pipeline for static EPUB diagrams
-2. **Architecture Fix:** Address root cause instead of band-aiding symptoms
+1. **Phase 6.1a:** Fix diagram rendering architecture
+2. **Get diagrams displaying:** Focus on making query-generated diagrams work in browser
 
 **Future Work:**
-1. **Partner Consult:** Dynamic query diagram generation (after EPUB extraction working)
-2. **PGN Corpus Expansion:** Scale from 1,778 → 1M games
-3. **Phase 5.2 Resume:** Re-validate RRF with larger corpus
+1. **Phase 6.1b:** Static EPUB diagram extraction (after 6.1a complete)
+2. **Partner Consult:** Dynamic diagram optimization
+3. **PGN Corpus Expansion:** Scale from 1,778 → 1M games
+4. **Phase 5.2 Resume:** Re-validate RRF with larger corpus
 
 ### Documentation Updated
 
 **Files Modified (this session):**
-- `backlog.md` - Updated CURRENT STATUS, removed 6.1a completion, added 6.1b active work
-- `README.md` - Updated Current Status, corrected 6.1a claim, added 6.1b status
+- `backlog.md` - Corrected phase sequencing, 6.1a = ACTIVE, 6.1b = PENDING
+- `README.md` - Updated Current Status to reflect 6.1a in progress
 - `SESSION_NOTES.md` - This entry
 
-**Git Commit:** Pending - will commit all Big 3 updates together
+**Git Commits:**
+1. First commit (603ba5c): Incorrect phase ordering
+2. Second commit (pending): Corrected phase sequencing
 
-**Status:** Phase 6.1b IN PROGRESS - EPUB diagram extraction architecture
+**Status:** Phase 6.1a IN PROGRESS - Interactive chess diagram architecture
 
 ---
 
