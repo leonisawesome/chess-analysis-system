@@ -149,9 +149,9 @@ def print_audit_results(result):
 def main():
     # Sample books to audit (diagram-heavy ones preferred)
     sample_books = [
-        "/Volumes/T7 Shield/epub/kotronias_0000_the_safest_scandinavian_reloaded.epub",
-        "/Volumes/T7 Shield/epub/john_2012_play_the_french_everyman_chess.epub",
-        "/Volumes/T7 Shield/epub/simeonidis_2020_carlsens_neo_moller_nic.epub",
+        "/Volumes/T7 Shield/books/epub/kotronias_0000_the_safest_scandinavian_reloaded.epub",
+        "/Volumes/T7 Shield/books/epub/john_2012_play_the_french_everyman_chess.epub",
+        "/Volumes/T7 Shield/books/epub/simeonidis_2020_carlsens_neo_moller_nic.epub",
     ]
 
     print("🔍 EPUB Diagram Audit - Examining diagram encoding in chess books")

@@ -54,6 +54,25 @@
 - **Port:** Flask runs on port 5001
 - **Auth:** GitHub SSH (no token expiration issues)
 
+### Data Storage Structure
+```
+/Volumes/T7 Shield/books/
+├── epub/                      # 1,055 chess books in EPUB format
+│   ├── kotronias_0000_the_safest_scandinavian_reloaded.epub
+│   ├── john_2012_play_the_french_everyman_chess.epub
+│   └── ... (1,053 more books)
+│
+└── images/                    # Extracted diagram images (Phase 6.1a)
+    ├── book_001/              # Organized by book ID
+    │   ├── diagram_001.png
+    │   ├── diagram_002.png
+    │   └── ...
+    └── book_002/
+        └── ...
+```
+
+**Note:** Directory structure updated November 9, 2025 to consolidate all book-related data under `/books/`
+
 ---
 
 ## 📦 System Architecture
@@ -489,7 +508,7 @@ python analyze_chess_books.py "/path/to/book.mobi"
 source .venv/bin/activate
 
 # Analyze all books in a directory
-python batch_process_epubs.py "/Volumes/T7 Shield/epub/1new"
+python batch_process_epubs.py "/Volumes/T7 Shield/books/epub/1new"
 
 # Results stored in: epub_analysis.db
 # Query results:
@@ -680,7 +699,7 @@ mv "/path/to/Original Name [Publisher, Year].epub" \
 source .venv/bin/activate
 
 # 2. Analyze new books
-python batch_process_epubs.py "/Volumes/T7 Shield/epub/1new"
+python batch_process_epubs.py "/Volumes/T7 Shield/books/epub/1new"
 
 # 3. Check results
 sqlite3 epub_analysis.db <<EOF

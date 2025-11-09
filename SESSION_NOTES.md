@@ -87,6 +87,32 @@
 
 **Status:** Phase 6.1a IN PROGRESS - Static EPUB diagram extraction architecture
 
+### 4. Directory Structure Housekeeping (November 9, 2025)
+
+**Change:** Consolidated all book-related data under new directory structure
+
+**Old Structure:**
+```
+/Volumes/T7 Shield/epub/     # EPUB files only
+```
+
+**New Structure:**
+```
+/Volumes/T7 Shield/books/
+├── epub/                     # 1,055 chess books
+└── images/                   # Extracted diagrams (Phase 6.1a target)
+    └── {book_id}/
+```
+
+**Files Updated:**
+- All audit scripts (audit_epub_diagrams.py, examine_epub_structure.py, etc.)
+- batch_process_epubs.py (example paths)
+- README.md (added Data Storage Structure section)
+- BACKLOG.md (added directory structure info)
+- SESSION_NOTES.md (this entry)
+
+**Benefit:** Clean organization for future diagram extraction
+
 ---
 
 # 📋 PREVIOUS SESSION: Phase 5.1 COMPLETE - RRF Implementation

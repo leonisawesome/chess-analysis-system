@@ -44,3 +44,4 @@ test_output*/
 
 # Log files
 *.log
+start_server.sh

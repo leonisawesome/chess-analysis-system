@@ -20,9 +20,13 @@
 
 **What We're Building:**
 1. Extract PNG/SVG diagrams from EPUB files during ingestion
-2. Store diagrams with unique IDs
+2. Store diagrams in `/Volumes/T7 Shield/books/images/{book_id}/`
 3. Link diagrams to text chunks in Qdrant metadata
 4. Display book diagrams when chunks appear in search results
+
+**Directory Structure:**
+- **EPUB Files:** `/Volumes/T7 Shield/books/epub/` (1,055 books)
+- **Extracted Images:** `/Volumes/T7 Shield/books/images/{book_id}/` (target: ~600K diagrams)
 
 **Tasks:**
 - [ ] Audit sample EPUBs to understand diagram encoding (PNG? SVG? Base64?)

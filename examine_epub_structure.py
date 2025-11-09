@@ -70,5 +70,5 @@ def examine_epub_html(epub_path):
 
 if __name__ == '__main__':
     # Examine one book
-    epub_file = "/Volumes/T7 Shield/epub/simeonidis_2020_carlsens_neo_moller_nic.epub"
+    epub_file = "/Volumes/T7 Shield/books/epub/simeonidis_2020_carlsens_neo_moller_nic.epub"
     examine_epub_html(epub_file)

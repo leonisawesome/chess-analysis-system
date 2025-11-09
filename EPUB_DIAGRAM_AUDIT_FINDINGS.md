@@ -70,10 +70,10 @@ which is created on d6...</p>
 ## 💡 Extraction Strategy
 
 ### Phase 1: Image Extraction
-1. **Iterate through all EPUB files** in corpus (1,055 books)
+1. **Iterate through all EPUB files** in `/Volumes/T7 Shield/books/epub/` (1,055 books)
 2. **Extract all images** (skip covers, keep diagrams)
 3. **Store with unique IDs:** `{book_id}_{image_name}`
-4. **Save to:** `static/diagrams/{book_id}/`
+4. **Save to:** `/Volumes/T7 Shield/books/images/{book_id}/`
 
 ### Phase 2: Text-Image Linking
 1. **Parse HTML documents** in each EPUB
