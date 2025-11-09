@@ -45,3 +45,4 @@ test_output*/
 # Log files
 *.log
 start_server.sh
+diagram_metadata.json
