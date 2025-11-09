@@ -34,6 +34,9 @@ import asyncio
 from rrf_merger import merge_collections
 from query_router import get_query_info
 
+# Phase 6.1a: Static EPUB diagram integration
+from diagram_service import diagram_index
+
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
 
@@ -97,6 +100,16 @@ print("Initializing canonical positions prompt...")
 from synthesis_pipeline import initialize_canonical_prompt
 initialize_canonical_prompt()
 
+# Phase 6.1a: Load static EPUB diagram metadata
+print("Loading EPUB diagram metadata...")
+try:
+    diagram_index.load('diagram_metadata_full.json', min_size_bytes=12000)
+    print(f"✓ Diagram service ready")
+except FileNotFoundError:
+    print("⚠️  diagram_metadata_full.json not found - static diagrams disabled")
+except Exception as e:
+    print(f"⚠️  Error loading diagram metadata: {e}")
+
 # ============================================================================
 # MULTI-STAGE SYNTHESIS PIPELINE
 # ============================================================================
@@ -107,6 +120,52 @@ import json
 def index():
     """Main page."""
     return render_template('index.html')
+
+
+# ============================================================================
+# PHASE 6.1a: STATIC EPUB DIAGRAM SERVING
+# ============================================================================
+
+@app.route('/diagrams/<diagram_id>')
+def serve_diagram(diagram_id):
+    """
+    Serve a static EPUB diagram by ID.
+
+    Security: Uses metadata whitelist validation (no user-controlled paths).
+
+    Args:
+        diagram_id: Diagram identifier (e.g., "book_a857fac20ce3_0042")
+
+    Returns:
+        Image file with caching headers or 404/410
+    """
+    from flask import send_file, abort, Response
+
+    # Validate against whitelist
+    if not diagram_index.is_valid_diagram_id(diagram_id):
+        app.logger.warning(f"Invalid diagram ID requested: {diagram_id}")
+        abort(404)
+
+    # Get trusted file path from metadata
+    diagram_info = diagram_index.get_diagram_by_id(diagram_id)
+    if not diagram_info:
+        abort(404)
+
+    file_path = diagram_info['file_path']
+
+    # Check if file exists
+    if not os.path.exists(file_path):
+        app.logger.error(f"Diagram file missing: {file_path}")
+        return Response("Diagram file unavailable (drive may be unmounted)", status=410)
+
+    # Serve with caching headers
+    try:
+        response = send_file(file_path, conditional=True)  # Adds ETag/Last-Modified
+        response.headers['Cache-Control'] = 'public, max-age=86400'  # 24 hours
+        return response
+    except Exception as e:
+        app.logger.error(f"Error serving diagram {diagram_id}: {e}")
+        abort(500)
 
 @app.route('/test_pgn')
 def test_pgn_page():
@@ -591,6 +650,46 @@ def query_merged():
         total = time.time() - start
         print(f"🎯 TOTAL: {total:.2f}s")
         print("=" * 80)
+
+        # Phase 6.1a: Attach static EPUB diagrams to results
+        print(f"📷 Attaching static EPUB diagrams...")
+        diagram_attach_start = time.time()
+
+        for result in final_results[:10]:  # Top 10 results only
+            book_name = result.get('book_name', '')
+            book_id = diagram_index.get_book_id_from_name(book_name)
+
+            if book_id:
+                # Get all diagrams for this book
+                all_diagrams = diagram_index.get_diagrams_for_book(book_id)
+
+                if all_diagrams:
+                    # Rank diagrams by relevance to chunk
+                    ranked_diagrams = diagram_index.rank_diagrams_for_chunk(
+                        all_diagrams,
+                        result,  # Pass full result dict as "chunk"
+                        max_k=5
+                    )
+
+                    # Format for frontend
+                    result['epub_diagrams'] = [
+                        {
+                            'id': d['diagram_id'],
+                            'url': f"/diagrams/{d['diagram_id']}",
+                            'caption': (d.get('context_before') or d.get('context_after') or 'Chess diagram')[:120],
+                            'book_title': d.get('book_title', 'Unknown'),
+                            'position': d.get('position_in_document', 0)
+                        }
+                        for d in ranked_diagrams
+                    ]
+                else:
+                    result['epub_diagrams'] = []
+            else:
+                result['epub_diagrams'] = []
+
+        diagram_attach_time = time.time() - diagram_attach_start
+        total_diagrams = sum(len(r.get('epub_diagrams', [])) for r in final_results[:10])
+        print(f"📷 Attached {total_diagrams} diagrams across {len([r for r in final_results[:10] if r.get('epub_diagrams')])} results: {diagram_attach_time:.2f}s")
 
         # Prepare response
         response_data = {

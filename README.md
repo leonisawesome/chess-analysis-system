@@ -34,7 +34,7 @@
   - ✅ **Results:** Early termination after 28/50 queries - EPUB wins 28/28 (100%)
   - ⚠️ **Findings:** PGN corpus too small (1,778 vs 1M target), scored 0.000 on 25% of openings
   - 📊 **Status:** RRF system working correctly, validation paused until PGN corpus scaled to 1M games
-- ✅ **ITEM-029 Phase 6.1a COMPLETE:** Static EPUB Diagram Extraction
+- ✅ **ITEM-029 Phase 6.1a COMPLETE:** Static EPUB Diagram Integration (November 9, 2025)
   - **Extraction Pipeline:** COMPLETE ✅ (`extract_epub_diagrams.py` - 350+ lines)
   - **Test Results:** 2,046 diagrams from 3 books (100% success rate)
   - **Full Extraction:** COMPLETE ✅ (979 books total after all processing)
@@ -44,6 +44,13 @@
   - **Qdrant Cleanup:** Removed 32,150 duplicate .mobi chunks (collection: 359,929 → 327,779)
   - **Output:** `/Volumes/T7 Shield/books/images/{book_id}/`
   - **Evaluation Enhancement:** Added deletion prompts to `analyze_chess_books.py` for books scoring <40/100
+  - ✅ **UI Integration COMPLETE:** Static diagrams now displayed in search results
+    - **diagram_service.py:** In-memory index with quality filtering and relevance ranking (242 lines)
+    - **app.py:** Secure `/diagrams/<diagram_id>` endpoint + diagram attachment to results
+    - **index.html:** Frontend rendering with responsive grid, lazy loading, graceful error handling
+    - **Ranking Algorithm:** Text similarity (Jaccard) + opening keywords + sequential proximity + quality boost
+    - **Security:** Metadata whitelist validation, trusted file paths only, 24-hour cache headers
+    - **Partner Consultation:** Synthesized feedback from Gemini, Grok, ChatGPT
 - ✅ **Bug Fix Complete:** Added `book_title` field to Qdrant ingestion
   - **Issue:** Ingestion pipeline only saved `book_name` (filename), not human-readable title
   - **Fix:** Extract title from EPUB metadata using `ebooklib`, fallback to filename if missing

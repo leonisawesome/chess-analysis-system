@@ -203,6 +203,58 @@
             border-radius: 4px;
         }
 
+        /* Phase 6.1a: Static EPUB diagram styling */
+        .epub-diagrams-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .diagrams-header {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .diagram-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .diagram-item {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .diagram-item img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
+            max-width: 300px;
+        }
+
+        .diagram-caption {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 600px) {
+            .diagram-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         .error {
             background: #e74c3c;
             color: white;
@@ -751,6 +803,42 @@
                 });
 
                 card.appendChild(positionsDiv);
+            }
+
+            // Phase 6.1a: Static EPUB diagrams (if any)
+            if (result.epub_diagrams && result.epub_diagrams.length > 0) {
+                const diagramsDiv = document.createElement('div');
+                diagramsDiv.className = 'epub-diagrams-section';
+
+                const header = document.createElement('div');
+                header.className = 'diagrams-header';
+                header.textContent = `📷 ${result.epub_diagrams.length} diagram(s) from "${result.epub_diagrams[0].book_title}"`;
+                diagramsDiv.appendChild(header);
+
+                const grid = document.createElement('div');
+                grid.className = 'diagram-grid';
+
+                result.epub_diagrams.forEach((diagram, diagIndex) => {
+                    const item = document.createElement('div');
+                    item.className = 'diagram-item';
+
+                    const img = document.createElement('img');
+                    img.src = diagram.url;
+                    img.alt = diagram.caption;
+                    img.loading = 'lazy';
+                    img.onerror = function() { this.style.display = 'none'; };  // Silent fail
+                    item.appendChild(img);
+
+                    const caption = document.createElement('p');
+                    caption.className = 'diagram-caption';
+                    caption.textContent = diagram.caption;
+                    item.appendChild(caption);
+
+                    grid.appendChild(item);
+                });
+
+                diagramsDiv.appendChild(grid);
+                card.appendChild(diagramsDiv);
             }
 
             return card;
