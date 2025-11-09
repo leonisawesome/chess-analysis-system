@@ -1,6 +1,6 @@
 # Chess Knowledge RAG System
 
-**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 360,320 chunks from 1,052 chess books + 1,778 PGN games.**
+**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 360,320 chunks from 938 chess books (692,187 extracted diagrams) + 1,778 PGN games.**
 
 ---
 
@@ -34,16 +34,18 @@
   - ✅ **Results:** Early termination after 28/50 queries - EPUB wins 28/28 (100%)
   - ⚠️ **Findings:** PGN corpus too small (1,778 vs 1M target), scored 0.000 on 25% of openings
   - 📊 **Status:** RRF system working correctly, validation paused until PGN corpus scaled to 1M games
-- 🔄 **ITEM-029 Phase 6.1a RUNNING:** Static EPUB Diagram Extraction
+- ✅ **ITEM-029 Phase 6.1a COMPLETE:** Static EPUB Diagram Extraction
   - **Extraction Pipeline:** COMPLETE ✅ (`extract_epub_diagrams.py` - 350+ lines)
   - **Test Results:** 2,046 diagrams from 3 books (100% success rate)
-  - **Full Extraction:** RUNNING (957 books, ETA ~30 minutes)
-  - **Progress:** 4/957 books processed, ~1.6s per book
+  - **Full Extraction:** COMPLETE ✅ (938 books after data cleaning)
+  - **Final Stats:** 692,187 diagrams extracted, 15.28 GB metadata, 170 GB actual disk usage
+  - **Data Cleaning:** Removed 17 low-quality books (9 batch 1, 8 batch 2 including 1 duplicate)
   - **Output:** `/Volumes/T7 Shield/books/images/{book_id}/`
-  - **Projection:** ~650,000 diagrams, ~25 GB total
-- 🎯 **Active Priority:** Phase 6.1a - Full corpus extraction running in background
+  - **Evaluation Enhancement:** Added deletion prompts to `analyze_chess_books.py` for books scoring <40/100
+- 🎯 **Active Priority:** Phase 6.1a documentation complete, ready for Phase 6.1b or .mobi conversion
 - 📦 **Future Work:**
-  - Phase 6.1b: Dynamic diagram generation (after 6.1a complete + partner consult required)
+  - Convert .mobi files to EPUB format and extract diagrams
+  - Phase 6.1b: Dynamic diagram generation (after partner consult required)
   - PGN corpus expansion to 1M games, then resume Phase 5.2 validation
 - 🔧 **Architecture:** Clean modular design across 9 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
@@ -58,21 +60,20 @@
 ### Data Storage Structure
 ```
 /Volumes/T7 Shield/books/
-├── epub/                      # 1,055 chess books in EPUB format
+├── epub/                      # 938 chess books in EPUB format (after data cleaning)
 │   ├── kotronias_0000_the_safest_scandinavian_reloaded.epub
 │   ├── john_2012_play_the_french_everyman_chess.epub
-│   └── ... (1,053 more books)
+│   └── ... (936 more books)
 │
-└── images/                    # Extracted diagram images (Phase 6.1a)
-    ├── book_001/              # Organized by book ID
-    │   ├── diagram_001.png
-    │   ├── diagram_002.png
-    │   └── ...
-    └── book_002/
-        └── ...
+└── images/                    # Extracted diagram images (Phase 6.1a COMPLETE)
+    ├── book_{hash}/           # Organized by book ID
+    │   ├── book_{hash}_0000.png
+    │   ├── book_{hash}_0001.png
+    │   └── ... (692,187 total diagrams across all books)
+    └── ...
 ```
 
-**Note:** Directory structure updated November 9, 2025 to consolidate all book-related data under `/books/`
+**Note:** Directory structure updated November 9, 2025 to consolidate all book-related data under `/books/`. Data cleaning removed 17 low-quality books (2 with 0 diagrams, 15 with <63 diagrams).
 
 ---
 

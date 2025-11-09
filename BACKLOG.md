@@ -229,16 +229,17 @@ System: [Searches PGN collection with context]
 - ✅ Phase 1-4: EPUB ingestion, search, GPT-5 reranking
 - ✅ Phase 5.1: RRF multi-collection merge (UI integrated, production-ready)
 - ✅ Phase 5.2: Validation framework created (early termination after 28/50 queries)
-
-**Active Work:**
-- 🔄 **Phase 6.1a: Static EPUB Diagram Extraction** (RUNNING)
-  - **Pipeline:** COMPLETE ✅ - `extract_epub_diagrams.py` (350+ lines)
+- ✅ **Phase 6.1a: Static EPUB Diagram Extraction** (COMPLETE - November 9, 2025)
+  - **Pipeline:** `extract_epub_diagrams.py` (350+ lines)
   - **Test:** 2,046 diagrams from 3 books (100% success)
-  - **Full Extraction:** RUNNING in background (957 books, ~40 min ETA)
-  - **Progress:** 12/957 books, ~2.5s per book
+  - **Full Extraction:** COMPLETE (938 books after data cleaning)
+  - **Final Stats:** 692,187 diagrams extracted
+  - **Storage:** 15.28 GB metadata, 170 GB actual disk usage
   - **Output:** `/Volumes/T7 Shield/books/images/{book_id}/`
-  - **Monitor:** `./monitor_extraction.sh` for live updates
-  - **Next:** Qdrant schema update after extraction complete
+  - **Data Cleaning:** Removed 17 low-quality books (9 batch 1, 8 batch 2)
+    - Batch 1: 9 books with <30 diagrams (7-29 range)
+    - Batch 2: 7 books with 30-63 diagrams + 1 Silman duplicate (875 diagrams)
+  - **Evaluation Enhancement:** Added deletion prompts to `analyze_chess_books.py` for books scoring <40/100
 
 **On Hold:**
 - ⏸️ **Phase 5.2 Validation:** Paused pending larger PGN corpus
@@ -248,7 +249,8 @@ System: [Searches PGN collection with context]
   - **Status:** RRF system working correctly, just needs more PGN data
 
 **Future Work:**
-- 🎯 **Phase 6.1b:** Dynamic diagram generation (after 6.1a + partner consult)
+- 📦 **Convert .mobi files:** Convert to EPUB format and extract diagrams
+- 🎯 **Phase 6.1b:** Dynamic diagram generation (after partner consult)
 - 📦 **PGN Corpus Expansion:** Scale from 1,778 → 1M games
 - 🔄 **Phase 5.2 Resume:** Re-validate RRF after PGN corpus expansion
 

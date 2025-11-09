@@ -3,9 +3,9 @@
 
 ---
 
-# 🎯 LATEST SESSION: Phase 6.1a - Static EPUB Diagram Extraction (IN PROGRESS)
+# 🎯 LATEST SESSION: Phase 6.1a - Static EPUB Diagram Extraction (COMPLETE ✅)
 **Date:** November 9, 2025
-**Session Focus:** Major documentation correction - dynamic diagrams never worked, starting static extraction
+**Session Focus:** EPUB diagram extraction pipeline, data cleaning, evaluation enhancement
 
 ## Session Summary
 
@@ -149,6 +149,108 @@
 - SESSION_NOTES.md (this entry)
 
 **Benefit:** Clean organization for future diagram extraction
+
+### 6. Full Corpus Extraction Complete (November 9, 2025)
+
+**Achievement:** Phase 6.1a COMPLETE ✅
+
+**Final Statistics:**
+- **Books processed:** 955/957 (99.8% success rate)
+- **Books with 0 diagrams:** 2 (not actual failures)
+- **Total diagrams extracted:** 692,187
+- **Storage:** 15.28 GB metadata, 170 GB actual disk usage
+- **Processing time:** 1 hour 0 minutes 25 seconds
+- **Average speed:** 3.79 seconds per book
+- **Format breakdown:**
+  - JPG: 306,801 (44.3%)
+  - PNG: 298,373 (43.1%)
+  - JPEG: 67,013 (9.7%)
+  - GIF: 20,000 (2.9%)
+
+### 7. Data Cleaning (November 9, 2025)
+
+**Batch 1: Low-Diagram Books (9 removed)**
+- Books with <30 diagrams removed
+- Range: 7-29 diagrams per book
+- Examples: The Grandmaster (7), Deep Thinking (5), The Moves That Matter (1)
+
+**Batch 2: Additional Low-Quality + Duplicate (8 removed)**
+- 7 books with 30-63 diagrams (marginal quality)
+- 1 duplicate: "How to Reassess Your Chess" by Jeremy Silman (875 diagrams)
+- Decision: Keep the 4th edition, remove older edition
+
+**Total Removed:** 17 books
+**Final Corpus:** 938 books
+
+**Scripts Created:**
+- `remove_low_diagram_books.py` (Batch 1)
+- `remove_books_batch2.py` (Batch 2)
+
+**Qdrant Status:**
+- All removed books had 0 chunks in database (never ingested)
+- Only file system cleanup required
+
+### 8. Evaluation Script Enhancement (November 9, 2025)
+
+**Feature:** Automatic deletion prompts for low-quality books
+
+**Implementation:**
+- Modified `analyze_chess_books.py`
+- Added `prompt_for_deletion()` function (lines 477-502)
+- Triggers for books scoring <40/100
+- Interactive y/N confirmation
+- Shows specific quality issues:
+  - Few diagrams (count)
+  - Short length (word count)
+  - Minimal chess notation (ratio)
+  - Unknown author (reputation score)
+
+**Benefits:**
+- Prevents low-quality books from entering corpus
+- Interactive quality control during analysis
+- Clear justification for deletion decisions
+- Automatic file cleanup if confirmed
+
+**Example Output:**
+```
+⚠️  LOW-QUALITY BOOK DETECTED
+File: chess_for_beginners_unknown.epub
+Score: 35/100 (LOW tier)
+Reasons:
+  - Very few diagrams: 12
+  - Short length: 15,432 words
+  - Minimal chess notation: 1.2%
+  - Unknown author
+
+This book is unlikely to be useful for technical chess instruction.
+
+🗑️  Delete this book? [y/N]: _
+```
+
+### 9. Documentation Updated (November 9, 2025)
+
+**Files Modified:**
+
+**README.md:**
+- Updated corpus count: 938 books (from 955)
+- Phase 6.1a marked COMPLETE
+- Final diagram statistics: 692,187 diagrams
+- Data cleaning summary added
+- Data Storage Structure section updated
+
+**BACKLOG.md:**
+- Phase 6.1a moved to Completed section
+- Final extraction statistics documented
+- Data cleaning details added (Batch 1 + Batch 2)
+- Evaluation enhancement documented
+- Future work updated (.mobi conversion next)
+
+**SESSION_NOTES.md:**
+- This session entry documenting all work
+- Extraction completion details
+- Data cleaning process
+- Evaluation script enhancement
+- Final statistics
 
 ---
 
