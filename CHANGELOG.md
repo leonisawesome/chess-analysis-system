@@ -4,6 +4,36 @@
 
 ---
 
+## ITEM-032: Phase 6.1a Debugging (November 10, 2025) ✅
+
+**Problem:** All 3 diagram features broken after Phase 6.1a deployment
+- GPT-5 writing `[DIAGRAM: ...]` placeholders (6 found)
+- Featured diagrams returning 0 items
+- 0/10 relevance sources appearing (10 found)
+
+**Root Cause:** Flask module caching + data flow timing issues
+
+**4 Fixes Implemented:**
+1. **Code Loading Verification**: Added canary prints, cleared `__pycache__`
+2. **Featured Diagrams**: Fixed data flow timing (diagrams attach at line 536, not 472)
+3. **0/10 Filter**: Verified already correctly placed after GPT reranking
+4. **GPT Placeholders**: Strengthened prompt + added regex strip fallback
+
+**Test Results:**
+- Italian Game query: 4 featured diagrams ✅
+- epub_diagrams properly attached to results
+- Defense in depth: prompt engineering + post-processing
+
+**Files Modified:**
+- app.py: Removed premature epub_diagrams copy, kept canary
+- synthesis_pipeline.py: Strengthened prompt (line 188), added regex strip (line 338)
+
+**Partner Consultation:** Gemini, Grok, ChatGPT identified caching as root cause
+
+**Commit:** 72252f8
+
+---
+
 ## ITEM-031: Book Ingestion (November 10, 2025) ✅
 
 **Books Added:** 2

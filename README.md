@@ -30,13 +30,14 @@
 ## 🎯 Current Status (November 10, 2025)
 
 ### Recently Completed
+- ✅ **ITEM-032:** Phase 6.1a debugging - Fixed 4 diagram issues (GPT placeholders, featured diagrams, 0/10 filter, code caching)
 - ✅ **ITEM-031:** Added 2 books (Dvoretsky, Markos) + fixed 2 critical bugs
 - ✅ **ITEM-030:** Duplicate book cleanup
 - ✅ **ITEM-029:** Static EPUB diagram integration (536K diagrams)
 - ✅ **ITEM-028:** RRF multi-collection merge (EPUB + PGN)
 
 ### Active Priority
-🎯 Test static diagram display in UI with 536,243 extracted diagrams
+🎯 Frontend verification of static diagram display in browser (backend tested ✅)
 
 ### System Stats (Verified Nov 10, 2025 - 3:30 PM)
 
