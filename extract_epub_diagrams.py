@@ -149,6 +149,10 @@ class DiagramExtractor:
             book_output_dir = self.output_base_dir / self.book_id
             book_output_dir.mkdir(parents=True, exist_ok=True)
 
+            # VERIFY directory was created successfully
+            if not book_output_dir.exists() or not book_output_dir.is_dir():
+                raise RuntimeError(f"Failed to create output directory: {book_output_dir}")
+
             # Step 1: Extract all images and build lookup
             images_by_name = {}
             for item in book.get_items():
@@ -234,6 +238,10 @@ class DiagramExtractor:
                         with open(output_path, 'wb') as f:
                             f.write(img_data['content'])
 
+                        # VERIFY file was written successfully
+                        if not output_path.exists():
+                            raise RuntimeError(f"Failed to write file: {output_path}")
+
                         # Create metadata
                         diagram_info = DiagramInfo(
                             diagram_id=diagram_id,
@@ -256,6 +264,18 @@ class DiagramExtractor:
                 except Exception as e:
                     logger.error(f"  Error processing HTML document {item.get_name()}: {e}")
                     continue
+
+            # FINAL VERIFICATION: Ensure directory and files still exist
+            if not book_output_dir.exists():
+                raise RuntimeError(f"Output directory disappeared after extraction: {book_output_dir}")
+
+            # Count files, excluding macOS ._* metadata files
+            actual_files = len([f for f in book_output_dir.glob("*") if not f.name.startswith('._')])
+            if actual_files != len(self.diagrams):
+                raise RuntimeError(
+                    f"File count mismatch for {self.book_id}: "
+                    f"Expected {len(self.diagrams)} files, found {actual_files}"
+                )
 
             logger.info(f"  Extracted {len(self.diagrams)} diagrams to {book_output_dir}")
             return self.diagrams

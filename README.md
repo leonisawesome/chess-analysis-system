@@ -645,6 +645,108 @@ pkill -f "python.*app.py"
 python app.py
 ```
 
+### Extracting Diagrams from EPUBs
+
+After adding books to the RAG corpus, you should extract chess diagrams from the EPUB files for static diagram display in the UI.
+
+**Overview:**
+- **Script:** `extract_epub_diagrams.py` (427 lines)
+- **Purpose:** Extract all chess diagram images from EPUB files with metadata
+- **Output:** `/Volumes/T7 Shield/books/images/{book_id}/` directories
+- **Features:** Duplicate prevention, context extraction, metadata generation
+
+**Extract Diagrams for All Books:**
+```bash
+# Activate environment
+source .venv/bin/activate
+
+# Extract diagrams from all EPUBs
+python extract_epub_diagrams.py \
+  --epub-dir "/Volumes/T7 Shield/books/epub" \
+  --output-dir "/Volumes/T7 Shield/books/images" \
+  --metadata-file diagram_metadata.json
+
+# The script will:
+# - Process all 920 EPUB files
+# - Skip books with existing image directories (incremental)
+# - Extract diagrams with surrounding text context
+# - Generate metadata JSON with diagram info
+# - Time: ~15-20 minutes for full collection
+# - Output: ~920 book directories with extracted diagrams
+```
+
+**Extract Diagrams for Specific Books:**
+```bash
+# Test mode: process only 3 books
+python extract_epub_diagrams.py --test-mode
+
+# Custom limit: process first N books
+python extract_epub_diagrams.py --limit 10
+```
+
+**How It Works:**
+1. **Book ID Generation:** Each book gets unique ID: `book_{md5(filename)[:12]}`
+2. **Image Extraction:** Extracts all images from EPUB (skips covers)
+3. **Duplicate Prevention:** Tracks processed images to avoid re-extraction when same image appears in multiple HTML documents
+4. **Context Extraction:** Captures surrounding text before/after each diagram
+5. **Metadata Creation:** Generates JSON with diagram locations, context, and book info
+6. **Output Structure:**
+   ```
+   /Volumes/T7 Shield/books/images/
+   ├── book_a857fac20ce3/
+   │   ├── book_a857fac20ce3_0000.png
+   │   ├── book_a857fac20ce3_0001.png
+   │   └── ...
+   ├── book_910a140220d4/
+   └── ...
+   ```
+
+**Verification:**
+```bash
+# Count total image directories (should match EPUB count)
+cd "/Volumes/T7 Shield/books/images"
+find . -maxdepth 1 -type d -name "book_*" | wc -l
+
+# Expected: 920 (one per EPUB file)
+
+# Check specific book extraction
+ls -lh book_a857fac20ce3/
+# Should show extracted diagram files
+```
+
+**Metadata File:**
+The `diagram_metadata.json` contains:
+- **stats:** Extraction statistics (total books, diagrams, formats)
+- **diagrams:** Array of diagram metadata objects with:
+  - `diagram_id`: Unique identifier
+  - `book_id`, `book_title`, `epub_filename`: Book information
+  - `file_path`: Path to extracted image
+  - `html_document`: Source HTML file in EPUB
+  - `context_before`, `context_after`: Surrounding text (up to 300 chars each)
+  - `position_in_document`: Diagram index within HTML document
+
+**Bug Fix (November 2025):**
+The duplicate prevention bug was fixed in lines 171-222 of `extract_epub_diagrams.py`:
+- **Problem:** Same diagram extracted multiple times when referenced across different HTML documents (navigation, TOC, chapters)
+- **Example:** Fischer 2008 book extracted 13,032 files for 258 unique images (50x duplication)
+- **Solution:** Added `extracted_images` set to track processed images and skip duplicates
+- **Result:** Proper 1:1 mapping between unique images and extracted files
+
+**macOS File System Gotcha (November 2025):**
+The verification logic was updated in line 273 of `extract_epub_diagrams.py` to handle macOS metadata files:
+- **Problem:** macOS automatically creates `._*` metadata files for every image file written to external drives
+- **Symptom:** Verification reported "Expected 889 files, found 1778" (exactly 2x the expected count)
+- **Root Cause:** macOS creates hidden `._book_a857fac20ce3_0000.jpg` files alongside actual `book_a857fac20ce3_0000.jpg` images
+- **Solution:** Updated file count verification to exclude `._*` files: `len([f for f in dir.glob("*") if not f.name.startswith('._')])`
+- **Impact:** This only affects macOS systems with external drives; the metadata files are harmless but were causing false verification failures
+- **Note:** These `._` files store extended attributes and resource forks - they're created automatically by macOS and should be excluded from file counts
+
+**When to Re-extract:**
+- After adding new EPUB files to the collection
+- After fixing corrupted image directories
+- After deleting books (orphaned directories remain until cleanup)
+- Script automatically skips books with existing directories (incremental mode)
+
 #### Cost Estimation
 
 **OpenAI Embedding Costs:**
