@@ -324,3 +324,70 @@ Dynamic diagram generation never worked reliably:
 
 **Estimated Time to Complete:** 30 minutes
 
+
+---
+
+## UPDATE: 2:50 PM - Phase 6.1a Testing Complete
+
+### Flask Server Status
+- **Running:** Yes, at http://localhost:5001
+- **Process:** Background (started 2:45 PM)
+- **Diagram Service:** Loaded successfully
+
+### Tests Performed
+
+**1. Flask Server Start** ✅
+```
+✓ Clients initialized (Qdrant: 311266 vectors)
+✓ spaCy model loaded
+✓ Diagram service ready
+Starting server at http://127.0.0.1:5001
+```
+
+**2. Diagram Endpoint Test** ✅
+```bash
+curl -I http://localhost:5001/diagrams/book_00448974a7ea_0000
+# Result: HTTP/1.1 200 OK, Content-Type: image/gif
+```
+- Diagrams are being served correctly
+- Flask can access the 536,243 diagrams on external drive
+
+**3. UI Access** ✅
+- Browser opened at http://localhost:5001
+- Main page loads successfully
+
+### Manual Testing Required
+
+**User should test in browser:**
+1. Enter query: "Najdorf Sicilian"
+2. Verify search results appear
+3. Check that diagrams appear below each result
+4. Verify diagrams are relevant to the content
+5. Test diagram lazy loading (scroll through results)
+
+**Expected Behavior:**
+- Each result should show up to 5 chess diagrams
+- Diagrams ranked by relevance (Jaccard similarity + keywords)
+- Diagrams load from `/diagrams/<diagram_id>` endpoint
+- Images should be from actual EPUB books (static, not generated)
+
+### Phase 6.1a Status
+
+**Completed:**
+- ✅ Diagram extraction (536,243 diagrams from 922 books)
+- ✅ Diagram service implementation (`diagram_service.py`)
+- ✅ Flask endpoint (`/diagrams/<id>`)
+- ✅ Frontend rendering code (`index.html`)
+- ✅ Server started with diagram service loaded
+- ✅ Diagram endpoint verified working
+
+**Pending User Verification:**
+- ⏳ Visual confirmation diagrams appear in UI
+- ⏳ Diagram relevance ranking quality check
+- ⏳ Lazy loading performance check
+
+**Next Phase (6.2 - Must Have):**
+- Interactive PGN diagrams with chessboard.js
+- Playable boards (step through game moves)
+- Different from static EPUB diagrams (for showing games)
+
