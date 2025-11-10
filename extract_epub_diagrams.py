@@ -168,6 +168,8 @@ class DiagramExtractor:
 
             # Step 2: Parse HTML documents to find image references and context
             diagram_index = 0
+            extracted_images = set()  # Track which images we've already extracted
+
             for item in book.get_items():
                 if item.get_type() != ebooklib.ITEM_DOCUMENT:
                     continue
@@ -211,6 +213,13 @@ class DiagramExtractor:
                         if not img_data:
                             logger.debug(f"  Image not found: {src} (decoded: {src_decoded})")
                             continue
+
+                        # BUGFIX: Skip if we've already extracted this image
+                        if actual_key in extracted_images:
+                            logger.debug(f"  Skipping duplicate image: {actual_key}")
+                            continue
+
+                        extracted_images.add(actual_key)
 
                         # Extract context
                         context_before, context_after = self._extract_context(img_tag, soup)
