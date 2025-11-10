@@ -28,6 +28,9 @@ from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_
 # Phase 5.1: RRF multi-collection merge
 import asyncio
 from rrf_merger import merge_collections
+import uuid
+
+print("\n*** [CANARY] app.py VERSION: 6.1a-2025-11-10 LOADED ***\n")
 from query_router import get_query_info
 
 # Phase 6.1a: Static EPUB diagram integration
@@ -467,7 +470,9 @@ def query_merged():
                 'best_rank': result['best_rank'],
                 'fusion_sources': result['fusion_sources']
             }
-            final_results.append(formatted)
+            # Filter out results with 0 relevance (completely irrelevant)
+            if result['max_similarity'] > 0:
+                final_results.append(formatted)
 
         # Step 10: Prepare synthesis context with mixed-media support
         print(f"⏱  Preparing synthesis context...")
@@ -545,6 +550,16 @@ def query_merged():
         total_diagrams = sum(len(r.get('epub_diagrams', [])) for r in final_results[:10])
         print(f"📷 Attached {total_diagrams} diagrams across {len([r for r in final_results[:10] if r.get('epub_diagrams')])} results: {diagram_attach_time:.2f}s")
 
+        # Collect featured diagrams from top 3 EPUB sources for prominent display
+        featured_diagrams = []
+        for result in final_results[:3]:
+            # Check if result has epub_diagrams (indicates it's from an EPUB source)
+            if result.get('epub_diagrams'):
+                # Take max 2 diagrams per source
+                featured_diagrams.extend(result['epub_diagrams'][:2])
+        featured_diagrams = featured_diagrams[:6]  # Max 6 total
+        print(f"📷 Featured diagrams for display: {len(featured_diagrams)}")
+
         # Prepare response
         response_data = {
             'success': True,
@@ -552,6 +567,7 @@ def query_merged():
             'answer': synthesized_answer,
             'positions': synthesized_positions,
             'diagram_positions': diagram_positions,
+            'featured_diagrams': featured_diagrams,  # Add featured diagrams
             'sources': final_results[:5],
             'results': final_results,
             'timing': {

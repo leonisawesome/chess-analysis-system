@@ -12,6 +12,8 @@ import re
 import json
 from openai import OpenAI
 
+print("\n*** [CANARY] synthesis_pipeline.py VERSION: 6.1a-2025-11-10 LOADED ***\n")
+
 # Global variable to hold canonical library prompt
 CANONICAL_POSITIONS_PROMPT = None
 
@@ -182,51 +184,10 @@ When synthesizing your answer:
 - Use book sources to explain strategic concepts and ideas
 - Use PGN sources to show concrete move sequences and variations
 - Reference both types naturally in your explanation
+- Focus on clear explanations of strategic concepts and concrete variations
+- DO NOT include diagram markup - diagrams will be provided separately from source materials
 
-MANDATORY DIAGRAM RULES:
-
-RULE 1 - TACTICAL CONCEPTS (pins, forks, skewers, discovered attacks, etc.):
-  MUST use @canonical/ references from the library below.
-  Format: [DIAGRAM: @canonical/category/id | Caption: description]
-  Example: [DIAGRAM: @canonical/forks/knight_fork_queen_rook | Caption: Classic knight fork pattern]
-
-RULE 2 - OPENING SEQUENCES:
-  Use move notation showing 3-6 moves from starting position.
-  Format: [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: description]
-  Example: [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position]
-
-RULE 3 - ENFORCEMENT GUARANTEE:
-  All tactical diagrams are automatically validated and enforced post-synthesis.
-  Non-canonical tactical diagrams will be replaced with canonical positions.
-
-{canonical_prompt}
-
-CAPTION GUIDELINES:
-- Be concise (5-15 words)
-- Describe what's HAPPENING in the position (strategic ideas, piece placement, key moves)
-- Do NOT just repeat the move notation
-- Focus on WHY this position is important
-
-IMPORTANT: ALWAYS wrap diagrams in [DIAGRAM: ... | Caption: ...] brackets
-NEVER output bare FEN strings directly in the text without brackets
-
-CANONICAL POSITION USAGE:
-If a [CANONICAL POSITION: FEN] is provided in the context below:
-- You MUST generate diagrams based on this position
-- Use [DIAGRAM: FEN_STRING] format with the canonical FEN or variations
-- Do NOT use opening move sequences for middlegame concepts
-- The canonical position represents the KEY position for this concept
-
-Example (opening):
-"The Italian Game begins with [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4] where White develops quickly..."
-
-Example (middlegame with canonical FEN):
-"In this position [DIAGRAM: r1bq1rk1/pp2bppp/2n1pn2/2pp4/2PP4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 9], White launches the minority attack..."
-
-Example (using canonical reference):
-"The knight fork is a powerful tactic [DIAGRAM: @canonical/forks/knight_fork_queen_rook] where the knight attacks multiple pieces..."
-
-Write 2-3 detailed paragraphs per section with diagrams."""
+Write 2-3 detailed paragraphs per section."""
 
     for i, section in enumerate(sections, 1):
         section_prompt = f"""Question: {query}
