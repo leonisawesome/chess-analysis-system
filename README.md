@@ -1,6 +1,6 @@
 # Chess Knowledge RAG System
 
-**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 315,554 chunks from 946 chess books (724,062 extracted diagrams) + 1,778 PGN games.**
+**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 313,057 chunks from 922 chess books (536,243 extracted diagrams) + 1,778 PGN games.**
 
 ---
 
@@ -17,7 +17,6 @@
 - ✅ **ITEM-008 Complete:** Sicilian contamination bug eliminated (100% success rate)
 - ✅ **ITEM-011 Complete:** Monolithic refactoring (1,474 → 262 lines, -82.2%)
 - ✅ **ITEM-024.7 Complete:** JavaScript rendering architecture (Path B) - Restored clean separation between backend and frontend
-- ✅ **ITEM-024.8 Complete:** Dynamic diagram extraction restored - Reverted static 73-position bypass, now uses RAG-based extraction from 360,320 chunks
 - ✅ **ITEM-027 Complete:** PGN ingestion system - All 1,778 games validated, 1,791 chunks in `chess_pgn_repertoire`, 100% query success
 - ✅ **ITEM-028 Phase 5.1 COMPLETE:** RRF Multi-Collection Merge - Production-ready with UI integration
   - ✅ Query router with intent classification (8/8 tests passed)
@@ -37,8 +36,8 @@
 - ✅ **ITEM-029 Phase 6.1a COMPLETE:** Static EPUB Diagram Integration (November 9, 2025)
   - **Extraction Pipeline:** COMPLETE ✅ (`extract_epub_diagrams.py` - 350+ lines)
   - **Test Results:** 2,046 diagrams from 3 books (100% success rate)
-  - **Full Extraction:** COMPLETE ✅ (979 books total after all processing)
-  - **Final Stats:** 724,062 diagrams extracted, ~16.5 GB total disk usage
+  - **Full Extraction:** COMPLETE ✅ (924 books total after all processing)
+  - **Final Stats:** 536,243 diagrams extracted, ~12 GB total disk usage
   - **Data Cleaning:** Removed 17 low-quality books (9 batch 1, 8 batch 2 including 1 duplicate)
   - **.mobi Conversion:** 41 books converted from .mobi → EPUB, 31,875 diagrams extracted (avg 777/book)
   - **Qdrant Cleanup:** Removed 32,150 duplicate .mobi chunks (collection: 359,929 → 327,779)
@@ -51,28 +50,39 @@
     - **Ranking Algorithm:** Text similarity (Jaccard) + opening keywords + sequential proximity + quality boost
     - **Security:** Metadata whitelist validation, trusted file paths only, 24-hour cache headers
     - **Partner Consultation:** Synthesized feedback from Gemini, Grok, ChatGPT
-- ✅ **ITEM-030 Complete:** Duplicate Book Cleanup (November 10, 2025)
-  - **Removed:** 917 files total (4 duplicate books + 913 MacOS metadata files)
-  - **Duplicates Deleted:** herman_2014, rozentalis_0000, moskalenko_no_dg, plus 1 other
-  - **Metadata Cleanup:** All `._*` files removed (junk files from external drive copying)
-  - **Final Count:** 946 unique EPUB books (down from 979)
-  - **Qdrant Status:** 315,554 chunks (down from 327,779) - All duplicates removed
+- ✅ **ITEM-030 Complete:** Duplicate Book Cleanup (Previous session)
+  - **Duplicates Removed:** 4 duplicate books (herman_2014, rozentalis_0000, moskalenko_no_dg, plus 1 other)
+  - **Note on `._*` files:** macOS metadata files are properly IGNORED in counts, not deleted (Mac needs them!)
+  - **Qdrant Status:** Duplicates removed from vector database
   - **Tool Created:** `find_current_duplicates_fixed.py` for future duplicate detection
 - ✅ **Bug Fix Complete:** Added `book_title` field to Qdrant ingestion
   - **Issue:** Ingestion pipeline only saved `book_name` (filename), not human-readable title
   - **Fix:** Extract title from EPUB metadata using `ebooklib`, fallback to filename if missing
   - **Location:** `build_production_corpus.py` lines 138-156 (extraction), 200 (chunk metadata), 294 (Qdrant payload)
   - **Impact:** Future ingestion will include human-readable titles for better UX
-- 🎯 **Active Priority:** Test static diagram display in UI with 724,062 extracted diagrams
-- 📦 **Future Work:**
-  - Phase 6.1b: Dynamic diagram generation (after partner consult required)
-  - PGN corpus expansion to 1M games, then resume Phase 5.2 validation
+- ✅ **Dynamic Diagram Removal Complete** (November 10, 2025)
+  - **Reason:** GPT-5/ChatGPT diagram generation never worked reliably - positions didn't match concepts
+  - **Removed:** 7 files (diagram_processor.py, opening_validator.py, tactical_query_detector.py, diagram_validator.py, canonical_positions.json, canonical_fens.json, validate_canonical_library.py)
+  - **Code Cleanup:** ~200 lines removed from app.py + 326 lines from README.md
+  - **Bug Fix:** Fixed `diagram_time` variable reference → `diagram_attach_time`
+  - **Current Solution:** Static EPUB diagrams only (Phase 6.1a - 536,243 diagrams)
+- ✅ **ITEM-031 Complete:** Book Ingestion (November 10, 2025)
+  - **Books Added:** 2 (Dvoretsky Endgame Manual 6th Ed, Markos Under the Surface 2nd Ed)
+  - **Stats Change:** 920 → 922 books, 309,867 → 311,266 EPUB chunks, 534,467 → 536,243 diagrams
+  - **New Content:** +1,399 chunks, +1,776 diagrams
+  - **Cost:** $0.0143
+  - **Bugs Fixed:** 2 (add_books_to_corpus.py wrong path, batch_process_epubs.py crash)
+  - **Documentation:** Corrected inflated stats from previous sessions (946 books → 920 actual before today)
+- 🎯 **Active Priority:** Test static diagram display in UI with 536,243 extracted diagrams
+- 📦 **Future Work:** PGN corpus expansion to 1M games, then resume Phase 5.2 validation
 - 🔧 **Architecture:** Clean modular design across 9 specialized modules
 - 🔧 **System:** Fully synced with GitHub, Flask operational at port 5001
 
 ### Critical System Facts
 - **Model:** GPT-5 (\`gpt-chatgpt-4o-latest-20250514\`)
-- **Corpus:** 360,320 total chunks (358,529 EPUB + 1,791 PGN) across 2 Qdrant collections
+- **Corpus:** 313,057 total chunks (311,266 EPUB + 1,791 PGN) across 2 Qdrant collections
+- **Books:** 922 EPUB books, 1,778 PGN games
+- **Diagrams:** 536,243 extracted from EPUBs
 - **Success Rate:** 100% on Phase 1 & Phase 2 validation queries
 - **Port:** Flask runs on port 5001
 - **Auth:** GitHub SSH (no token expiration issues)
@@ -89,11 +99,11 @@
     ├── book_{hash}/           # Organized by book ID
     │   ├── book_{hash}_0000.png
     │   ├── book_{hash}_0001.png
-    │   └── ... (724,062 total diagrams across all books)
+    │   └── ... (536,243 total diagrams across 922 books)
     └── ...
 ```
 
-**Note:** Directory structure updated November 10, 2025 after duplicate cleanup. Removed 33 duplicate books total (17 low-quality + 16 duplicate editions) + 913 MacOS metadata files.
+**Note:** Directory structure as of November 10, 2025. Count excludes macOS `._*` metadata files (Mac needs these - they are ignored, not deleted).
 
 ---
 
@@ -1281,6 +1291,58 @@ git remote set-url origin git@github.com:leonisawesome/chess-analysis-system.git
 
 ---
 
+## 🐛 Known Bugs & Required Fixes (November 10, 2025)
+
+### Critical Bugs Found During ITEM-031 Ingestion
+
+**1. add_books_to_corpus.py - Hardcoded Wrong Path**
+- **File:** `add_books_to_corpus.py` line 62
+- **Issue:** `EPUB_DIR = "/Volumes/T7 Shield/epub"` (WRONG)
+- **Actual:** `/Volumes/T7 Shield/books/epub`
+- **Impact:** Incremental book addition completely broken
+- **Status:** ✅ **FIXED** (Nov 10, 2025 - 2:20 PM)
+- **Fix Applied:** Updated line 62 to `/Volumes/T7 Shield/books/epub`
+- **Note:** User specifically asked previous Claude to fix this during directory restructure, but it wasn't done
+
+**2. batch_process_epubs.py - Summary Report Crash**
+- **File:** `batch_process_epubs.py` line 273
+- **Issue:** `TypeError: '<' not supported between instances of 'str' and 'NoneType'`
+- **Root Cause:** Trying to sort `format_stats` keys containing `None` values
+- **Impact:** Crash at end of batch processing (after analysis completes)
+- **Status:** ✅ **FIXED** (Nov 10, 2025 - 2:20 PM)
+- **Fix Applied:** Added None filtering before sorting: `valid_formats = [k for k in summary['format_stats'].keys() if k is not None]`
+
+**3. extract_epub_diagrams.py - No Specific File Support**
+- **File:** `extract_epub_diagrams.py`
+- **Issue:** Only supports `--epub-dir` (processes all files), no `--files` argument
+- **Impact:** Wasteful - must process entire directory to extract from 2 new books
+- **Status:** ❌ NOT FIXED YET (designed workaround used)
+- **Fix Required:** Add `--files` argument to accept specific EPUB paths
+- **Workaround:** Created inline extraction script for 2 specific books
+
+### Learnings from ITEM-031
+
+**Technical Discoveries:**
+1. `extract_epub_text()` returns a **tuple** (text, None), not a string - must use `result[0]`
+2. OpenAI embedding API limit: 300k tokens per request - batch at 100 chunks
+3. Qdrant upload timeout: ~1400 points - batch at 200 points (learned from PGN ingestion Phase 3.5)
+4. Documentation drift: README stats were ~40% inflated (724K → 536K diagrams)
+
+**Process Failures:**
+1. Previous Claude sessions claimed "complete" without validating actual state
+2. Bug fixes requested by user were not implemented
+3. Stats not updated after significant changes
+4. Master Prompt principle violated: "Never trust status messages - Always validate with log files"
+
+**Action Items for Future Claude Sessions:**
+- Always verify stats with actual queries, not documentation
+- Fix bugs when discovered, don't defer
+- Update README/SESSION_NOTES/BACKLOG immediately after changes
+- Check for hardcoded paths when directory structure changes
+- Add specific file arguments to batch processing scripts
+
+---
+
 ## 🔄 Common Development Tasks
 
 ### Adding a New Function to a Module
@@ -1565,329 +1627,3 @@ Fixed diagram rendering bug where [DIAGRAM_ID:xxx] markers appeared as text inst
 **Partner Consult:** ChatGPT, Gemini, Grok - unanimous recommendation for client-side DOMParser approach
 **Security:** Production-grade sanitizer based on OWASP best practices
 **Testing:** Validated with Italian Game query (3+ diagrams)
-
-### Enhancement 1 (October 31, 2025): Complex Move Notation Parsing
-Fixed diagram parser to handle complex move notations:
-- **'OR' handling:** Diagrams like `[DIAGRAM: 1.f4! exf4 2.e5 OR 1.dxe5!]` now parse correctly (takes first sequence before OR)
-- **Move annotations:** Strips `!`, `?`, `!!`, `!?`, `?!` from moves before parsing
-- **Implementation:** Updated `extract_moves_from_description()` in diagram_processor.py
-- **Testing:** Validated with 4 test cases including OR separators and annotations
-
-### Enhancement 2 (October 31, 2025): Descriptive Diagram Captions
-Implemented context-aware descriptive captions for chess diagrams instead of raw FEN strings:
-
-**Problem:** Diagrams previously showed technical FEN notation (e.g., `rnbqkb1r/pppp1ppp/5n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4`) which is not user-friendly
-
-**Solution:** Synthesis-time caption generation with GPT-5
-- **Format:** `[DIAGRAM: <position> | Caption: <description>]`
-- **Example:** `[DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position with White's bishop on c4]`
-
-**Implementation:**
-1. **synthesis_pipeline.py (lines 107-130):** Updated system prompt to instruct GPT-5 to generate descriptive captions
-   - Format examples provided in prompt
-   - Caption guidelines: 5-15 words, describe strategic ideas, focus on WHY the position matters
-2. **diagram_processor.py (lines 61-132):** Parser updated to extract captions from `|` separator
-   - Handles `Caption:` label (case-insensitive)
-   - Falls back to move notation or FEN if no caption provided
-3. **diagram-renderer.js (lines 114-126):** Frontend displays `diagram.caption` instead of FEN
-   - Graceful fallback to FEN if caption unavailable
-4. **diagrams.css (lines 27-39):** Updated styling for descriptive text
-   - Changed from `.fen-caption` (monospace) to `.diagram-caption` (sans-serif)
-   - Larger font (14px), better line-height (1.4), italic styling
-
-**Partner Consult:** ChatGPT (Option A), Gemini (Option A), Grok (Option B) - 2/3 voted for synthesis-time generation
-
-**Benefits:**
-- User-friendly explanations instead of technical notation
-- GPT-5 has full context during synthesis for meaningful captions
-- Describes strategic purpose, piece placement, and key ideas
-- Maintains backward compatibility (fallback to FEN if caption missing)
-
-### Enhancement 3 (October 31, 2025): Diagram Validation & Canonical Library
-Implemented automated validation system to ensure chess diagrams accurately illustrate tactical concepts:
-
-**Problem:** Diagrams render correctly with descriptive captions BUT positions don't match the concepts being discussed
-- "Forks and pins" query shows positions without actual forks or pins
-- GPT-5 generates excellent captions but inaccurate FEN positions
-- Diagrams are generic, not contextually appropriate
-
-**Partner Consult:** Gemini, ChatGPT, Grok - UNANIMOUS recommendation for validation approach
-
-**Solution: 3-Phase Smart Hybrid Approach (ITEM-020)**
-
-**Phase 1 - Automated Validation:**
-- Uses `python-chess` library for programmatic position analysis
-- `validate_fork()`: Checks if piece attacks 2+ opponent pieces
-- `validate_pin()`: Uses `board.is_pinned()` API
-- `validate_diagram()`: Main dispatcher based on tactic type
-- Non-tactical positions (development, structure) accepted as valid
-
-**Phase 2 - Canonical Library Fallback:**
-- `canonical_positions.json`: 15 seed positions across 4 categories
-  * Forks: 5 positions (knight, bishop, queen, pawn, mixed)
-  * Pins: 3 positions (bishop pin knight, rook pin knight, bishop pin rook)
-  * Skewers: 2 positions (rook skewer, bishop skewer)
-  * Development: 5 positions (Italian Game, Ruy Lopez, QG, Sicilian Dragon, etc.)
-- `find_canonical_fallback()`: Searches library by tactic/caption/category
-- When validation fails, replace with verified canonical position
-- Better to show pedagogically optimal example than invalid position
-
-**Phase 3-lite - Optional TACTIC Metadata:**
-- Format: `[DIAGRAM: position | Caption: text | TACTIC: type]`
-- Valid types: fork, pin, skewer, development
-- Helps validator understand intent when caption alone is ambiguous
-- FULLY backward compatible (works without TACTIC field)
-- GPT-5 prompted to include TACTIC for tactical concepts
-
-**Validation Flow:**
-```
-1. Synthesis: [DIAGRAM: position | Caption: text | TACTIC: type]
-2. diagram_processor.py extracts position, caption, tactic
-3. validate_diagram(fen, caption, tactic) using python-chess
-4. If VALID → Add to diagram_positions array
-5. If INVALID → find_canonical_fallback(tactic or caption)
-   - Found? Replace with canonical position
-   - Not found? Skip diagram (better than showing wrong position)
-```
-
-**Implementation:**
-
-Files Created:
-- **diagram_validator.py (156 lines):** Position validation using python-chess
-  - `validate_fork()`: Checks piece attacks 2+ opponent pieces
-  - `validate_pin()`: Checks for pinned pieces via `board.is_pinned()`
-  - `validate_diagram()`: Main validation dispatcher
-- **canonical_positions.json (15 positions):** Verified tactical examples organized by category
-
-Files Modified:
-- **diagram_processor.py (248 lines):**
-  - Added validation loop in `extract_diagram_markers()`
-  - Parses TACTIC field from diagram markers (line 128-135)
-  - Calls `validate_diagram()` for each position (line 168)
-  - Implements canonical fallback logic (line 185-201)
-  - Skips invalid diagrams with no fallback (line 203-204)
-- **synthesis_pipeline.py (lines 118-139):**
-  - Updated DIAGRAM FORMAT instructions with optional TACTIC field
-  - Added examples showing TACTIC usage
-  - Guidelines for when to include TACTIC (tactical positions only)
-
-**Expected Impact:**
-- ✅ 85-90% diagram accuracy (validated positions + canonical fallbacks)
-- ✅ Invalid diagrams skipped (better than showing misleading content)
-- ✅ Canonical positions are pedagogically optimal examples
-- ✅ No manual curation required (automated validation)
-- ✅ Scales to any tactical concept with canonical library expansion
-
-**Future Work (ITEM-021):**
-- Expand canonical library to 50+ positions
-- Add more tactic types (discovered attack, deflection, etc.)
-- Implement GPT-5 structured diagram requests (e.g., `[DIAGRAM: @canonical/fork/knight_fork_king_rook]`)
-- Add skewer-specific validation (currently uses pin logic)
-- Human validation testing with 20 tactical queries
-
-### Enhancement 4.1 (October 31, 2025): Post-Synthesis Enforcement - 100% Tactical Accuracy
-Implemented programmatic enforcement to achieve 100% tactical diagram accuracy after GPT-5 completely ignored @canonical/ instructions:
-
-**Problem:** Phase 3 (@canonical/) was technically correct BUT GPT-5 ignored instructions. User feedback: "Same diagrams all completely wrong. There is no way the knight could do what it says in the caption."
-
-**Root Cause (Partner Consult - ChatGPT, Gemini, Grok):**
-All three AI partners independently identified:
-1. **Prompt Overload:** 8,314-char canonical library listing diluted Transformer attention
-2. **Instruction Competition:** Permissive "OR" logic gave GPT-5 escape routes
-3. **No Enforcement:** Instructions could be violated without consequences
-
-Agreement: "Your code is perfect. The prompt strategy is wrong."
-
-**Solution: Two-Pass Architecture (ITEM-024.1)**
-
-**Pass 1 - Generation:** GPT-5 generates diagrams (may violate instructions)
-**Pass 2 - Enforcement:** Programmatic validation catches and replaces violations
-
-This ensures 100% accuracy regardless of GPT-5 instruction-following behavior.
-
-**Implementation:**
-
-1. **Post-Synthesis Enforcement** (diagram_processor.py):
-   - Added `TACTICAL_KEYWORDS` set (11 tactical concepts)
-   - Added `infer_category()` - Maps caption text to tactical categories
-   - Added `is_tactical_diagram()` - Detects tactical keywords in captions
-   - Added `enforce_canonical_for_tactics()` - 124 lines of enforcement logic
-   - Modified `extract_diagram_markers()` - Calls enforcement before returning results
-   - **100% accuracy guarantee:** Tactical diagrams auto-replaced if non-canonical
-
-2. **Simplified Prompt** (synthesis_pipeline.py):
-   - Reduced `build_canonical_positions_prompt()` from 8,314 → ~960 chars (88% reduction)
-   - Lists category names + counts + example IDs only
-   - Removes overwhelming detail that diluted Transformer attention
-   - Token savings: ~1,900 tokens per query
-
-3. **Mandatory Rules** (synthesis_pipeline.py):
-   - Replaced "CRITICAL DIAGRAM RULES" with "MANDATORY DIAGRAM RULES"
-   - RULE 1: Tactical concepts MUST use @canonical/ references
-   - RULE 2: Opening sequences use move notation (3-6 moves)
-   - RULE 3: Enforcement guarantee notice to GPT-5
-   - Removed permissive "OR" logic that allowed escape routes
-
-**Technical Achievements:**
-- Keyword-based tactical detection (11 tactical concepts)
-- Natural language category inference from captions
-- Automatic canonical replacement with logging
-- Token reduction: ~1,900 tokens saved per query (95% reduction in prompt size)
-- Backward compatible with opening sequences
-- Graceful degradation (fallback chain: specific ID → category → skip)
-
-**Expected Impact:**
-- Before: Phase 3 code ✅ working, GPT-5 behavior ❌ ignoring, Accuracy ❌ 0% for tactics
-- After: Enforcement ✅, 100% tactical accuracy ✅, Token reduction ✅ 88%, Backward compatible ✅
-
-**Key Lessons:**
-- From ChatGPT: "Make disobedience impossible"
-- From Gemini: "Delete the 8K noise, trust your code"
-- From Grok: "Structure over instructions"
-- Don't trust LLM instruction-following for critical accuracy
-- Programmatic enforcement > prompting
-- Less prompt text > massive detailed listings
-
-**Testing Plan:**
-1. "show me 5 examples of pins" → Expect 3 canonical pin diagrams, all showing actual pins
-2. "explain knight forks" → Multiple fork diagrams, all showing actual forks
-3. "Italian Game opening" → Move sequences work, no enforcement needed
-
-**Stage 2 Option Available:** If Stage 1 insufficient, can implement JSON structured output (Grok's recommendation) for schema-level compliance (~1 day implementation).
-
-**UPDATE:** Enhancement 4.1 failed catastrophically in production testing (0% accuracy). Replaced by Enhancement 4.2 (Emergency Fix).
-
-### Enhancement 4.2 (October 31, 2025): Emergency Fix - Tactical Query Bypass - 100% Accuracy
-
-After Enhancement 4.1 failed in production testing (0/6 diagrams correct), implemented emergency bypass solution that achieves 100% tactical diagram accuracy:
-
-**Failure Report (Enhancement 4.1):**
-- Test query: "show me 5 examples of pins"
-- Expected: 3-5 pin diagrams
-- Actual: 6 diagrams, **ZERO showing actual pins**
-- **Accuracy: 0% (complete failure)**
-
-**Partner Consult Verdict:**
-All three AI partners (ChatGPT, Gemini, Grok) unanimously concluded: **Stage 1 unfixable**
-- Post-synthesis enforcement runs too late (diagrams already wrong)
-- Only solution: **Bypass GPT-5 diagram generation entirely for tactical queries**
-
-**Emergency Fix Architecture: Tactical Query Bypass**
-
-Early detection and complete bypass at /query endpoint level:
-1. Detect tactical keywords in user query (before synthesis pipeline)
-2. If tactical → Skip GPT-5 diagram generation completely
-3. Generate text explanation only (no diagram markers)
-4. Inject canonical diagrams programmatically
-5. Generate SVG for all canonical positions
-6. Return with `emergency_fix_applied` flag
-
-**Implementation (ITEM-024.2):**
-
-1. **tactical_query_detector.py** (132 lines) - New module:
-   - 27 tactical keywords across 14 categories
-   - `is_tactical_query()` - Keyword matching detection
-   - `infer_tactical_category()` - Category inference from query text
-   - `inject_canonical_diagrams()` - Inject up to 5 canonical positions
-   - `strip_diagram_markers()` - Remove any GPT-generated markers
-
-2. **diagnostic_logger.py** (19 lines) - New module:
-   - Debug logging for troubleshooting enforcement attempts
-
-3. **app.py modifications** (+90 lines at 29, 66-75, 134-210):
-   - Load canonical_positions.json at startup (73 positions, 14 categories)
-   - Emergency fix integration at /query endpoint
-   - Complete bypass of synthesis pipeline for tactical queries
-   - Programmatic SVG generation for all injected diagrams
-   - Response includes `emergency_fix_applied` flag for debugging
-
-**Execution Flow:**
-1. Query received: "show me 5 examples of pins"
-2. Tactical detection: keyword 'pins' found → emergency bypass triggered
-3. RAG pipeline: Execute for textual context only (embed → search → rerank)
-4. GPT-5 call: Generate text explanation ONLY (no diagrams)
-5. Strip any diagram markers GPT-5 might have added anyway
-6. Canonical injection: Load 'pins' category from canonical_positions.json (3 positions)
-7. SVG generation: Convert FEN → SVG for all diagrams
-8. Response assembly: Text + canonical diagrams + emergency_fix_applied flag
-9. Return to frontend: 100% accurate tactical diagrams
-
-**Verification Results:**
-
-Test query: "show me 5 examples of pins"
-- ✅ Tactical detection working
-- ✅ 3 canonical pin diagrams injected
-- ✅ All diagrams have valid FEN + SVG (23-31k chars each)
-- ✅ All tagged with category='pins', tactic='pin'
-- ✅ Text explanation clean and concise
-- ✅ Total time: 15.81s
-- ✅ **Accuracy: 100% (3/3 diagrams showing actual pins)**
-
-**Comparison: Enhancement 4.1 vs 4.2**
-
-| Metric | 4.1 (Failed) | 4.2 (Success) |
-|--------|-------------|---------------|
-| Detection | ❌ Failed | ✅ Working |
-| Canonical Injection | ❌ 0 diagrams | ✅ 3 diagrams |
-| SVG Generation | ❌ Failed | ✅ Working (23-31k chars) |
-| Response Structure | ❌ Wrong | ✅ Correct |
-| **Accuracy** | **❌ 0%** | **✅ 100%** |
-
-**Supported Tactical Categories (14):**
-pins, forks, skewers, discovered_attacks, deflection, decoy, clearance, interference, removal_of_defender, x-ray, windmill, smothered_mate, zugzwang, zwischenzug
-
-**Technical Achievements:**
-- Complete bypass of unreliable GPT-5 diagram generation
-- Early detection at endpoint level (before synthesis)
-- Guaranteed canonical accuracy for all tactical queries
-- Programmatic SVG generation for all positions
-- Backward compatible (non-tactical queries use normal pipeline)
-- Clean response structure with emergency_fix_applied flag
-
-**Key Lessons:**
-- Post-synthesis enforcement = too late for this problem
-- Early detection and bypass > trying to fix GPT-5 behavior
-- Canonical injection at endpoint level > prompt engineering
-- Partner consults prevent wasted iteration on unfixable approaches
-- **100% accuracy requires bypassing unreliable components entirely**
-
-**UPDATE (October 31, 2025): Multi-Category Bug Fix**
-
-Enhancement 4.2 had two hidden bugs discovered through partner consultation:
-
-**Bug #1: if/elif Chain (Gemini's Diagnosis)**
-- Multi-category queries only detected first matching concept
-- Query "show me pins and forks" only returned pins
-- Root cause: if/elif stopped at first match
-- Fixed: Replaced with SET-based collection
-
-**Bug #2: Integration Gap (ChatGPT + Grok)**
-- Verified integration in app.py working correctly
-
-**Fix Deployed:**
-```python
-# Changed from if/elif chain to SET-based detection
-def infer_tactical_categories(query: str) -> Set[str]:
-    found_categories = set()
-    for category, keywords in TACTICAL_KEYWORDS.items():
-        for keyword in keywords:
-            if keyword in query_lower:
-                found_categories.add(category)
-                break
-    return found_categories
-```
-
-**Verification:** Query "show me pins and forks"
-- ✅ Categories detected: {'pins', 'forks'} (both)
-- ✅ Diagrams returned: 6 (3 pins + 3 forks)
-- ✅ SVG generation: 6/6
-- ✅ Accuracy: 100%
-
-**Production Status:**
-- ✅ Flask server @ http://127.0.0.1:5001
-- ✅ Canonical library: 73 positions across 14 categories loaded
-- ✅ Qdrant database: 358,529 vectors from 1,055 books (Docker mode)
-- ✅ Emergency fix active and monitoring all queries
-- ✅ Multi-category detection: WORKING
-- ✅ Verified with both single and multi-category tactical queries
-- ✅ **Ready for production with 100% tactical diagram accuracy**

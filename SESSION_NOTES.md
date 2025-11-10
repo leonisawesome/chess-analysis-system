@@ -1,2260 +1,326 @@
-# Chess RAG System - Session Notes
-**Last Updated:** November 9, 2025 (Phase 6.1a UI Integration Complete)
+# Chess Analysis System - Session Notes
+**Date:** 2025-11-10
+**Last Updated:** 2:15 PM
+
+## CURRENT STATUS: ✅ ITEM-031 COMPLETE - 2 BOOKS INGESTED + BUGS DOCUMENTED
+
+### Flask Server Status
+- **Running:** Yes, at http://localhost:5001
+- **Process:** Background shell ID `95f373`
+- **Command:** `export OPENAI_API_KEY="sk-proj-YOUR_API_KEY_HERE..." && source .venv/bin/activate && python app.py 2>&1 | tee flask_final.log &`
+- **Log File:** `flask_final.log`
+
+### Diagram Service Status
+- **Loaded Diagrams:** 526,463 (from 920 books)
+- **Filtered Out:** 8,003 small images (< 2KB)
+- **Total Extracted:** 534,466 diagrams
+- **Storage:** `/Volumes/T7 Shield/books/images/`
+- **Metadata:** `diagram_metadata_full.json` (385MB)
+
+### What Was Accomplished This Session
+
+#### 1. Investigation: Diagram Linking Issue (FIXED ✅)
+**Problem:** User asked "did you already link all the diagrams or how can we test them if they are not linked?"
+
+**Investigation Process:**
+1. Found diagram_service.py loads diagrams on Flask startup
+2. Found /diagrams/<diagram_id> endpoint exists (app.py line 129)
+3. Tested endpoint: Got 404 for `book_00448974a7ea_0000`
+4. Root cause: Size filtering too aggressive
+
+**Solution Applied:**
+- **File:** `app.py` line 106
+- **Changed:** `min_size_bytes=12000` → `min_size_bytes=2000`
+- **Impact:** Recovered 64,316 valid diagrams
+- **Verification:** `curl -I http://localhost:5001/diagrams/book_00448974a7ea_0000` returns HTTP 200 OK
+
+#### 2. Size Threshold Analysis
+**Data Distribution:**
+```
+< 1KB:     5,576    (true icons)
+1-2KB:     2,427    (small icons)
+2-5KB:     2,025    (valid diagrams - now included!)
+5-10KB:    34,229   (valid diagrams - now included!)
+10-20KB:   213,654  (always included)
+```
+
+**Decision:** 2KB threshold balances quality (filters icons) vs coverage (keeps diagrams)
+
+#### 3. Test Query In Progress
+- **Query:** "Najdorf Sicilian"
+- **Status:** Processing (FEN parsing for 100 results)
+- **Background Shell:** `a61708`
+- **Progress:** Embedding generated (5.62s), search completed (50 EPUB + 50 PGN), RRF merge done, now matching diagrams
 
 ---
 
-# 🎯 LATEST SESSION: Phase 6.1a UI Integration - Static EPUB Diagrams (COMPLETE ✅)
-**Date:** November 9, 2025
-**Session Focus:** Integrate static EPUB diagram service into web interface
+## AFTER REBOOT: WHAT TO DO
 
-## Summary
-
-Completed Phase 6.1a by implementing the UI integration for static EPUB diagrams. This session focused on creating the diagram service, integrating it with the Flask backend, and updating the frontend to display diagrams in search results.
-
-**Key Achievement:** Users can now see relevant chess diagrams from EPUB books displayed alongside text answers.
-
-## Partner Consultation Process
-
-### 1. Consultation Document Created
-**File:** `PARTNER_CONSULT_STATIC_DIAGRAMS.md`
-
-**Questions Asked:**
-1. How to link 724,062 diagrams to 327,779 text chunks?
-2. Chapter-level vs book-level linking strategy?
-3. Ranking algorithm for diagram relevance?
-4. Security model for serving external drive files?
-5. Performance considerations (caching, lazy loading)?
-
-**Partners Consulted:** Gemini, Grok, ChatGPT
-
-### 2. Partner Responses
-
-**Gemini:**
-- Recommended chapter-level matching via `html_document` field
-- Suggested symlink strategy for drive mounting
-- Security hardening recommendations
-
-**Grok:**
-- Hybrid book-level + ranking approach
-- Quality filtering (size-based)
-- Drive health check monitoring
-- Cache headers for performance
-
-**ChatGPT:**
-- Lightweight ranking with drop-in code
-- Metadata whitelist validation
-- Jaccard similarity for text matching
-
-### 3. Critical Discovery
-**Qdrant Metadata Analysis:**
-```json
-{
-  "text": "...",
-  "book_name": "unknown_author_0000_study_chess_with_tal.epub",
-  "book_tier": "HIGH",
-  "book_score": 88,
-  "chapter_title": "unknown_author_0000_study_chess_with_tal.epub",
-  "chapter_index": 0,
-  "chunk_index": 0
-}
-```
-
-**Issue:** Qdrant chunks DON'T have `html_document` field, only `book_name` and `chapter_title` (which is just the filename).
-
-**Impact:** Chapter-level matching approach BLOCKED by missing metadata.
-
-### 4. Architecture Synthesis
-**File:** `PARTNER_SYNTHESIS_STATIC_DIAGRAMS.md`
-
-**Consensus Points:**
-- ✅ Book-level linking + lightweight ranking (chapter-level blocked)
-- ✅ In-memory metadata index (200 MB acceptable)
-- ✅ Secure endpoint with whitelist validation
-- ✅ Quality filtering (<12KB)
-- ✅ 24-hour cache headers
-- ✅ Ranking algorithm: Text similarity + keywords + proximity + quality
-
-**Security Decision:**
-- Changed from `/diagrams/<book_id>/<filename>` (vulnerable to path traversal)
-- To `/diagrams/<diagram_id>` (metadata whitelist validation only)
-
-## Implementation Details
-
-### 1. diagram_service.py (NEW - 242 lines)
-**Purpose:** In-memory index of chess diagrams with ranking utilities
-
-**Key Components:**
-```python
-class DiagramIndex:
-    def __init__(self):
-        self.by_book = defaultdict(list)  # book_id -> [diagram_info]
-        self.by_id = {}                   # diagram_id -> diagram_info
-        self.whitelist = set()            # Set of valid diagram_ids
-        self.book_name_to_id = {}         # book_name -> book_id
-
-    def load(self, metadata_path, min_size_bytes=12000):
-        """Load and filter diagram metadata."""
-        # Quality filtering: Skip images <12KB (icons/ribbons)
-        # Build reverse lookup: book_name → book_id
-        # Sort by position_in_document for sequential relevance
-
-    def rank_diagrams_for_chunk(self, diagrams, chunk, max_k=5):
-        """
-        Rank diagrams by relevance to text chunk.
-
-        Algorithm:
-            score = 0.8 * text_similarity (Jaccard)
-                  + 0.4 * opening_keywords (ECO, "Najdorf", etc.)
-                  + 0.2 * sequential_proximity (position in book)
-                  + 0.1 * size_quality (larger images prioritized)
-        """
-```
-
-**Features:**
-- Jaccard similarity for text overlap (stopwords filtered)
-- Opening keyword pattern matching (ECO codes, opening names)
-- Sequential proximity scoring (exponential decay)
-- Quality boost for larger diagrams (>25KB)
-- Fallback: Ensure at least 2 diagrams if available
-
-**Loading Results:**
-```
-✅ Loaded 26,876 diagrams from 41 books
-   Filtered 0 small images (< 12,000 bytes)
-   Indexed 41 unique book names
-```
-
-### 2. app.py Modifications
-**Lines 37-38:** Import diagram_service
-```python
-from diagram_service import diagram_index
-```
-
-**Lines 103-111:** Load metadata on startup
-```python
-print("Loading EPUB diagram metadata...")
-try:
-    diagram_index.load('diagram_metadata_full.json', min_size_bytes=12000)
-    print(f"✓ Diagram service ready")
-except FileNotFoundError:
-    print("⚠️  diagram_metadata_full.json not found - static diagrams disabled")
-```
-
-**Lines 129-168:** Secure diagram serving endpoint
-```python
-@app.route('/diagrams/<diagram_id>')
-def serve_diagram(diagram_id):
-    """Serve a static EPUB diagram by ID with metadata whitelist validation."""
-
-    # Validate against whitelist
-    if not diagram_index.is_valid_diagram_id(diagram_id):
-        app.logger.warning(f"Invalid diagram ID requested: {diagram_id}")
-        abort(404)
-
-    # Get trusted file path from metadata
-    diagram_info = diagram_index.get_diagram_by_id(diagram_id)
-    if not diagram_info:
-        abort(404)
-
-    file_path = diagram_info['file_path']
-
-    # Check if file exists (handle unmounted drive)
-    if not os.path.exists(file_path):
-        return Response("Diagram file unavailable (drive may be unmounted)", status=410)
-
-    # Serve with caching
-    response = send_file(file_path, conditional=True)
-    response.headers['Cache-Control'] = 'public, max-age=86400'  # 24 hours
-    return response
-```
-
-**Lines 654-692:** Attach diagrams to /query_merged results
-```python
-print(f"📷 Attaching static EPUB diagrams...")
-for result in final_results[:10]:
-    book_name = result.get('book_name', '')
-    book_id = diagram_index.get_book_id_from_name(book_name)
-
-    if book_id:
-        all_diagrams = diagram_index.get_diagrams_for_book(book_id)
-        if all_diagrams:
-            ranked_diagrams = diagram_index.rank_diagrams_for_chunk(
-                all_diagrams, result, max_k=5
-            )
-            result['epub_diagrams'] = [
-                {
-                    'id': d['diagram_id'],
-                    'url': f"/diagrams/{d['diagram_id']}",
-                    'caption': (d.get('context_before') or d.get('context_after') or 'Chess diagram')[:120],
-                    'book_title': d.get('book_title', 'Unknown'),
-                    'position': d.get('position_in_document', 0)
-                }
-                for d in ranked_diagrams
-            ]
-```
-
-### 3. index.html Frontend Integration
-
-**JavaScript Rendering (lines 756-790):**
-```javascript
-// Phase 6.1a: Static EPUB diagrams (if any)
-if (result.epub_diagrams && result.epub_diagrams.length > 0) {
-    const diagramsDiv = document.createElement('div');
-    diagramsDiv.className = 'epub-diagrams-section';
-
-    const header = document.createElement('div');
-    header.className = 'diagrams-header';
-    header.textContent = `📷 ${result.epub_diagrams.length} diagram(s) from "${result.epub_diagrams[0].book_title}"`;
-    diagramsDiv.appendChild(header);
-
-    const grid = document.createElement('div');
-    grid.className = 'diagram-grid';
-
-    result.epub_diagrams.forEach((diagram) => {
-        const item = document.createElement('div');
-        item.className = 'diagram-item';
-
-        const img = document.createElement('img');
-        img.src = diagram.url;
-        img.alt = diagram.caption;
-        img.loading = 'lazy';  // Browser-native lazy loading
-        img.onerror = function() { this.style.display = 'none'; };  // Silent fail
-        item.appendChild(img);
-
-        const caption = document.createElement('p');
-        caption.className = 'diagram-caption';
-        caption.textContent = diagram.caption;
-        item.appendChild(caption);
-
-        grid.appendChild(item);
-    });
-
-    diagramsDiv.appendChild(grid);
-    card.appendChild(diagramsDiv);
-}
-```
-
-**CSS Styling (lines 206-256):**
-```css
-/* Phase 6.1a: Static EPUB diagram styling */
-.epub-diagrams-section {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #ecf0f1;
-}
-
-.diagrams-header {
-    font-weight: 600;
-    margin-bottom: 15px;
-    color: #2c3e50;
-    font-size: 14px;
-}
-
-.diagram-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-    margin: 15px 0;
-}
-
-.diagram-item {
-    text-align: center;
-    background: #f8f9fa;
-    padding: 10px;
-    border-radius: 4px;
-}
-
-.diagram-item img {
-    width: 100%;
-    height: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: #fff;
-    max-width: 300px;
-}
-
-/* Mobile responsive */
-@media (max-width: 600px) {
-    .diagram-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-```
-
-## Testing Results
-
-### Module Import Test
+### 1. Restart Flask Server
 ```bash
-python3 -c "from diagram_service import diagram_index; print('✓ Import successful')"
+cd /Users/leon/Downloads/python/chess-analysis-system
+source .venv/bin/activate
+export OPENAI_API_KEY="sk-proj-YOUR_API_KEY_HERE"
+python app.py
 ```
-**Result:** ✅ PASSED
 
-### Metadata Loading Test
+**Expected Output:**
+```
+✅ Loaded 526,463 diagrams from 920 books
+   Filtered 8,003 small images (< 2,000 bytes)
+
+Starting server at http://127.0.0.1:5001
+```
+
+### 2. Verify Diagram Endpoint
 ```bash
-python3 -c "from diagram_service import diagram_index; diagram_index.load('diagram_metadata_full.json'); print(f'Loaded {len(diagram_index.by_id)} diagrams')"
+curl -I http://localhost:5001/diagrams/book_00448974a7ea_0000
 ```
-**Result:** ✅ 26,876 diagrams loaded from 41 books
 
-### Flask Startup Test
+**Expected:** `HTTP/1.1 200 OK` with `Content-Type: image/gif`
+
+### 3. Test Query with Diagrams
 ```bash
-python3 app.py
+curl -X POST http://localhost:5001/query_merged \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Najdorf Sicilian", "top_k": 5}' \
+  | python3 -c "import sys, json; data = json.load(sys.stdin); print(f'Results: {len(data[\"results\"])}'); print(f'First result diagrams: {len(data[\"results\"][0].get(\"diagrams\", []))}')"
 ```
-**Result:** ✅ Diagram service loaded successfully
 
-## Files Modified
+### 4. Open Web UI
+```bash
+open http://localhost:5001
+```
 
-**Created:**
-- `diagram_service.py` (242 lines)
-- `PARTNER_CONSULT_STATIC_DIAGRAMS.md` (comprehensive consultation doc)
-- `PARTNER_SYNTHESIS_STATIC_DIAGRAMS.md` (architecture synthesis)
-
-**Modified:**
-- `app.py` (4 changes: import, startup loading, diagram endpoint, result attachment)
-- `templates/index.html` (2 sections: JavaScript rendering, CSS styling)
-- `README.md` (Phase 6.1a status updated)
-- `BACKLOG.md` (Phase 6.1a marked complete with UI details)
-- `SESSION_NOTES.md` (this entry)
-
-## Key Technical Decisions
-
-### 1. Book-Level Linking (Not Chapter-Level)
-**Reason:** Qdrant chunks lack `html_document` field needed for chapter matching
-
-**Alternative Considered:** Chapter-level matching for precision
-**Decision:** Book-level + ranking (blocked by missing metadata)
-
-### 2. Security Model: diagram_id Endpoint
-**Vulnerable Approach:** `/diagrams/<book_id>/<filename>` (path traversal risk)
-**Secure Approach:** `/diagrams/<diagram_id>` (metadata whitelist only)
-
-**Benefits:**
-- Client provides only diagram_id (not file paths)
-- Server looks up trusted path from metadata
-- No user-controlled path components
-- Returns 410 Gone if drive unmounted
-
-### 3. Ranking Algorithm Components
-**Text Similarity (0.8 weight):**
-- Jaccard similarity between chunk text and diagram context
-- Stopwords filtered (the, a, move, plans, etc.)
-
-**Opening Keywords (0.4 weight):**
-- ECO codes (A00-E99)
-- Opening names (Najdorf, Sicilian, King's Indian, etc.)
-
-**Sequential Proximity (0.2 weight):**
-- Exponential decay: `0.2 * exp(-delta / 10.0)`
-- Delta = |diagram_position - chunk_index|
-
-**Quality Boost (0.1 weight):**
-- Larger images (>25KB) get priority
-- Helps filter out small/low-quality diagrams
-
-### 4. Quality Filtering: 12KB Threshold
-**Rationale:** Icons, ribbons, decorative elements typically <12KB
-**Impact:** Filters noise while keeping real diagrams
-**Result:** 0 diagrams filtered in test set (all above threshold)
-
-### 5. Cache Strategy
-**Headers:** `Cache-Control: public, max-age=86400` (24 hours)
-**Benefit:** Reduces load on external drive
-**Tradeoff:** Updates require cache invalidation
-
-### 6. Graceful Degradation
-**Drive Unmounted:** Returns 410 Gone (not 500 error)
-**Image Load Failure:** `onerror` hides broken images silently
-**No Diagrams Available:** Section not rendered (no empty state)
-
-## Architecture Alignment
-
-### Backend (Option B - Gemini)
-- Pre-render diagram metadata into response
-- Secure file serving with whitelist validation
-- Quality filtering and ranking on server
-
-### Frontend (Option A - ChatGPT/Grok)
-- Lazy loading for performance
-- Responsive grid layout
-- Graceful error handling
-
-## Performance Characteristics
-
-**Memory Usage:**
-- Diagram index: ~200 MB in RAM
-- Acceptable for production use
-
-**Latency:**
-- Metadata loading: One-time on startup (~1 second)
-- Diagram lookup: O(1) by diagram_id
-- Ranking: O(n) where n = diagrams per book (~600 avg)
-- File serving: Direct file read (no processing)
-
-**Scalability:**
-- 724,062 total diagrams supported
-- 26,876 currently indexed (41 books)
-- Can scale to full corpus with more RAM
-
-## Next Steps (Future Work)
-
-**Immediate:**
-1. ✅ Update Big 3 documentation → IN PROGRESS
-2. ⏳ Commit to GitHub → PENDING
-3. ⏳ Test in browser with real queries → PENDING
-
-**Phase 6.1b (Future):**
-1. Test static diagram display with various query types
-2. Monitor drive unmount scenarios
-3. Tune ranking algorithm weights based on user feedback
-4. Consider dynamic diagram generation (after partner consult)
-
-## Key Lessons
-
-1. **Partner consultation prevented wrong approach:** Chapter-level would have failed due to missing metadata
-2. **Security first:** Whitelist validation prevents path traversal attacks
-3. **Quality filtering essential:** 12KB threshold removes noise
-4. **Multi-factor ranking > simple matching:** Text + keywords + proximity + quality
-5. **Graceful degradation > error messages:** Silent failures for missing images
-6. **In-memory index acceptable:** 200 MB for 700K+ diagrams is reasonable
-
-## Status
-
-✅ **Phase 6.1a UI Integration COMPLETE**
-- diagram_service.py: WORKING
-- Secure diagram endpoint: WORKING
-- Result attachment: WORKING
-- Frontend rendering: WORKING
-- Documentation: COMPLETE
-- Testing: PASSED
-
-**Next:** Commit to GitHub and test in browser.
+Test the interface:
+- Search for "Najdorf Sicilian"
+- Verify diagrams appear in results
+- Check diagram lazy loading
+- Test multiple queries
 
 ---
 
-# 🎯 PREVIOUS SESSION: Qdrant Metadata Bug Fix - book_title Field (COMPLETE ✅)
-**Date:** November 9, 2025
-**Session Focus:** Fix missing `book_title` field in Qdrant ingestion pipeline
+## TROUBLESHOOTING
 
-## Problem Identified
+### If Diagrams Return 404
+1. Check Flask loaded diagrams: `grep "Loaded.*diagrams" flask_final.log`
+2. Verify threshold: `grep "min_size_bytes" app.py` should show 2000
+3. Check metadata exists: `ls -lh diagram_metadata_full.json` (should be ~385MB)
+4. Verify image exists: `ls -lh "/Volumes/T7 Shield/books/images/book_00448974a7ea/book_00448974a7ea_0000.gif"`
 
-During .mobi conversion work, discovered that `build_production_corpus.py` only saved `book_name` (filename) to Qdrant, not the human-readable book title extracted from EPUB metadata.
+### If Query Times Out
+- OpenAI API might be slow
+- Check logs: `tail -f flask_final.log`
+- Normal processing: Embedding (5-6s) + Search (1-2s) + Reranking (15-20s) + FEN parsing (variable)
 
-**Impact:**
-- All 327,779 chunks in Qdrant have filenames instead of proper titles
-- Makes it difficult to display user-friendly source attribution in UI
-- Example: "unknown_author_0000_study_chess_with_tal.epub" instead of "Study Chess with Tal"
-
-## Solution Implemented
-
-**File Modified:** `build_production_corpus.py`
-
-### 1. Added imports (lines 30-31)
-```python
-import ebooklib
-from ebooklib import epub
-```
-
-### 2. Created title extraction function (lines 138-156)
-```python
-def extract_epub_title(epub_path: str) -> str:
-    """
-    Extract book title from EPUB metadata.
-    Falls back to filename if title not found.
-    """
-    try:
-        book = epub.read_epub(epub_path)
-        title = book.get_metadata('DC', 'title')
-
-        if title and len(title) > 0:
-            # get_metadata returns a list of tuples: [(title, {})]
-            return title[0][0] if isinstance(title[0], tuple) else title[0]
-
-        # Fallback to filename without extension
-        return Path(epub_path).stem
-
-    except Exception:
-        # Fallback to filename on any error
-        return Path(epub_path).stem
-```
-
-### 3. Updated chunk creation (line 192, 200)
-```python
-# Extract book title from EPUB metadata
-book_title = extract_epub_title(book_path)
-
-# Add metadata to each chunk
-chunk_data = {
-    'text': chunk_text,
-    'book_name': book_metadata['filename'],
-    'book_title': book_title,  # Human-readable title
-    'book_path': book_metadata['full_path'],
-    # ... rest of metadata
-}
-```
-
-### 4. Updated Qdrant payload (line 294)
-```python
-payload={
-    'text': chunk['text'],
-    'book_name': chunk['book_name'],
-    'book_title': chunk['book_title'],  # Human-readable title
-    'book_tier': chunk['book_tier'],
-    'book_score': chunk['book_score'],
-    # ... rest of payload
-}
-```
-
-## Testing Strategy
-
-**Note:** Existing Qdrant data (327,779 chunks) still has missing `book_title` field. This fix only applies to future ingestion runs.
-
-**To validate fix:**
-1. Run `build_production_corpus.py` on small test set
-2. Query Qdrant and verify `book_title` field exists in payload
-3. Confirm title is human-readable (not filename)
-
-**Future work:**
-- Option A: Re-ingest entire corpus (979 books, ~$15 OpenAI cost)
-- Option B: Write migration script to extract titles and update existing Qdrant points
-- Decision: Defer until needed for UI work
-
-## Files Modified
-
-- `build_production_corpus.py` (4 changes: imports, function, chunk metadata, Qdrant payload)
-- `README.md` (documented bug fix completion)
-- `backlog.md` (moved from Future Work to completed with details)
-- `SESSION_NOTES.md` (this entry)
-
-## Status
-
-✅ **Bug fix complete** - Future ingestion runs will include `book_title` field
-⏸️ **Existing data** - Not migrated yet (pending UI requirements)
+### If External Drive Missing
+- Diagrams stored on `/Volumes/T7 Shield/books/images/`
+- Mount external drive before starting Flask
+- Check with: `ls /Volumes/T7\ Shield/books/images/ | head -5`
 
 ---
 
-# 🎯 PREVIOUS SESSION: Phase 6.1a - Static EPUB Diagram Extraction (COMPLETE ✅)
-**Date:** November 9, 2025
-**Session Focus:** EPUB diagram extraction pipeline, data cleaning, evaluation enhancement
+## QUICK REFERENCE
 
-## Session Summary
+**Start Flask:**
+```bash
+source .venv/bin/activate && export OPENAI_API_KEY="sk-proj-YOUR_API_KEY_HERE" && python app.py
+```
 
-### 1. Phase 5.2 Validation Put ON HOLD
+**Test Diagram:**
+```bash
+curl -I http://localhost:5001/diagrams/book_00448974a7ea_0000
+```
 
-**Phase 5.2 validation has been paused** pending PGN corpus expansion from 1,778 games to target of 1M games.
+**Test Query:**
+```bash
+curl -X POST http://localhost:5001/query_merged -H "Content-Type: application/json" -d '{"query":"Najdorf Sicilian","top_k":5}'
+```
 
-**Early Termination Results (28/50 queries completed):**
-- EPUB won 28/28 queries (100% win rate)
-- PGN corpus scored 0.000 on 25% of opening queries
-- RRF merge underperformed EPUB-only search
+**Open UI:**
+```bash
+open http://localhost:5001
+```
 
-**Root Cause:**
-- Current PGN corpus (1,778 games) too small for meaningful validation
-- Target corpus size: 1M games
-- Insufficient game diversity and coverage
+---
 
-**Status of RRF System:**
-- ✅ RRF implementation working correctly
-- ✅ UI integration complete and production-ready
-- ✅ System architecture validated
-- ⚠️ Simply needs more PGN data to demonstrate value
+## STATUS CHECKLIST
 
-### 2. MAJOR CORRECTION: Dynamic Diagrams Never Worked
+- ✅ Diagram extraction complete (534,466 diagrams)
+- ✅ Size threshold optimized (2KB, not 12KB)
+- ✅ Flask server configuration updated
+- ✅ Diagram endpoint tested (HTTP 200)
+- ✅ Metadata loaded (526,463 diagrams)
+- ✅ Investigation complete
+- 🔄 Test query in progress (may complete after reboot)
+- ⏳ Web UI testing pending
 
-**Critical Discovery:** Documentation was incorrect about diagram state.
+**READY FOR:** Phase 6.1a static diagram display testing in web UI
 
-**TRUE State:**
-- **Dynamic diagrams (GPT-5 generated): NEVER worked properly**
-- **Static EPUB diagrams: NEVER extracted**
-- README documented Enhancement 4.2 "100% tactical accuracy" - NOT actually working
-- Previous Claude was not updating documentation accurately
+**USER ACTION NEEDED:** Open http://localhost:5001 in browser and test diagram display in search results
 
-**Phase Definitions Corrected:**
-- **Phase 6.1a:** Static EPUB diagram extraction (extract from 1,055 books)
-- **Phase 6.1b:** Dynamic diagram generation (GPT-5, requires partner consult)
+---
 
-### 3. Current Focus: Static EPUB Diagram Extraction (Phase 6.1a)
+## UPDATE: 1:30 PM - Dynamic Diagram Code Removal
 
-**Goal:** Extract diagrams from EPUB files and display in search results
+**Last Updated:** 1:30 PM
 
-**Current Reality:**
-- 1,055 chess books contain THOUSANDS of diagrams (not extracted)
-- `static/diagrams/` directory is empty
-- NO extraction code exists
-- NO diagram metadata in Qdrant chunks
+### Status Change
+- **Previous:** Static EPUB diagrams + Dynamic GPT-5 diagram generation
+- **Current:** Static EPUB diagrams ONLY
 
-**What We're Building:**
-1. EPUB diagram extraction pipeline
-2. Store diagrams with unique IDs in `static/diagrams/{book_id}/`
-3. Add `diagram_ids: []` metadata to Qdrant chunks
-4. Display book diagrams when chunks appear in search results
+### What Changed
+User directive: "Lets remove all the chatgpt svg stuff. That is not our solution and is causing problems."
 
-**Key Insight:** Start with static extraction (real book diagrams) before attempting dynamic generation.
+#### Files Removed (7 total)
+1. `diagram_processor.py` - Dynamic diagram extraction/parsing
+2. `opening_validator.py` - GPT-5 diagram validation
+3. `tactical_query_detector.py` - Tactical query bypass system
+4. `diagram_validator.py` - Position validation logic
+5. `validate_canonical_library.py` - Canonical library validation
+6. `canonical_positions.json` - 73 tactical positions library
+7. `canonical_fens.json` - FEN database
+
+#### Code Cleanup
+**File:** `app.py`
+- **Removed:** ~200 lines
+  - Dynamic diagram imports (lines 24-29)
+  - Canonical positions loading (lines 73-101)
+  - Tactical query bypass (lines 194-290)
+  - Dynamic diagram extraction calls in `/query` and `/query_merged`
+- **Fixed:** Variable name bug
+  - Line 563: `diagram_time` → `diagram_attach_time`
+  - Root cause: Leftover reference after dynamic code removal
+
+**File:** `synthesis_pipeline.py`
+- Changed validation function parameters to `None`:
+  - `validate_stage2_diagrams_func=None`
+  - `generate_section_with_retry_func=None`
+
+#### Documentation Updates
+1. **README.md:** Removed 326 lines (Enhancement 1-4.2 sections)
+2. **BACKLOG.md:** Removed Phase 6.1b section, added removal documentation
+3. **SESSION_NOTES.md:** Added this section
+
+### Testing Status
+#### Errors Encountered & Fixed
+1. **First test:** Book name mismatch (EPUB vs no extension) - FIXED with `.epub` fallback
+2. **Second test:** `NameError: validate_stage2_diagrams` not defined - FIXED by passing `None`
+3. **Third test:** API key typo (`sor` instead of `sr`) - FIXED
+4. **Fourth test:** `NameError: diagram_time` not defined - FIXED (changed to `diagram_attach_time`)
+
+#### Current State
+- ✅ Flask running at http://localhost:5001
+- ✅ Diagram service loaded: 526,463 diagrams
+- ✅ All dynamic diagram code removed
+- ✅ All bugs fixed
+- ⏳ **Ready for testing:** Static EPUB diagrams
+
+### Current Architecture
+```
+Query Flow (Static Diagrams Only):
+1. User query → /query_merged endpoint
+2. Parallel search: EPUB + PGN collections
+3. RRF merge results
+4. GPT-5 synthesis (text only, no diagram generation)
+5. Static diagram attachment:
+   - Match book_name to book_id
+   - Rank diagrams by relevance (Jaccard similarity + keywords)
+   - Attach top 5 diagrams per result
+6. Return: text + static EPUB diagrams
+```
+
+**No GPT-5 diagram generation** - Only pre-extracted EPUB diagrams from Phase 6.1a
+
+### Reason for Removal
+Dynamic diagram generation never worked reliably:
+- Positions didn't match concepts described
+- "Forks and pins" queries showed positions without actual forks/pins
+- Multiple attempted fixes (Enhancement 4.1, 4.2) all failed
+- Solution: Use only real diagrams extracted from books (Phase 6.1a)
 
 ### Next Steps
+1. Test query with static diagrams
+2. Verify diagrams appear in UI
+3. Confirm diagram relevance ranking works
+4. Document results
 
-**Immediate Priority:**
-1. **Audit Sample EPUBs:** Understand how diagrams are encoded (PNG? SVG? Base64?)
-2. **Build Extraction Pipeline:** Code to extract diagrams from EPUB files
-3. **Storage Architecture:** Design diagram storage and linking to chunks
-
-**Future Work:**
-1. **Phase 6.1b:** Dynamic diagram generation (after 6.1a complete + partner consult)
-2. **PGN Corpus Expansion:** Scale from 1,778 → 1M games
-3. **Phase 5.2 Resume:** Re-validate RRF with larger corpus
-
-### Documentation Updated
-
-**Files Modified (this session):**
-- `backlog.md` - MAJOR correction: 6.1a = static EPUB extraction, 6.1b = dynamic generation
-- `README.md` - Removed false claims about working diagrams, corrected current state
-- `SESSION_NOTES.md` - This entry documenting the major correction
-
-**Git Commits:**
-1. Commit 603ba5c: Incorrect (had 6.1b before 6.1a)
-2. Commit 8f4daa0: Partial fix (corrected ordering but wrong phase definitions)
-3. Commit PENDING: Major correction (true state: no diagrams working, starting static extraction)
-
-**Status:** Phase 6.1a FULL EXTRACTION RUNNING 🔄
-
-### 4. Extraction Pipeline Built and Tested (November 9, 2025)
-
-**Achievement:** EPUB diagram extraction pipeline complete and working
-
-**Test Results (3 books):**
-- Hippopotamus Defence: 889 diagrams extracted
-- Keep it Simple 1.e4: 791 diagrams extracted
-- Morphy Move by Move: 366 diagrams extracted
-- **Total: 2,046 diagrams (65 MB)**
-
-**Technical Implementation:**
-- **File:** `extract_epub_diagrams.py` (350+ lines)
-- **URL decoding:** Fixed %20, %2019 encoding issues with urllib.parse.unquote()
-- **Context extraction:** Captures text before/after each diagram
-- **Metadata:** Comprehensive tracking for Qdrant integration
-- **Organization:** Book-specific directories with unique IDs
-
-**Metadata Structure:**
-```python
-{
-  "diagram_id": "book_{hash}_{index:04d}",
-  "book_id": "book_{hash}",
-  "book_title": "...",
-  "file_path": "/Volumes/T7 Shield/books/images/{book_id}/{diagram_id}.png",
-  "context_before": "1.e4 e5 2.Nf3 Nc6...",  # For Qdrant linking
-  "context_after": "In this position...",
-  "html_document": "index_split_014.html",
-  "position_in_document": 5
-}
-```
-
-**Projection:**
-- 1,055 books × ~682 diagrams/book = **~720,000 total diagrams**
-- Estimated storage: 25-30 GB
-
-**Git Commit:** `4708340`
-
-### 5. Directory Structure Housekeeping (November 9, 2025)
-
-**Change:** Consolidated all book-related data under new directory structure
-
-**Old Structure:**
-```
-/Volumes/T7 Shield/epub/     # EPUB files only
-```
-
-**New Structure:**
-```
-/Volumes/T7 Shield/books/
-├── epub/                     # 1,055 chess books
-└── images/                   # Extracted diagrams (Phase 6.1a target)
-    └── {book_id}/
-```
-
-**Files Updated:**
-- All audit scripts (audit_epub_diagrams.py, examine_epub_structure.py, etc.)
-- batch_process_epubs.py (example paths)
-- README.md (added Data Storage Structure section)
-- BACKLOG.md (added directory structure info)
-- SESSION_NOTES.md (this entry)
-
-**Benefit:** Clean organization for future diagram extraction
-
-### 6. Full Corpus Extraction Complete (November 9, 2025)
-
-**Achievement:** Phase 6.1a COMPLETE ✅
-
-**Final Statistics:**
-- **Books processed:** 955/957 (99.8% success rate)
-- **Books with 0 diagrams:** 2 (not actual failures)
-- **Total diagrams extracted:** 692,187
-- **Storage:** 15.28 GB metadata, 170 GB actual disk usage
-- **Processing time:** 1 hour 0 minutes 25 seconds
-- **Average speed:** 3.79 seconds per book
-- **Format breakdown:**
-  - JPG: 306,801 (44.3%)
-  - PNG: 298,373 (43.1%)
-  - JPEG: 67,013 (9.7%)
-  - GIF: 20,000 (2.9%)
-
-### 7. Data Cleaning (November 9, 2025)
-
-**Batch 1: Low-Diagram Books (9 removed)**
-- Books with <30 diagrams removed
-- Range: 7-29 diagrams per book
-- Examples: The Grandmaster (7), Deep Thinking (5), The Moves That Matter (1)
-
-**Batch 2: Additional Low-Quality + Duplicate (8 removed)**
-- 7 books with 30-63 diagrams (marginal quality)
-- 1 duplicate: "How to Reassess Your Chess" by Jeremy Silman (875 diagrams)
-- Decision: Keep the 4th edition, remove older edition
-
-**Total Removed:** 17 books
-**Final Corpus:** 938 books
-
-**Scripts Created:**
-- `remove_low_diagram_books.py` (Batch 1)
-- `remove_books_batch2.py` (Batch 2)
-
-**Qdrant Status:**
-- All removed books had 0 chunks in database (never ingested)
-- Only file system cleanup required
-
-### 8. Evaluation Script Enhancement (November 9, 2025)
-
-**Feature:** Automatic deletion prompts for low-quality books
-
-**Implementation:**
-- Modified `analyze_chess_books.py`
-- Added `prompt_for_deletion()` function (lines 477-502)
-- Triggers for books scoring <40/100
-- Interactive y/N confirmation
-- Shows specific quality issues:
-  - Few diagrams (count)
-  - Short length (word count)
-  - Minimal chess notation (ratio)
-  - Unknown author (reputation score)
-
-**Benefits:**
-- Prevents low-quality books from entering corpus
-- Interactive quality control during analysis
-- Clear justification for deletion decisions
-- Automatic file cleanup if confirmed
-
-**Example Output:**
-```
-⚠️  LOW-QUALITY BOOK DETECTED
-File: chess_for_beginners_unknown.epub
-Score: 35/100 (LOW tier)
-Reasons:
-  - Very few diagrams: 12
-  - Short length: 15,432 words
-  - Minimal chess notation: 1.2%
-  - Unknown author
-
-This book is unlikely to be useful for technical chess instruction.
-
-🗑️  Delete this book? [y/N]: _
-```
-
-### 9. Documentation Updated (November 9, 2025)
-
-**Files Modified:**
-
-**README.md:**
-- Updated corpus count: 938 books (from 955)
-- Phase 6.1a marked COMPLETE
-- Final diagram statistics: 692,187 diagrams
-- Data cleaning summary added
-- Data Storage Structure section updated
-
-**BACKLOG.md:**
-- Phase 6.1a moved to Completed section
-- Final extraction statistics documented
-- Data cleaning details added (Batch 1 + Batch 2)
-- Evaluation enhancement documented
-- Future work updated (.mobi conversion next)
-
-**SESSION_NOTES.md:**
-- This session entry documenting all work
-- Extraction completion details
-- Data cleaning process
-- Evaluation script enhancement
-- Final statistics
 
 ---
 
-# 📋 PREVIOUS SESSION: Phase 5.1 COMPLETE - RRF Implementation
-**Date:** November 8, 2025 (Evening)
-**Session Focus:** Complete RRF multi-collection merge implementation (Tasks 2-5)
+## UPDATE: 2:15 PM - ITEM-031: Book Ingestion Complete
+
+### What Was Accomplished
+
+**Books Added:**
+1. Dvoretsky's Endgame Manual - 6th Edition (Russell Enterprises, 2020)
+   - Quality Score: 57 (MEDIUM tier)
+   - Chunks: 1,053
+   - Diagrams: 1,275
+   
+2. Under the Surface - Second Edition (Jan Markos, Quality Chess, 2018)
+   - Quality Score: 69 (MEDIUM tier)
+   - Chunks: 346
+   - Diagrams: 501
+
+**Total Impact:**
+- New Chunks: 1,399 (cost: $0.0143)
+- New Diagrams: 1,776
+- Time: ~2 hours (including bug discovery and workarounds)
+
+### Bugs Discovered
+
+**Bug 1: add_books_to_corpus.py - Wrong Hardcoded Path**
+- Line 62: `EPUB_DIR = "/Volumes/T7 Shield/epub"` (should be `/books/epub`)
+- User requested previous Claude fix this - wasn't done
+- Impact: Incremental book addition completely broken
+- Status: NOT FIXED (will fix before commit)
+
+**Bug 2: batch_process_epubs.py - Summary Crash**
+- Line 273: TypeError when sorting keys with None values
+- Impact: Crashes at end but analysis still completes
+- Status: NOT FIXED (will fix before commit)
+
+**Design Issue: extract_epub_diagrams.py**
+- No support for specific files - only processes entire directory
+- Wasteful for adding 2 books
+- Workaround: Created inline extraction script
+
+### Technical Learnings
+
+1. `extract_epub_text()` returns tuple (text, None) - use `result[0]`
+2. OpenAI embedding limit: 300k tokens/request - batch at 100
+3. Qdrant upload timeout at ~1400 points - batch at 200
+4. Previous stats in README were inflated by ~40% (724K → 536K diagrams)
+
+### Current System State
+
+**Stats Change (Today's Work):**
+- EPUB Books: 920 → 922 (+2)
+- EPUB Chunks: 309,867 → 311,266 (+1,399)
+- Total Chunks: 311,658 → 313,057 (+1,399)
+- Diagrams: 534,467 → 536,243 (+1,776)
+
+**Current System State:**
+- EPUB Books: 922
+- Total Chunks: 313,057 (311,266 EPUB + 1,791 PGN)
+- Total Diagrams: 536,243
+- Qdrant Collections:
+  - chess_production: 311,266 points
+  - chess_pgn_repertoire: 1,791 points
+  - chess_pgn_test: 13,010 points
+
+**Documentation Updated:**
+- ✅ README.md - All stats corrected + bugs section added
+- ✅ SESSION_NOTES.md - This section
+- ⏳ BACKLOG.md - Pending
+
+**Next Steps:**
+1. Fix 2 bugs (add_books_to_corpus.py, batch_process_epubs.py)
+2. Update BACKLOG.md
+3. Restart Flask server
+4. Git commit with detailed message
+5. Push to GitHub remote
+
+**Estimated Time to Complete:** 30 minutes
 
-## Summary
-
-**PHASE 5.1 COMPLETE** ✅ - All 5 tasks implemented and tested
-
-Implemented the complete RRF (Reciprocal Rank Fusion) pipeline for unified EPUB + PGN
-multi-collection querying. This unlocks the ability to search across both chess books
-(strategic explanations) and PGN game files (concrete variations) in a single query,
-with intelligent weighting based on query intent.
-
-**Total Implementation:**
-- 2 new modules created (rrf_merger.py, query_router.py)
-- 2 existing modules modified (rag_engine.py, synthesis_pipeline.py)
-- 1 new endpoint added (/query_merged in app.py)
-- 5 comprehensive test suites (24 total tests, all passing)
-
-## Implementation Details
-
-### Task 2: RRF Merger Module ✅
-**File Created:** `rrf_merger.py` (152 lines)
-
-**Functions Implemented:**
-1. `reciprocal_rank_fusion(results_lists, k=60, source_weights=None)`
-   - Core RRF algorithm: RRF_score = Σ weight × (1 / (k + rank))
-   - k=60 (standard from literature)
-   - Collection-specific weight application
-   - Tie-breaking: RRF score (desc) → best_rank (asc) → max_similarity (desc)
-   - Returns merged results with RRF metadata
-
-2. `merge_collections(epub_results, pgn_results, query_type='mixed', k=60)`
-   - Convenience wrapper for EPUB + PGN merging
-   - Auto-determines weights based on query_type:
-     * 'opening' → PGN gets 1.3x boost
-     * 'concept' → EPUB gets 1.3x boost
-     * 'mixed' → equal weights (1.0)
-   - Tags results with collection name
-   - Returns sorted, merged results
-
-**Test Suite:** `test_rrf_merger.py` (8 unit tests, all passing)
-- Basic RRF without weights
-- RRF with collection weights
-- Tie-breaking logic
-- Empty list handling
-- Duplicate result handling (boosts RRF score)
-- Opening query merge (PGN weighted)
-- Concept query merge (EPUB weighted)
-- k-value sensitivity
-
-### Task 3: Query Router Module ✅
-**File Created:** `query_router.py` (136 lines)
-
-**Components:**
-1. **OPENING_PATTERN** (regex)
-   - ECO codes (A00-E99)
-   - SAN notation (Nf3, Bxc6)
-   - Move numbers (1. e4)
-   - Keywords: FEN, ECO, mainline, repertoire, variation, line, opening, gambit, defense
-
-2. **CONCEPT_PATTERN** (regex)
-   - Keywords: explain, plans, strategy, ideas, why, principles, concepts
-   - Phrases: "how to", "what is", "understand", "model game"
-
-3. **Functions:**
-   - `classify_query(query)` → 'opening' | 'concept' | 'mixed'
-   - `get_collection_weights(query)` → Dict[str, float]
-   - `get_query_info(query)` → (query_type, weights)
-
-**Test Suite:** `test_query_router.py` (8 unit tests, all passing)
-- Opening query classification (8 test cases)
-- Concept query classification (7 test cases)
-- Mixed query classification (4 test cases)
-- Weight assignment correctness (3 test cases)
-- Real-world queries (8 test cases)
-
-### Task 4: Parallel Multi-Collection Search ✅
-**File Modified:** `rag_engine.py` (added 64 lines)
-
-**Function Added:** `search_multi_collection_async()`
-- **Lines:** 201-263
-- **Signature:** `async def search_multi_collection_async(qdrant_client, query_vector, collections, search_func)`
-- **Purpose:** Search multiple Qdrant collections in parallel
-
-**Implementation:**
-- Uses `asyncio.gather()` for concurrent searches
-- Wraps synchronous `search_func` with `asyncio.to_thread()`
-- Takes single query_vector (computed once, shared across collections)
-- Balanced retrieval: 50 EPUB + 50 PGN (critical fix from 100+10)
-- Tags results with collection name for RRF
-- Returns: (epub_results, pgn_results)
-
-**Performance:** Latency = max(search1, search2) not sum(search1, search2)
-
-### Task 5: /query_merged Endpoint ✅
-**File Modified:** `app.py` (added 237 lines)
-
-**Endpoint:** `/query_merged` (POST)
-- **Lines:** 387-623
-- **Purpose:** Complete RRF pipeline for unified EPUB+PGN queries
-
-**Pipeline Steps:**
-1. Parse request (extract query)
-2. Classify query intent (opening/concept/mixed)
-3. Generate embedding (once, shared across collections)
-4. Parallel search (50 EPUB + 50 PGN)
-5. Independent GPT-5 reranking per collection
-6. Format results for RRF merger
-7. Apply RRF merge with collection weights
-8. Take top 10 merged results
-9. Final formatting with RRF metadata
-10. Prepare synthesis context (mixed-media)
-11. 3-stage synthesis pipeline
-12. Post-processing (wrap bare FENs)
-13. Extract diagram markers
-14. Return response with timing + RRF metadata
-
-**Response Includes:**
-- Standard fields: answer, positions, diagram_positions, sources, results
-- Timing breakdown: embedding, search, reranking, rrf_merge, synthesis, diagrams, total
-- RRF metadata: query_type, collection_weights, candidate counts, merged count
-
-### Testing & Validation ✅
-
-**Test Suite 1:** `test_rrf_merger.py`
-- 8 unit tests for RRF algorithm
-- ✅ ALL PASSED
-
-**Test Suite 2:** `test_query_router.py`
-- 8 unit tests for query classification
-- ✅ ALL PASSED
-
-**Test Suite 3:** `test_mixed_context_formatting.py` (from Task 1)
-- 7 checks for synthesis context preparation
-- ✅ ALL PASSED
-
-**Test Suite 4:** `test_phase5_module_integration.py`
-- Module import validation
-- Query classification validation
-- RRF algorithm validation
-- Synthesis context validation
-- App.py import compatibility
-- ✅ 5/5 TESTS PASSED
-
-**Test Suite 5:** `test_phase5_integration.py`
-- Full E2E test (requires OPENAI_API_KEY + Qdrant)
-- Tests complete pipeline from query → RRF → synthesis
-- ⏳ Ready to run when API key available
-
-## Success Criteria
-
-✅ All Phase 5.1 Tasks Complete:
-- Task 1: Synthesis prompts updated (DONE)
-- Task 2: RRF merger created and tested (8/8 tests passed)
-- Task 3: Query router created and tested (8/8 tests passed)
-- Task 4: Parallel search implemented with asyncio (DONE)
-- Task 5: /query_merged endpoint added (237 lines, DONE)
-
-✅ Module Integration Validated:
-- All imports work correctly
-- No circular dependencies
-- Clean separation of concerns
-
-✅ Code Quality:
-- Comprehensive test coverage
-- Clear documentation
-- Follows existing code patterns
-
-⏳ Next Steps:
-- Phase 5.2: Validation & Tuning (50-query test suite)
-- Live E2E testing with API/Qdrant
-- Production deployment
-
-## Files Changed
-
-**Created:**
-- `rrf_merger.py` (152 lines)
-- `query_router.py` (136 lines)
-- `test_rrf_merger.py` (265 lines)
-- `test_query_router.py` (179 lines)
-- `test_phase5_module_integration.py` (220 lines)
-- `test_phase5_integration.py` (250 lines)
-
-**Modified:**
-- `rag_engine.py` (+64 lines) - Added search_multi_collection_async()
-- `app.py` (+237 lines) - Added /query_merged endpoint
-- `synthesis_pipeline.py` (updated Stage 2 prompts for mixed-media)
-- `BACKLOG.txt` (updated with Phase 5.1 completion)
-- `README.md` (updated Current Status and module architecture)
-- `SESSION_NOTES.md` (this file)
-
-**Total Added:** ~1,270 lines (implementation + tests)
-
----
-
-# 📋 PREVIOUS SESSION: Phase 5.1 Task 1 - Synthesis Prompt Update
-**Date:** November 8, 2025 (Afternoon)
-**Session Focus:** Implement mixed-media synthesis (Priority 1A)
-
-## Summary
-
-Completed Task 1 of Phase 5.1: Updated synthesis prompts to handle mixed EPUB + PGN sources.
-This was identified as Priority 1A by Gemini (critical blind spot) and is the foundation
-for RRF multi-collection merge.
-
-**Status:** TASK 1 COMPLETE ✅ - Tested and validated
-
-## Implementation Details
-
-### 1. Modified rag_engine.py:prepare_synthesis_context()
-**File:** `rag_engine.py` (lines 121-166)
-
-**Changes:**
-- Added structured source attribution for each context chunk
-- Format: `[Source N: Type - "Title"]\n{content}`
-- Detects source type from metadata:
-  - EPUB: Has `book_name` field → labeled as "Book"
-  - PGN: Has `source_file` field → labeled as "PGN"
-- Preserves all content exactly as provided
-
-**Example output:**
-```
-[Source 1: Book - "Mastering the King's Indian Defense"]
-The King's Indian Defense is characterized by...
-
-[Source 2: PGN - "King's Indian Defense (king_indian_repertoire.pgn)"]
-1. d4 Nf6 2. c4 g6 3. Nc3 Bg7...
-```
-
-### 2. Modified synthesis_pipeline.py (all 3 stages)
-**File:** `synthesis_pipeline.py`
-
-**Stage 1 (Outline Generation):**
-- Line 111: Updated context label from "chess literature" to "chess sources (books and game files)"
-- Minimal change, backward compatible
-
-**Stage 2 (Section Expansion) - CRITICAL CHANGES:**
-- Lines 173-184: Added mixed-media instructions
-  * Explains what Book sources contain (strategic concepts, WHY/WHAT)
-  * Explains what PGN sources contain (move sequences, concrete examples, HOW)
-  * Instructions on integrating both types
-- Lines 237-241: Updated section prompt
-  * Notes that books provide concepts, PGN provides variations
-  * Instructs to synthesize from both types
-
-**Stage 3 (Final Assembly):**
-- Lines 338-347: Added note about mixed-media integration
-  * Maintains balance between concepts and examples
-  * Preserves diagram markers from both source types
-
-### 3. Created Test Suite
-**File:** `test_mixed_context_formatting.py` (new)
-
-**Test Design:**
-- Creates mock results with 2 EPUB + 2 PGN sources
-- Calls `prepare_synthesis_context()` with mixed results
-- Validates source labeling and content preservation
-
-**Test Results:**
-```
-✅ Chunk 1 labeled as Book source
-✅ Chunk 2 labeled as PGN source
-✅ Chunk 3 labeled as Book source
-✅ Chunk 4 labeled as PGN source
-✅ Book title preserved
-✅ PGN filename preserved
-✅ PGN move notation preserved
-
-ALL 7 CHECKS PASSED
-```
-
-## Why This Was Priority 1A
-
-From Gemini's partner consultation response:
-
-> **CRITICAL BLIND SPOT: Synthesis Pipeline**
-> - #1 Risk you are missing: Synthesis prompt engineered for book prose
-> - Will now be fed PGN chunks: `1. e4 c5 2. Nf3 {Notes...}`
-> - LLM will get confused by mixed-format context
-> - **This change is NOT OPTIONAL. Critical for high-quality synthesis.**
-
-Without this update:
-- ❌ GPT-5 would treat PGN as "corrupted prose"
-- ❌ Would hallucinate to make it prose-like
-- ❌ Or complain it couldn't understand format
-- ❌ Synthesis quality would be catastrophic
-
-With this update:
-- ✅ GPT-5 knows it's mixed media intentionally
-- ✅ Uses books for concepts, PGN for concrete lines
-- ✅ Synthesizes by integrating both types naturally
-
-## Files Modified
-
-- `rag_engine.py` (modified: prepare_synthesis_context function)
-- `synthesis_pipeline.py` (modified: all 3 stage prompts)
-- `test_mixed_context_formatting.py` (created: validation test)
-- `rag_engine.py.backup` (created: safety backup)
-- `synthesis_pipeline.py.backup` (created: safety backup)
-
-## Validation Results
-
-- ✅ Context formatting: PASSED (7/7 checks)
-- ✅ Source attribution: PASSED (Book vs PGN labels correct)
-- ✅ Content preservation: PASSED (exact content maintained)
-- ✅ Backward compatibility: PASSED (works with EPUB-only results)
-
-## Next Steps (Phase 5.1 Tasks 2-5)
-
-1. Create `rrf_merger.py` with RRF algorithm
-2. Create `query_router.py` with intent classification
-3. Modify `rag_engine.py` for parallel multi-collection search
-4. Add `/query_merged` endpoint in `app.py`
-
-## Git Status
-
-Ready to commit:
-- rag_engine.py (synthesis context preparation)
-- synthesis_pipeline.py (all 3 stage prompts)
-- test_mixed_context_formatting.py (validation test)
-- BACKLOG.txt (Task 1 marked complete)
-- README.md (Current Status updated)
-- SESSION_NOTES.md (this entry)
-
-**Next Commit:** "Phase 5.1 Task 1 Complete: Synthesis prompt update for mixed-media"
-
----
-
-# 🎯 PREVIOUS SESSION: Phase 5 RRF Multi-Collection Merge Planning
-**Date:** November 8, 2025 (Morning)
-**Session Focus:** Partner consultation for RRF implementation, synthesis document creation
-
-## Summary
-
-Completed comprehensive planning for Phase 5: RRF (Reciprocal Rank Fusion) multi-collection merge.
-Consulted with three AI partners (ChatGPT, Gemini, Grok) to design the architecture for combining
-EPUB (books) and PGN (games) collections into unified search results.
-
-**Status:** PLANNING COMPLETE ✅ - Ready for implementation
-
-## Key Achievements
-
-1. **Partner Consultation Complete**
-   - ChatGPT: Implementation-ready code with MMR diversity, reranking, full feature set
-   - Gemini: Phased approach recommendation, identified critical synthesis prompt blind spot
-   - Grok: Graceful degradation strategies, performance optimization recommendations
-   - **Unanimous consensus**: Option A (new `/query_merged` endpoint), k=60, balanced 50+50 retrieval
-
-2. **Critical Blind Spot Identified (Gemini)**
-   - Synthesis prompts MUST be updated for mixed-media sources
-   - Current prompts tuned for book prose, will fail with PGN chunks
-   - Solution: Structured source formatting in `synthesis_pipeline.py`
-   - **Priority 1A**: Update synthesis BEFORE implementing RRF
-
-3. **Architecture Decision: Option A**
-   - New `/query_merged` endpoint (keep existing endpoints unchanged)
-   - Clean separation, testable, backward compatible, future-proof
-   - 100% unanimous partner recommendation
-
-4. **Core Parameters (Unanimous Agreement)**
-   - RRF k value: **60** (standard from literature)
-   - Retrieval: **50 EPUB + 50 PGN** (CRITICAL fix from 100+10 imbalance)
-   - Collection weights: **1.0 vs 1.3** (via intent router)
-   - No score normalization (RRF is rank-based)
-   - Parallel searches with asyncio.gather()
-
-5. **Implementation Approach: Gemini's Phased Strategy**
-   - Phase 5.1: Core RRF only (Week 1)
-   - Phase 5.2: Validation with 50-query test suite (Week 2)
-   - Phase 5.3: UI/UX improvements (Week 3)
-   - Phase 6: Advanced features (MMR, dedup, reranking) - IF needed
-
-   **Rationale:** Validate foundation before adding complexity (avoid action bias)
-
-## Documentation Created
-
-1. **RRF_PHASE5_SYNTHESIS.md** (1,147 lines)
-   - Complete implementation guide with partner synthesis
-   - Technical specifications and code samples
-   - Validation strategy and success metrics
-   - Principal Architect's opinion and recommendations
-   - Phased implementation plan
-
-2. **PARTNER_CONSULT_RRF_PHASE5.md** (updated)
-   - Full partner responses from ChatGPT, Gemini, Grok
-   - Questions asked and answers received
-   - Consensus points and divergent opinions
-
-## Key Technical Decisions
-
-### Files to Create (Phase 5.1)
-- `rrf_merger.py` - RRF algorithm implementation
-- `query_router.py` - Intent classification (opening vs concept queries)
-
-### Files to Modify (Phase 5.1)
-- `synthesis_pipeline.py` - **CRITICAL**: Update all 3 stage prompts for mixed-media
-- `rag_engine.py` - Add `search_multi_collection_async()` for parallel searches
-- `app.py` - Add `/query_merged` endpoint
-
-### Validation Strategy (Phase 5.2)
-- 50 test queries with ground truth (20 opening, 20 concept, 10 mixed)
-- Calculate MRR and NDCG@10 for all endpoints
-- Prove `/query_merged` outperforms single-collection endpoints
-
-## Principal Architect's Assessment
-
-**Quote:** "This is your best-designed phase yet"
-
-**Key Recommendations:**
-1. Start with Gemini's phased approach (not ChatGPT's feature-rich)
-2. Synthesis prompt update is NON-NEGOTIABLE (Priority 1A)
-3. Balanced 50+50 retrieval is CRITICAL (avoid 100+10 bias)
-
-**Confidence Level:** 95%
-
-**Prediction:** Takes 2.5 weeks, will add MMR diversity from ChatGPT anyway (validation will show need)
-
-## Next Steps
-
-**This Session:**
-1. Create `rrf_merger.py` + unit tests
-2. Create `query_router.py` + test with 10 sample queries
-3. STOP (don't touch synthesis or endpoints yet)
-
-**Next Session:**
-1. Update synthesis prompts with structured source formatting
-2. Test manually with mixed context (2 EPUB + 2 PGN chunks)
-3. Verify GPT-5 handles mixed formats correctly
-4. Only then proceed to endpoint integration
-
-## Files Modified This Session
-
-- RRF_PHASE5_SYNTHESIS.md (CREATED - 1,147 lines)
-- PARTNER_CONSULT_RRF_PHASE5.md (UPDATED with all responses)
-- BACKLOG.txt (UPDATED with ITEM-028)
-- README.md (UPDATED Current Status)
-- SESSION_NOTES.md (UPDATED with this entry)
-
-## Git Status
-
-Ready for commit:
-- All Big 3 documentation updated
-- Planning documents complete
-- Partner consultation responses captured
-- Implementation roadmap clear
-
-**Branch:** main
-**Next Commit:** "Phase 5 RRF Planning Complete - Partner consultation synthesis"
-
----
-
-# 🎯 PREVIOUS SESSION: November 1, 2025 (ITEM-024.8 Dynamic Extraction Restored)
-**Session Focus:** ITEM-024.7 Path B Revert, ITEM-024.8 Dynamic Extraction Restoration
-
----
-
-## 🎯 Session Summary
-
-**Completed Work:**
-1. **ITEM-024.4:** Backend marker injection fix (VERIFIED ✅)
-2. **ITEM-024.5:** Frontend SVG rendering fix (COMPLETE ✅)
-3. **ITEM-024.6:** Hybrid fix - Backend HTML pre-rendering + frontend architecture alignment (COMPLETE ✅)
-
-**Problem Evolution:**
-- ITEM-024.4: Backend markers not re-inserted after SVG generation
-- ITEM-024.5: Frontend JavaScript fix deployed but awaiting browser verification
-- ITEM-024.6: Complete architectural mismatch discovered → Backend HTML pre-rendering + Frontend direct HTML insertion
-
-**Current Status:** Frontend-backend architecture aligned. Backend sends pre-rendered HTML with embedded SVGs, frontend uses direct innerHTML insertion.
-
-**Key Innovation:** Eliminated architectural mismatch - backend pre-renders HTML (Option B), frontend inserts it directly without JavaScript processing (Option A alignment).
-
----
-
-## 📊 Work Completed This Session
-
-### ITEM-024.4: Backend Marker Injection (VERIFIED ✅)
-
-**Partner Consult (3/3 Unanimous):**
-- ChatGPT, Gemini, Grok all diagnosed: Frontend expects `[DIAGRAM_ID:uuid]` markers
-- Backend strips markers but never re-inserts them
-- No placeholders = frontend can't render SVGs
-
-**Solution:**
-```python
-# app.py lines 184-197
-marker_text = "\n\n"
-for diagram in diagram_positions:
-    marker_text += f"[DIAGRAM_ID:{diagram['id']}]\n"
-    if 'caption' in diagram:
-        marker_text += f"{diagram['caption']}\n\n"
-synthesized_answer += marker_text
-```
-
-**Verification:**
-- Test query: "give me 4 examples of a pin"
-- ✅ 3 markers in answer text
-- ✅ 3 diagrams with SVG (23-31KB each)
-- ✅ All IDs matched
-- ✅ emergency_fix_applied: True
-
-**Files Modified:**
-- app.py (lines 184-197)
-- ITEM-024.4_MARKER_INJECTION_FIX.md
-- MARKER_FIX_SUMMARY.md
-
----
-
-### ITEM-024.5: Frontend SVG Rendering (DEPLOYED ⏳)
-
-**Approach:** A - Frontend JavaScript Fix (ChatGPT + Grok recommendation)
-
-**Problem:** Frontend was rendering caption text instead of parsing SVG strings as DOM elements
-
-**Solution - 3 Files Created:**
-
-1. **diagram-renderer-fixed.js** (194 lines)
-   - SVG parsing with DOMParser
-   - Sanitization (removes script, iframe, dangerous attributes)
-   - DOM injection (replaces placeholders with actual SVG)
-   - Caption rendering below diagrams
-
-2. **diagram-renderer-loader.js** (15 lines)
-   - Ensures fixed renderer loads after page scripts
-
-3. **templates/index.html** (modified)
-   - Injected loader script before `</head>`
-
-4. **tactical_query_detector.py** (fixed)
-   - Line 85: 'default_caption' → 'caption'
-
-**Key Code:**
-```javascript
-function parseSvgString(svgString) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgString, 'image/svg+xml');
-    const svg = doc.documentElement;
-    const clean = sanitizeSvgElement(svg);
-    return document.importNode(clean, true);
-}
-```
-
-**Deployment:**
-- ✅ Flask running @ http://127.0.0.1:5001
-- ✅ JavaScript files deployed
-- ✅ Backend markers working
-- ⏳ Browser testing REQUIRED
-
-**Next Step:** User must open browser, clear cache, test with "show me 4 queen forks"
-
-**Fallback:** If fails → Approach B (backend HTML pre-rendering)
-
-**Git Commit:** dc30952
-
----
-
-### ITEM-024.6: Hybrid Fix - Backend HTML Pre-Rendering + Frontend Cleanup (IN PROGRESS ⏳)
-
-**Approach:** Hybrid - Option B (Gemini) + Option A (ChatGPT/Grok)
-
-**Problem:**
-ITEM-024.5 deployed but browser testing not yet completed. Concern about browser caching preventing new JavaScript from loading, which could cause diagrams to still fail.
-
-**Strategy:**
-Implement BOTH approaches as a hybrid fix:
-- **Option B (Primary):** Backend HTML pre-rendering - GUARANTEED to work
-- **Option A (Secondary):** Frontend cleanup - Investigate caching, simplify architecture
-
-**Why Hybrid:**
-- Option B guarantees working diagrams (bypasses all frontend issues)
-- Option A addresses root cause and improves maintainability
-- User gets working system immediately via backend rendering
-
----
-
-### Option B: Backend HTML Pre-Rendering (COMPLETE ✅)
-
-**Files Created:**
-
-**1. backend_html_renderer.py** (109 lines):
-
-```python
-def sanitize_svg_string(svg_str: str) -> str:
-    """Remove dangerous SVG elements/attributes."""
-    # Strips: script, foreignObject, iframe, onclick handlers, javascript: URLs
-    dangerous_patterns = [
-        r'<script[^>]*>.*?</script>',
-        r'<foreignObject[^>]*>.*?</foreignObject>',
-        r'<iframe[^>]*>.*?</iframe>',
-        r'on\w+\s*=\s*["\'][^"\']*["\']',  # event handlers
-        r'javascript:',
-    ]
-    cleaned = svg_str
-    for pattern in dangerous_patterns:
-        cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE | re.DOTALL)
-    return cleaned
-
-def render_diagram_html(diagram: dict) -> str:
-    """Render a single diagram as self-contained HTML with SVG + caption."""
-    svg = diagram.get('svg', '')
-    caption = diagram.get('caption', '')
-    category = diagram.get('category', 'diagram')
-
-    clean_svg = sanitize_svg_string(svg)
-
-    html = f'''
-<div class="chess-diagram-container" data-category="{escape(category)}"
-     style="margin: 25px auto; max-width: 400px; text-align: center;">
-    <div class="chess-diagram" style="display: inline-block;">
-        {clean_svg}
-    </div>
-    <div class="diagram-caption" style="margin-top: 12px; padding: 8px;
-         font-size: 14px; font-style: italic; color: #555; background: #f8f9fa;">
-        {escape(caption)}
-    </div>
-</div>
-'''
-    return html
-
-def embed_svgs_into_answer(answer: str, diagram_positions: list) -> str:
-    """Replace [DIAGRAM_ID:uuid] markers with rendered HTML."""
-    diagram_map = {}
-    for diagram in diagram_positions:
-        if diagram_id := diagram.get('id'):
-            diagram_map[diagram_id] = render_diagram_html(diagram)
-
-    def replacement(match):
-        return diagram_map.get(match.group(1), match.group(0))
-
-    return DIAGRAM_ID_RE.sub(replacement, answer)
-
-def apply_backend_html_rendering(response: dict) -> dict:
-    """Main entry point - embeds SVG HTML into response['answer']."""
-    answer = response.get('answer', '')
-    diagrams = response.get('diagram_positions', [])
-
-    if diagrams:
-        response['answer'] = embed_svgs_into_answer(answer, diagrams)
-        logger.info("[HTML Renderer] ✅ Backend HTML rendering applied")
-
-    return response
-```
-
-**2. Modified app.py** (lines 30, 205-229):
-
-```python
-# Line 30: Added import
-from backend_html_renderer import apply_backend_html_rendering
-
-# Lines 205-229: Changed response handling
-response = {
-    'success': True,
-    'query': query_text,
-    'answer': synthesized_answer,
-    'positions': synthesized_positions,
-    'diagram_positions': diagram_positions,
-    'sources': results[:5],
-    'results': results,
-    'timing': {...},
-    'emergency_fix_applied': True
-}
-
-# ITEM-024.6: Backend HTML pre-rendering (Option B - Nuclear Fix)
-response = apply_backend_html_rendering(response)
-
-return jsonify(response)
-```
-
-**How It Works:**
-1. Backend generates diagrams with SVG strings (already working)
-2. Backend inserts [DIAGRAM_ID:uuid] markers (ITEM-024.4)
-3. **NEW:** Before sending response, replace markers with full HTML:
-   - Sanitize SVG (remove dangerous elements)
-   - Wrap SVG in styled HTML container
-   - Escape caption text to prevent XSS
-   - Replace marker with complete HTML
-4. Frontend receives answer with embedded HTML
-5. Browser renders HTML → chess boards appear automatically
-
-**Advantages:**
-- ✅ Guaranteed to work (no JavaScript dependency)
-- ✅ Bypasses browser caching issues
-- ✅ Backward compatible (keeps diagram_positions)
-- ✅ Security (XSS protection via sanitization + HTML escaping)
-- ✅ No browser changes needed
-
-**Backups Created:**
-- Location: `backups/item-024.5_20251031_221452/`
-- app.py.bak, js_backup/, index.html.bak
-
-**Status:** ✅ COMPLETE - Backend HTML rendering integrated into app.py
-
----
-
-### Phase 3: Frontend Cleanup (COMPLETE ✅)
-
-**Completed Work:**
-1. ✅ Promoted diagram-renderer-fixed.js → diagram-renderer.js (5764 bytes)
-2. ✅ Backed up old broken version as diagram-renderer.BROKEN.*.bak
-3. ✅ Removed diagram-renderer-loader.js (source of conflicts)
-4. ✅ Updated cache-buster timestamp in index.html (?v=1761968358)
-5. ✅ Created verify_function_defined.sh verification script
-
-**Backups Created:**
-- Location: `backups/phase3_frontend_20251031_223918/`
-- diagram-renderer-loader.js.bak, old JS files
-
-**Status:** ✅ COMPLETE - Frontend consolidated to single JS file
-
----
-
-### Phase 4: Inline Fallback Function (COMPLETE ✅)
-
-**Completed Work:**
-1. ✅ Created patch_index_fallback.py Python patcher
-2. ✅ Added inline fallback function to templates/index.html
-3. ✅ Fallback provides simple innerHTML insertion if external JS fails
-4. ✅ Updated cache-buster to ?v=1761968923
-5. ✅ Verification shows all checks passing
-
-**Fallback Logic:**
-```javascript
-if (typeof window.renderAnswerWithDiagrams === 'undefined') {
-    console.warn("⚠️ External diagram-renderer.js not loaded, using inline fallback");
-    window.renderAnswerWithDiagrams = function(answer, diagramPositions, container) {
-        // Since backend sends HTML with embedded SVG, just insert it
-        container.innerHTML = answer;
-    };
-}
-```
-
-**Status:** ✅ COMPLETE - Triple redundancy safety system in place
-
----
-
-### Phase 5: Syntax Error Fixes (COMPLETE ✅)
-
-**Critical Errors Fixed:**
-
-**Error 1 - backend_html_renderer.py:12**
-```python
-# BEFORE (BROKEN):
-DIAGRAM_ID_RE = re.compile(r''\[DIAGRAM_ID:([^\]]+)\]'')
-
-# AFTER (FIXED):
-DIAGRAM_ID_RE = re.compile(r'\[DIAGRAM_ID:([^\]]+)\]')
-```
-**Issue:** Double single quotes in raw string caused line continuation error
-**Impact:** Flask couldn't start - SyntaxError on import
-
-**Error 2 - backend_html_renderer.py:27**
-```python
-# BEFORE (BROKEN):
-r'on\w+\s*=\s*["\'''][^"''']]*["\''']'  # event handlers
-
-# AFTER (FIXED):
-r'on\w+\s*=\s*["\'][^"\']*["\']'  # event handlers
-```
-**Issue:** Triple quotes in character class caused unmatched bracket error
-**Impact:** Flask couldn't start - SyntaxError on import
-
-**Status:** ✅ COMPLETE - All syntax errors fixed, Flask ready to start
-
----
-
-### ITEM-024.6 Final Summary
-
-**Implementation Complete:**
-- ✅ Backend HTML pre-rendering (Phase 1 & 2)
-- ✅ Frontend cleanup (Phase 3)
-- ✅ Inline fallback function (Phase 4)
-- ✅ Syntax error fixes (Phase 5)
-- ✅ Frontend architecture alignment (Phase 6 - November 1, 2025)
-- ✅ Big 3 documentation updated
-
-**Triple-Redundancy Diagram Safety System:**
-1. **Primary:** Backend HTML pre-rendering (guaranteed to work)
-2. **Secondary:** External diagram-renderer.js (5764 bytes)
-3. **Tertiary:** Inline fallback function in index.html
-
-**Files Modified:**
-- backend_html_renderer.py (NEW - 109 lines, 2 syntax fixes)
-- app.py (integrated backend HTML rendering at line 30, 226)
-- static/js/diagram-renderer.js (promoted from fixed version)
-- templates/index.html (added inline fallback, cache-buster, frontend architecture fix)
-
-**Testing Required:**
-1. Start Flask with valid API key
-2. Query: "show me diagrams of knights forking 2 pieces"
-3. Verify chess boards render in browser
-4. Check no JavaScript console errors
-
-**Status:** ✅ ITEM-024.6 COMPLETE - Backend & Frontend Architecture Aligned
-
----
-
-### Phase 6: Frontend Architecture Alignment (November 1, 2025)
-
-**Problem Discovered:**
-Complete architectural mismatch between backend and frontend:
-- **Backend:** Implemented Option B (HTML pre-rendering) - sends complete HTML with embedded `<svg>` tags
-- **Frontend:** Still using Option A approach - calling `renderAnswerWithDiagrams()` JavaScript function
-- **Error:** "renderAnswerWithDiagrams is not defined" (JavaScript console)
-
-**Root Cause:**
-Previous session implemented backend HTML pre-rendering, but frontend was never updated to match this architecture. Frontend code at templates/index.html:521-523 was trying to call a non-existent JavaScript function instead of directly inserting the pre-rendered HTML.
-
-**Solution Implemented:**
-
-**File: templates/index.html (lines 521-523)**
-
-BEFORE (Broken - Option A expecting JavaScript processing):
-```javascript
-// Use diagram renderer to replace markers and inject diagrams
-const answerContainer = document.getElementById('answer-content-container');
-renderAnswerWithDiagrams(data.answer, data.diagram_positions || [], answerContainer);
-```
-
-AFTER (Fixed - Option A aligned with Option B backend):
-```javascript
-// ITEM-024.6: Backend sends pre-rendered HTML with embedded SVGs - just insert it directly
-const answerContainer = document.getElementById('answer-content-container');
-answerContainer.innerHTML = data.answer; /* Backend provides complete HTML */
-```
-
-**Architecture Alignment:**
-- Backend (Option B): Generates complete HTML with embedded SVGs using `backend_html_renderer.py`
-- Frontend (Option A): Now uses direct HTML insertion via `innerHTML` instead of JavaScript processing
-- Result: Simple, reliable architecture with no dependency on complex JavaScript functions
-
-**Backup Created:**
-- `templates/index.html.bak-gemini-fix-<timestamp>`
-
-**How Complete Pipeline Works Now:**
-1. User submits query
-2. Backend processes query through RAG + synthesis
-3. Backend generates diagram SVGs
-4. **Backend embeds SVGs directly into answer text as HTML** (Option B)
-5. Backend sends response with `data.answer` containing complete pre-rendered HTML
-6. **Frontend receives HTML and inserts directly via `innerHTML`** (Option A alignment)
-7. Browser renders HTML → chess diagrams appear automatically
-8. No JavaScript errors, no missing functions
-
-**Key Benefits:**
-- ✅ Eliminates architectural mismatch
-- ✅ Simpler frontend code (3 lines vs complex function call)
-- ✅ No dependency on external JavaScript functions
-- ✅ Guaranteed to work (bypasses all JavaScript issues)
-- ✅ Backward compatible with existing backend
-- ✅ No browser cache issues
-
-**Files Modified:**
-- templates/index.html (lines 521-523 - frontend response handler)
-- BACKLOG.txt (ITEM-024.6 documentation updated)
-- README.md (Current Status updated to November 1, 2025)
-- SESSION_NOTES.md (this file - Phase 6 documentation)
-
-**Status:** ✅ COMPLETE - Architecture aligned, ready for browser testing
-
----
-
-## 📋 Partner Consult Results (Historical - ITEM-024.1)
-
-### Unanimous Diagnosis (3/3):
-
-**ChatGPT, Gemini, Grok all independently identified:**
-
-1. **Prompt Overload:** 8,314-char library = attention dilution
-2. **Instruction Competition:** "OR" logic = easy escape path
-3. **No Enforcement:** Instructions can be violated
-
-**Agreement:** "Your code is perfect. The prompt strategy is wrong."
-
----
-
-## ✅ Implementation Complete
-
-### 1. Post-Synthesis Enforcement (diagram_processor.py)
-- `enforce_canonical_for_tactics()` - 124 lines
-- `is_tactical_diagram()` - Keyword detection
-- `infer_category()` - Caption → category mapping
-- Called automatically in `extract_diagram_markers()`
-- **100% accuracy guarantee**
-
-### 2. Simplified Prompt (synthesis_pipeline.py)
-- 8,314 → ~960 chars (88% reduction)
-- Category names + counts only
-- Removes overwhelming detail
-
-### 3. Mandatory Rules (synthesis_pipeline.py)
-- RULE 1: Tactical → @canonical/ only
-- RULE 2: Opening → move sequences
-- RULE 3: Enforcement notice
-- No "OR" escape routes
-
----
-
-## 📊 Expected Impact
-
-**Before:**
-- Phase 3 code: ✅ Working
-- GPT-5 behavior: ❌ Ignoring instructions
-- Accuracy: ❌ 0% for tactics
-
-**After:**
-- Post-synthesis enforcement: ✅
-- 100% tactical accuracy: ✅
-- Token reduction: ✅ 88%
-- Backward compatible: ✅
-
----
-
-## 🎓 Key Lessons
-
-**From Partners:**
-- ChatGPT: "Make disobedience impossible"
-- Gemini: "Delete the 8K noise, trust your code"
-- Grok: "Structure over instructions"
-
-**From Session:**
-- Don't trust LLM instruction-following for critical accuracy
-- Programmatic enforcement > prompting
-- Less prompt text > massive detailed listings
-- Partner consults prevent rabbit holes
-
----
-
-## 🧪 Testing Plan
-
-1. **"show me 5 examples of pins"**
-   - Expected: 3 canonical pin diagrams
-   - Verify: All show actual pins
-   - Check: Enforcement logs
-
-2. **"explain knight forks"**
-   - Expected: Multiple fork diagrams
-   - Verify: All show actual forks
-
-3. **"Italian Game opening"**
-   - Expected: Move sequences work
-   - Verify: No enforcement needed
-
----
-
-## 📂 Files Modified
-
-- `diagram_processor.py` (+124 lines enforcement)
-- `synthesis_pipeline.py` (simplified prompt + rules)
-- `BACKLOG.txt` (ITEM-024.1 complete)
-- `README.md` (Enhancement 4.1)
-- `SESSION_NOTES.md` (this file)
-
----
-
-## 🎯 Next Steps
-
-1. User testing with tactical queries
-2. Review enforcement logs
-3. If 100% accuracy → Stage 1 success
-4. If issues → Escal to Stage 2 (JSON)
-
-**Stage 2 Available:** JSON structured output if needed (~1 day)
-
----
-
-**Session Complete** ✅  
-**Status:** Phase 3 fix deployed, pending validation  
-**Priority:** User testing with tactical queries
-
-
----
-
-# 🚨 EMERGENCY FIX - ITEM-024.2 (October 31, 2025)
-
-## ❌ ITEM-024.1 Production Failure
-
-**Test:** "show me 5 examples of pins"
-**Expected:** 3-5 pin diagrams
-**Actual:** 6 diagrams, **ZERO showing actual pins**
-**Accuracy:** **0% (complete failure)**
-
-**Partner Consult Verdict (ChatGPT, Gemini, Grok):**
-- **Unanimous:** Stage 1 unfixable
-- Post-synthesis enforcement = too late
-- Only solution: **Bypass GPT-5 diagram generation entirely**
-
----
-
-## ✅ Option D: Tactical Query Bypass
-
-### Architecture
-**Early detection & complete bypass at /query endpoint:**
-1. Detect tactical keywords (before synthesis)
-2. Skip GPT-5 diagram generation
-3. Generate text explanation only
-4. Inject canonical diagrams programmatically
-5. Generate SVG for all positions
-6. Return with emergency_fix_applied flag
-
-### Components Created
-
-**1. tactical_query_detector.py (132 lines)**
-- 27 tactical keywords across 14 categories
-- `is_tactical_query()` - Keyword matching
-- `infer_tactical_category()` - Category inference
-- `inject_canonical_diagrams()` - Up to 5 positions
-- `strip_diagram_markers()` - Remove GPT markers
-
-**2. diagnostic_logger.py (19 lines)**
-- Debug logging for troubleshooting
-
-**3. app.py (+90 lines)**
-- Load canonical_positions.json (73 positions, 14 categories)
-- Emergency fix @ lines 134-210
-- Bypass synthesis pipeline for tactical queries
-- SVG generation for all injected diagrams
-
-### Verification Results
-
-**Query:** "show me 5 examples of pins"
-- ✅ Tactical detection working
-- ✅ 3 canonical pin diagrams injected
-- ✅ Valid FEN + SVG (23-31k chars each)
-- ✅ Tagged: category='pins', tactic='pin'
-- ✅ Text explanation clean
-- ✅ Time: 15.81s
-- ✅ **Accuracy: 100% (3/3 actual pins)**
-
-### Before vs After
-
-| Metric | ITEM-024.1 | ITEM-024.2 |
-|--------|-----------|-----------|
-| Detection | ❌ | ✅ |
-| Injection | ❌ 0 | ✅ 3 |
-| SVG | ❌ | ✅ |
-| Structure | ❌ | ✅ |
-| **Accuracy** | **❌ 0%** | **✅ 100%** |
-
-### Supported Categories (14)
-pins, forks, skewers, discovered_attacks, deflection, decoy,
-clearance, interference, removal_of_defender, x-ray, windmill,
-smothered_mate, zugzwang, zwischenzug
-
----
-
-## 🎓 Key Lessons
-
-1. **Post-synthesis enforcement = too late**
-2. **Early detection & bypass > fixing GPT behavior**
-3. **Canonical injection @ endpoint > prompt engineering**
-4. **Partner consults prevent unfixable rabbit holes**
-5. **100% accuracy requires bypassing unreliable components**
-
----
-
-## 📁 Files
-
-**Created:**
-- tactical_query_detector.py (132 lines)
-- diagnostic_logger.py (19 lines)
-- EMERGENCY_FIX_VERIFICATION.md (full report)
-
-**Modified:**
-- app.py (+90 lines)
-- BACKLOG.txt (ITEM-024.2)
-- SESSION_NOTES.md (this entry)
-- README.md (Enhancement 4.2 pending)
-
-**Git Commit:** 6285c30
-
----
-
-## 🚀 Production Status
-
-✅ Flask @ http://127.0.0.1:5001
-✅ 73 canonical positions loaded
-✅ 357,957 Qdrant vectors
-✅ Emergency fix active
-✅ Verified with tactical queries
-
-**Ready for production use with 100% tactical diagram accuracy.**
-
----
-
-# ITEM-024.3: Multi-Category Detection Bug Fix (2025-10-31)
-
-## Problem
-
-ITEM-024.2 emergency fix had two hidden bugs discovered through partner consultation:
-
-**Bug #1: if/elif Chain (Gemini)**
-- Query: "show me pins and forks"
-- Only detected 'pins' (first match)
-- Root cause: if/elif stopped at first category
-- Impact: Missing diagrams for other concepts
-
-**Bug #2: Integration Gap (ChatGPT + Grok)**
-- Diagrams generated but needed verification in app.py
-
-## Solution
-
-**Replaced if/elif chain with SET-based collection:**
-
-```python
-# BEFORE (Bug #1):
-def infer_tactical_category(query: str) -> Optional[str]:
-    if 'pin' in query_lower:
-        return 'pins'
-    elif 'fork' in query_lower:  # Never reached!
-        return 'forks'
-
-# AFTER (Fixed):
-def infer_tactical_categories(query: str) -> Set[str]:
-    found_categories = set()
-    for category, keywords in TACTICAL_KEYWORDS.items():
-        for keyword in keywords:
-            if keyword in query_lower:
-                found_categories.add(category)
-                break
-    return found_categories
-```
-
-## Verification
-
-**Test:** "show me pins and forks"
-
-| Metric | Before | After |
-|--------|--------|-------|
-| Categories detected | {'pins'} | {'pins', 'forks'} ✅ |
-| Diagrams returned | 3 | 6 ✅ |
-| SVG generation | 3/3 | 6/6 ✅ |
-| Accuracy | 50% | 100% ✅ |
-
-**Detector Logs:**
-```
-[Detector] Query: show me pins and forks
-[Detector] Inferred categories: {'forks', 'pins'}
-[Detector] Found 5 positions in 'forks'
-[Detector] Found 3 positions in 'pins'
-[Detector] Returning 6 total diagrams
-✅ EMERGENCY FIX COMPLETE: Injected 6 canonical diagrams
-```
-
-## Files Modified
-
-- **tactical_query_detector.py**: SET-based multi-category detection
-- **BACKLOG.txt**: ITEM-024.3 documentation
-- **SESSION_NOTES.md**: This entry
-- **README.md**: Updated Enhancement 4.2
-
-## Status
-
-✅ **Both bugs fixed and verified**
-- Multi-category detection: WORKING
-- Integration: VERIFIED
-- SVG generation: WORKING
-- 100% accuracy for all tactical queries
-
----
-
-# ITEM-028: Phase 5.1 - RRF Multi-Collection Merge UI Integration (2025-11-09)
-
-## Session Context
-
-This session continued from Phase 5.1 RRF implementation completion. The core RRF merge system was complete and tested (24/24 unit tests passing), but not yet integrated into the main web interface. Users still accessed separate EPUB-only and PGN-only endpoints.
-
-## Problem
-
-**User Request:** "I want to see the RRF system work in the browser. What URL do I go to and give me a query that proves it took data from both collections?"
-
-**Issues Discovered During Testing:**
-1. Main page still using `/query` (EPUB-only) instead of `/query_merged`
-2. All scores showing "1.6/10" with no variance
-3. PGN sources displaying empty content sections
-4. Corpus statistics only showing EPUB stats
-5. Missing performance metrics on main page
-6. No collection attribution badges
-
-## Solution: Iterative UI Integration with User Feedback
-
-### Round 1: Initial Integration
-- Created `/rrf_demo` endpoint with demo interface
-- User feedback: "Style doesn't match, not actionable, missing performance stats"
-- **Issue:** User was viewing demo page instead of main page
-
-### Round 2: Main Page Integration
-- Changed main page endpoint from `/query` to `/query_merged`
-- Added collection badges (📖 EPUB / ♟️ PGN)
-- Added performance metrics panel
-- Updated corpus statistics
-- User feedback: "PGN sections empty, all scores showing 1.6"
-
-### Round 3: Bug Fixes
-**Bug #1: PGN Content Missing**
-- Root cause: `payload.get('text')` only handles EPUB field
-- Fix: `payload.get('text') or payload.get('content', '')`
-- Location: app.py line 527
-
-**Bug #2: Score Display**
-- Root cause: Showing RRF scores (0.016 * 100 = 1.6)
-- Fix: Use GPT-5 relevance scores instead
-- User feedback: "We need BOTH scores - relevance and RRF fusion"
-
-### Round 4: Dual Score Display
-- Implemented dual scoring: "Relevance: (9/10) / RRF: (2.13)"
-- Rationale: Relevance shows content quality, RRF shows cross-collection consensus
-- User refinement: Added parentheses for clarity
-
-### Round 5: Corpus Statistics Update
-- Before: "357,957 chunks from 1,052 instructional chess books"
-- After: "360,320 total chunks: 358,529 from 1,052 books (EPUB) + 1,791 from PGN games"
-- Updated in header subtitle and loading message
-
-## Implementation Details
-
-**Files Modified:**
-
-1. **app.py** (+7 lines)
-   - Line 527: Handle both 'text' (EPUB) and 'content' (PGN) fields
-   - Line 536: Use GPT-5 relevance score for display
-   - Line 52: Changed QDRANT_MODE default to 'docker'
-   - Line 116: Added /rrf_demo route
-
-2. **templates/index.html** (+34 lines net)
-   - Line 540: Changed endpoint to `/query_merged`
-   - Lines 677-694: Dual score display + collection badges
-   - Lines 632-651: Performance stats panel
-   - Lines 394, 418: Updated corpus statistics
-
-3. **query_system_a.py** (+11 lines)
-   - Added `collection_name` parameter to `semantic_search()`
-   - Handle both 'text' and 'content' in reranking
-
-4. **rag_engine.py** (+15 lines)
-   - Fixed ScoredPoint immutability in collection tagging
-
-## Technical Challenges Resolved
-
-### Challenge 1: semantic_search() Parameter Mismatch
-**Error:** `TypeError: semantic_search() got an unexpected keyword argument 'collection_name'`
-**Solution:** Added optional parameter with default fallback to COLLECTION_NAME
-
-### Challenge 2: ScoredPoint Immutability
-**Error:** `TypeError: 'ScoredPoint' object does not support item assignment`
-**Solution:** Access mutable payload dict instead of trying to assign to ScoredPoint object
-
-### Challenge 3: Field Name Differences
-**Problem:** EPUB uses 'text', PGN uses 'content'
-**Solution:** Fallback chain: `payload.get('text') or payload.get('content', '')`
-
-### Challenge 4: Score Interpretation
-**Journey:**
-1. Initial: RRF scores only (1.6/10 everywhere)
-2. Fix attempt: GPT-5 relevance only (lost RRF information)
-3. User feedback: "We need both scores"
-4. Final: Dual display showing both metrics
-
-## Git Workflow
-
-**Branch:** `phase-5.1-ui-integration`
-
-**Commits:**
-1. "Phase 5.1: Bug fixes (semantic_search parameter, RRF collection tagging)"
-2. "Phase 5.1: UI enhancements (dual scores, corpus stats, collection badges)"
-
-**Documentation Updates:**
-- README.md: Updated corpus stats, current status, Phase 5.1 completion
-- backlog.txt: Added Phase 5.1 UI integration entry
-- session_notes.md: This entry
-
-## Key Metrics
-
-- **Corpus:** 360,320 total chunks
-  - EPUB: 358,529 chunks from 1,052 books
-  - PGN: 1,791 chunks from 1,778 games
-- **Collections:** 2 Qdrant collections (chess_production, chess_pgn_repertoire)
-- **RRF Algorithm:** k=60, reciprocal rank fusion with collection weights
-- **Query Types:** Opening (PGN 1.3x), Concept (EPUB 1.3x), Mixed (equal)
-
-## User Feedback Summary
-
-1. **Style consistency:** ✅ Resolved (URL confusion - demo vs main page)
-2. **PGN content display:** ✅ Fixed (handle 'content' field)
-3. **Score variance:** ✅ Fixed (use GPT-5 relevance scores)
-4. **Dual scores:** ✅ Implemented (relevance + RRF fusion)
-5. **Corpus statistics:** ✅ Updated (EPUB + PGN totals)
-6. **Collection badges:** ✅ Added (visual source attribution)
-
-## Production Status
-
-✅ Flask @ http://localhost:5001
-✅ Main page uses RRF multi-collection merge
-✅ Dual scoring system (relevance + RRF)
-✅ Collection badges visible
-✅ Comprehensive corpus statistics
-✅ Performance metrics displayed
-✅ Both EPUB and PGN collections integrated
-
-## Key Lessons
-
-1. **User testing reveals real issues:** Demo page looked fine, but user found 4 bugs immediately
-2. **Iterative refinement works:** Each round of feedback led to better solution
-3. **Field name assumptions break:** Different data sources use different field names
-4. **Multiple metrics provide context:** Single score insufficient, dual scores tell full story
-5. **Documentation critical:** Updated all Big 3 files as requested
-
-## Next Steps (Phase 5.2)
-
-- Create 50-query test suite (opening/concept/mixed)
-- Implement MRR and NDCG metrics
-- A/B testing: EPUB-only vs RRF-merged
-- Tune collection weights based on validation
-- Document optimal query patterns
-
-**Status:** ✅ Phase 5.1 UI Integration Complete
-
-
----
-
-# Session: November 9, 2025 (Continued) - .mobi Conversion & Qdrant Cleanup
-
-## Context
-
-Continuing from Phase 6.1a completion. User requested to convert remaining .mobi files to EPUB format, extract diagrams, and clean up duplicate data from Qdrant.
-
-## Work Completed
-
-### 1. Duplicate .mobi Removal (Disk)
-- **Identified:** 113 .mobi files with corresponding .epub versions
-- **Removed:** All 113 duplicate .mobi files from `/Volumes/T7 Shield/books/epub/`
-- **Remaining:** 4 .mobi files (all converted successfully)
-- **Script:** `remove_duplicate_mobis.py`
-
-### 2. Duplicate Chunk Removal (Qdrant)
-- **Problem:** 102 .mobi files existed in Qdrant with duplicate .epub versions
-- **Solution:** Created `find_mobi_in_qdrant.py` to identify and remove .mobi chunks
-- **Result:** Removed 32,150 duplicate chunks
-- **Collection size:** 359,929 → 327,779 chunks (-8.9%)
-- **Script:** `find_mobi_in_qdrant.py`
-
-### 3. .mobi → EPUB Conversion
-- **Tool:** Calibre's `ebook-convert` (installed via Homebrew)
-- **Total files:** 41 unique .mobi files converted
-- **Script:** `convert_mobi_to_epub.sh`
-- **Issue encountered:** Initial version failed due to bash array space handling
-- **Fix:** Changed to `while read` loop with proper IFS handling
-- **Success rate:** 100% (41/41 successful conversions)
-
-### 4. Diagram Extraction from Converted EPUBs
-- **Challenge:** Avoid re-scanning 938 already-processed books
-- **Solution:** Created temp directory with only 41 new EPUBs
-- **Script:** `extract_new_mobi_books.sh`
-- **Processing time:** <2 minutes
-- **Results:**
-  - Total diagrams: 31,875
-  - Average: 777 diagrams/book
-  - Range: 75 - 5,014 diagrams
-  - Min diagram count: 75 (acceptable quality)
-  - Max diagram count: 5,014 (excellent)
-  - Storage: 1.15 GB
-
-### 5. Quality Check
-All 41 converted books passed quality check:
-- **Lowest 10:** 75-438 diagrams (all acceptable)
-- **Highest 10:** 939-5,014 diagrams (excellent)
-- **No removals needed**
-
-### 6. Qdrant Metadata Bug Identified
-**Issue:** Ingestion pipeline doesn't save `book_title` field
-- Only saves `book_name` (filename)
-- Makes it difficult to display human-readable titles
-- Workaround: Use `book_name` field for source tracking
-
-**Root cause:** `build_production_corpus.py` line 260-268
-```python
-payload={
-    'text': chunk['text'],
-    'book_name': chunk['book_name'],  # filename only
-    'book_tier': chunk['book_tier'],
-    'book_score': chunk['book_score'],
-    # Missing: 'book_title': extracted_title
-}
-```
-
-**Fix needed:** Extract actual book title from EPUB metadata and add to payload
-
-## Final Statistics
-
-### Corpus Totals
-- **Books:** 979 (was 938)
-  - Original EPUB extraction: 938 books
-  - New from .mobi conversion: +41 books
-- **Diagrams:** 724,062 (was 692,187)
-  - Original: 692,187 diagrams
-  - New from .mobi: +31,875 diagrams
-- **Storage:** ~16.5 GB total
-  - Original: ~15.3 GB
-  - New from .mobi: +1.15 GB
-- **Qdrant chunks:** 327,779 (was 359,929)
-  - Reduced by 32,150 after duplicate removal
-
-### Scripts Created
-1. `remove_duplicate_mobis.py` - Remove duplicate .mobi files from disk
-2. `find_mobi_in_qdrant.py` - Find and remove .mobi chunks from Qdrant
-3. `convert_mobi_to_epub.sh` - Batch convert .mobi to EPUB using Calibre
-4. `extract_new_mobi_books.sh` - Extract diagrams from only new EPUBs (avoid re-scanning)
-5. `sample_qdrant_payload.py` - Inspect Qdrant payload structure
-
-## Key Lessons
-
-1. **Avoid unnecessary scanning:** Instead of re-scanning 938 books, copy 41 new ones to temp directory
-2. **Bash space handling:** Use `while IFS= read -r` instead of arrays for paths with spaces
-3. **Duplicate detection:** Check both disk AND Qdrant for duplicates
-4. **Metadata validation:** Always verify payload structure before assuming field names
-5. **Quality checks:** Even "low" diagram counts (75) can be acceptable for certain books
-
-## Issues Encountered
-
-### 1. Bash Array Path Bug
-**Problem:** `convert_mobi_to_epub.sh` failed with space in path `/Volumes/T7 Shield/`
-
-**Error:**
-```
-Cannot read from /Volumes/T7
-Cannot read from Shield/books/epub/filename.mobi
-```
-
-**Solution:** Changed from array iteration to `while read` loop:
-```bash
-# Before (broken):
-mobi_files=($(find "$MOBI_DIR" -name "*.mobi"))
-for mobi_file in "${mobi_files[@]}"; do
-
-# After (fixed):
-find "$MOBI_DIR" -name "*.mobi" | while IFS= read -r mobi_file; do
-```
-
-### 2. Qdrant Scroll Query Initial Failure
-**Problem:** First duplicate check query returned 0 results
-
-**Cause:** Incorrect `with_payload` parameter (tried to access non-existent fields)
-
-**Solution:** Use `with_payload=True` to get all fields, then check actual structure
-
-### 3. Missing Python Dependencies
-**Problem:** `ebooklib`, `Pillow`, `beautifulsoup4`, `tqdm` not installed in current environment
-
-**Cause:** Different Python environment than original extraction
-
-**Solution:** Installed dependencies, but better approach: use existing extraction script
-
-## Next Steps
-
-1. **Fix Qdrant metadata bug:** Add `book_title` field to ingestion pipeline
-2. **Update Big 3 documentation** with .mobi conversion results
-3. **Commit to GitHub** with comprehensive commit message
-4. **Test static diagram display** in UI with new corpus
-5. **Phase 6.1b consideration:** Dynamic diagram generation (pending partner consult)
-
-## Code Changes
-
-### Modified Files
-- None (all new scripts, no existing code modified)
-
-### New Files Created
-1. `remove_duplicate_mobis.py` (147 lines)
-2. `find_mobi_in_qdrant.py` (108 lines)
-3. `convert_mobi_to_epub.sh` (52 lines)
-4. `extract_new_mobi_books.sh` (45 lines)
-5. `sample_qdrant_payload.py` (31 lines)
-6. `mobi_converted_epubs.txt` (41 filenames)
-7. `mobi_conversion.log` (conversion output)
-8. `mobi_extraction_output.log` (diagram extraction output)
-
-**Status:** ✅ Phase 6.1a .mobi Conversion Complete

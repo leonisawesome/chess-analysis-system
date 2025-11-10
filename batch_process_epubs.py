@@ -270,7 +270,9 @@ def print_summary_report(summary: dict):
     # Format comparison
     if 'format_stats' in summary and summary['format_stats']:
         print(f"📚 Format Comparison:")
-        for fmt in sorted(summary['format_stats'].keys()):
+        # Filter out None keys before sorting (bug fix Nov 10, 2025)
+        valid_formats = [k for k in summary['format_stats'].keys() if k is not None]
+        for fmt in sorted(valid_formats):
             stats = summary['format_stats'][fmt]
             count = stats['count']
             avg_score = stats['avg_score']

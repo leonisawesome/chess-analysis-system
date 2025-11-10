@@ -59,7 +59,7 @@ DB_PATH = "epub_analysis.db"
 QDRANT_MODE = os.getenv('QDRANT_MODE', 'docker')  # 'docker' or 'local'
 QDRANT_URL = os.getenv('QDRANT_URL', 'http://localhost:6333')
 QDRANT_PATH = "./qdrant_production_db"
-EPUB_DIR = "/Volumes/T7 Shield/epub"
+EPUB_DIR = "/Volumes/T7 Shield/books/epub"  # Fixed Nov 10, 2025 - was missing /books/
 
 # Chunking parameters (MUST match build_production_corpus.py)
 CHUNK_SIZE = 512  # tokens per chunk

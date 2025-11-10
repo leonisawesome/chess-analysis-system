@@ -48,40 +48,6 @@
 
 ---
 
-### Phase 6.1b: Dynamic Diagram Generation (FUTURE)
-**Goal:** Generate diagrams on-the-fly for queries where no EPUB diagrams exist
-
-**Status:** PENDING (awaiting 6.1a completion + partner consult required)
-
-**The Problem (Honest Assessment):**
-- GPT-5 diagram generation has **NEVER worked properly**
-- Previous attempts were "band-aiding individual queries" instead of architectural fix
-- Documented solutions (Enhancement 4.1, 4.2) in README not actually working
-- Need partner consult for proper architecture
-
-**Why This is Hard:**
-- GPT-5 generates positions that don't match the concepts
-- "Forks and pins" queries return positions without actual forks/pins
-- Validation/enforcement approaches tried but failed
-- Canonical position library exists (73 positions) but integration doesn't work
-
-**Approach (TBD - Partner Consult Required):**
-- Option A: Fix GPT-5 prompt engineering + validation
-- Option B: Expand canonical library to thousands of positions
-- Option C: Different architecture entirely
-- **Decision:** Requires partner consultation after 6.1a complete
-
-**Estimated Time:** 7-14 days (after partner consult)
-**Risk Level:** HIGH (multiple failed attempts already)
-
-**Definition of Done:**
-- Dynamic diagrams actually render correctly in browser
-- Positions match the concepts being discussed
-- Works for common opening/tactical queries
-- Acceptable failure rate determined through testing
-
----
-
 ### Phase 6.2: Interactive PGN Diagrams ⭐ MUST HAVE
 **Goal:** PGN results show playable chessboard to step through moves
 
@@ -264,7 +230,14 @@ System: [Searches PGN collection with context]
   - **Fix:** Extract title from EPUB metadata using `ebooklib`, fallback to filename
   - **Location:** `build_production_corpus.py` lines 138-156, 200, 294
   - **Note:** Existing Qdrant data still has missing titles (re-ingestion required for historical data)
-- 🎯 **Phase 6.1b:** Test static diagram display in UI, then dynamic diagram generation (after partner consult)
+- ✅ **Dynamic Diagram Removal:** All GPT-5/ChatGPT SVG diagram generation code removed (November 10, 2025)
+  - **Reason:** Dynamic generation never worked reliably - positions didn't match concepts
+  - **Removed Files:** diagram_processor.py, opening_validator.py, tactical_query_detector.py, diagram_validator.py, canonical_positions.json, canonical_fens.json, validate_canonical_library.py (7 files total)
+  - **Code Cleanup:** Removed ~200 lines from app.py (tactical query bypass, dynamic extraction)
+  - **Bug Fixes:** Fixed `diagram_time` variable reference (app.py:563) → changed to `diagram_attach_time`
+  - **Documentation:** Cleaned up README.md (326 lines removed), BACKLOG.md, session_notes
+  - **Current Solution:** Static EPUB diagrams only (Phase 6.1a - 724,062 diagrams extracted)
+  - **Testing Status:** Flask running successfully at http://localhost:5001, ready for diagram testing
 - 📦 **PGN Corpus Expansion:** Scale from 1,778 → 1M games
 - 🔄 **Phase 5.2 Resume:** Re-validate RRF after PGN corpus expansion
 

@@ -9,7 +9,68 @@ Handles:
 """
 
 import re
+import json
 from openai import OpenAI
+
+# Global variable to hold canonical library prompt
+CANONICAL_POSITIONS_PROMPT = None
+
+def build_canonical_positions_prompt():
+    """
+    Build a SIMPLIFIED prompt section from canonical_positions.json.
+    
+    Returns ~400 chars instead of 8,314 chars.
+    Lists categories with counts, not all 73 positions.
+    """
+    try:
+        with open('canonical_positions.json', 'r') as f:
+            library = json.load(f)
+
+        prompt_lines = [
+            "",
+            "CANONICAL POSITIONS LIBRARY:",
+            "Use @canonical/{category}/{id} format for tactical/structural concepts.",
+            "",
+            "Available categories:"
+        ]
+
+        # Just list categories and counts with 1-2 example IDs
+        for category, positions in library.items():
+            count = len(positions)
+            example_ids = list(positions.keys())[:2]
+            examples = ', '.join(example_ids)
+            if count > 2:
+                examples += ', ...'
+            prompt_lines.append(f"  - {category} ({count}): {examples}")
+
+        prompt_lines.extend([
+            "",
+            "Format: [DIAGRAM: @canonical/{category}/{id} | Caption: description]",
+            "Example: [DIAGRAM: @canonical/pins/bishop_pin_knight_king | Caption: Bishop pins knight]",
+            ""
+        ])
+
+        return "\n".join(prompt_lines)
+
+    except FileNotFoundError:
+        return "\nCANONICAL POSITIONS LIBRARY: Not available\n"
+    except Exception as e:
+        return f"\nCANONICAL POSITIONS LIBRARY: Error loading ({str(e)})\n"
+def initialize_canonical_prompt():
+    """
+    Initialize the global canonical positions prompt.
+    Call this once at application startup.
+    """
+    global CANONICAL_POSITIONS_PROMPT
+    CANONICAL_POSITIONS_PROMPT = build_canonical_positions_prompt()
+    print(f"✓ Initialized canonical positions prompt ({len(CANONICAL_POSITIONS_PROMPT)} chars)")
+
+def get_canonical_prompt():
+    """Get the canonical positions prompt section."""
+    global CANONICAL_POSITIONS_PROMPT
+    if CANONICAL_POSITIONS_PROMPT is None:
+        initialize_canonical_prompt()
+    return CANONICAL_POSITIONS_PROMPT
 
 
 def stage1_generate_outline(openai_client: OpenAI, query: str, context: str,
@@ -104,21 +165,28 @@ def stage2_expand_sections(openai_client: OpenAI, sections: list, query: str,
     """
     expanded = []
 
-    system_prompt = """You are a chess expert writing detailed explanations with visual diagrams.
+    # Get canonical positions listing
+    canonical_prompt = get_canonical_prompt()
 
-CRITICAL DIAGRAM RULES:
-1. Include diagrams using [DIAGRAM: <position> | Caption: <description>] format
-2. <position> can be: move sequence (1.e4 e5 2.Nf3 Nc6 3.Bc4) OR FEN string
-3. <description> is a DESCRIPTIVE caption explaining what the position shows
-4. For openings: diagrams show 3-6 moves from the starting position
-5. For middlegame concepts: use the provided canonical FEN position
-6. Diagrams must match the opening/concept being discussed
-7. Include 2-4 diagrams per section to illustrate key positions
+    system_prompt = f"""You are a chess expert writing detailed explanations with visual diagrams.
 
-DIAGRAM FORMAT EXAMPLES:
-- [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position with White's bishop on c4]
-- [DIAGRAM: 1.d4 d5 2.c4 | Caption: Queen's Gambit - White offers the c-pawn to gain central control]
-- [DIAGRAM: r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1 | Caption: Two Knights Defense position after 3...Nf6]
+MANDATORY DIAGRAM RULES:
+
+RULE 1 - TACTICAL CONCEPTS (pins, forks, skewers, discovered attacks, etc.):
+  MUST use @canonical/ references from the library below.
+  Format: [DIAGRAM: @canonical/category/id | Caption: description]
+  Example: [DIAGRAM: @canonical/forks/knight_fork_queen_rook | Caption: Classic knight fork pattern]
+
+RULE 2 - OPENING SEQUENCES:
+  Use move notation showing 3-6 moves from starting position.
+  Format: [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: description]
+  Example: [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position]
+
+RULE 3 - ENFORCEMENT GUARANTEE:
+  All tactical diagrams are automatically validated and enforced post-synthesis.
+  Non-canonical tactical diagrams will be replaced with canonical positions.
+
+{canonical_prompt}
 
 CAPTION GUIDELINES:
 - Be concise (5-15 words)
@@ -141,6 +209,9 @@ Example (opening):
 
 Example (middlegame with canonical FEN):
 "In this position [DIAGRAM: r1bq1rk1/pp2bppp/2n1pn2/2pp4/2PP4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 9], White launches the minority attack..."
+
+Example (using canonical reference):
+"The knight fork is a powerful tactic [DIAGRAM: @canonical/forks/knight_fork_queen_rook] where the knight attacks multiple pieces..."
 
 Write 2-3 detailed paragraphs per section with diagrams."""
 

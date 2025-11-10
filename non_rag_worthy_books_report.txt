@@ -1,0 +1,222 @@
+Scanning 944 books for non-RAG-worthy content...
+================================================================================
+
+================================================================================
+AUTOBIOGRAPHICAL (9 books)
+================================================================================
+  843 diagrams | Keyword: best_games            | karolyi_0000_boris_spassky_s_best_games_2_world_champion.epub
+  705 diagrams | Keyword: best_games            | karolyi_0000_boris_spassky_s_best_games_1_the_rising_star.epub
+  623 diagrams | Keyword: best_games            | alekhine_2013_my_best_games_of_chess_russell_enterprises_inc.epub
+  623 diagrams | Keyword: best_games            | alexander_1908_my_best_games_of_chess_russell_enterprises_inc.epub
+  571 diagrams | Keyword: best_games            | timman_2023_max_euwe_s_best_games_nic.epub
+  505 diagrams | Keyword: best_games            | kuljasevic_0000_ding_liren_s_best_games.epub
+  303 diagrams | Keyword: memoir                | lubomir_2022_life_at_play_a_chess_memoir_new_in_chess.epub
+  270 diagrams | Keyword: selected_games        | kryakvin_2018_the_chelyabinsk_meteorite_selected_games_of_igor_kurnosov_elkruby_barsky_vladimir.epub
+    0 diagrams | Keyword: career                | grandmaster_2020_a_chess_prodigy’s_career_in_64_games_jakov_geller.epub
+
+================================================================================
+BEGINNER BOOKS (22 books)
+================================================================================
+ 2062 diagrams | Contains 'beginner' in title   | unknown_author_0000_chess_exercises_for_beginners_the_tactics_workbook_that_explains.epub
+ 2062 diagrams | Contains 'beginner' in title   | unknown_author_2019_franco_masetti_roberto_messa_chess_exercises_for_beginners_new_in_chess.epub
+ 2034 diagrams | Contains 'beginner' in title   | unknown_author_2019_franco_masetti_roberto_messa_richard_jones_chess_exercises_for_beginners_the_tactics_workbook_that_explains_the_basic_concepts_too_new_in_chess.epub
+ 2007 diagrams | Contains 'beginner' in title   | geller_2000_check_and_mate_a_beginners_guide_with_examples.epub
+ 2002 diagrams | Contains 'beginner' in title   | cicero_2019_checkmate_exercises_from_beginner_to_winner2.epub
+ 2001 diagrams | Contains 'beginner' in title   | cicero_2018_checkmate_exercises_from_beginner_to_winner1.epub
+ 1260 diagrams | Contains 'beginner' in title   | willemze_2022_chess_endgame_exercises_for_beginners_nic.epub
+ 1194 diagrams | Contains 'beginner' in title   | curtis_0000_chess_4_books_in_1_getting_started_from_a_beginner_learn_successful_openings_develop_advanced_strategy_and_win_your_games.epub
+ 1076 diagrams | Contains 'beginner' in title   | levy_2023_how_to_win_at_chess_the_ultimate_guide_for_beginners_and_beyond_ten_speed_press.epub
+  750 diagrams | Contains 'beginner' in title   | alberston_2007_51_chess_openings_for_beginners_cardoza.epub
+  528 diagrams | Contains 'beginner' in title   | srokovski_0000_chess_training_for_postbeginners.epub
+  528 diagrams | Contains 'beginner' in title   | yaroslav_2014_chess_training_for_postbeginners_new_in_chess.epub
+  475 diagrams | Contains 'beginner' in title   | unknown_author_2018_arthur_van_de_oudeweeterig_chess_pattern_recognition_for_beginners_new_in_chess.epub
+  475 diagrams | Contains 'beginner' in title   | unknown_author_2018_international_master_arthur_van_de_oudeweetering_chess_pattern_recognition_for_beginners_the_fundamental_guide_to_spotting_key_moves_in_the_middlegame_new_in_chess.epub
+  467 diagrams | Contains 'beginner' in title   | vincent_2016_my_first_chess_opening_repertoire_for_white_a_turnkey_package_for_ambitious_beginners_new_in.epub
+  151 diagrams | Contains 'beginner' in title   | unknown_author_0000_henry_bird_edward_lasker_josé_raul_capablanca_chess_strategy_a_complete_guide_for_beginners_to_chess_fundamentals.epub
+  100 diagrams | Contains 'beginner' in title   | cicero_2017_checkmate_exercises_for_beginners_sampler_edition.epub
+   92 diagrams | Contains 'beginner' in title   | unknown_author_0000_chess_the_ultimate_guide_for_beginners_a_comprehensive_and_simplified.epub
+   89 diagrams | Contains 'beginner' in title   | lars_0000_chess_for_beginners_the_ultimate_guide_to_understanding_chess.epub
+   23 diagrams | Contains 'beginner' in title   | tommy_0000_chess_openings_for_beginners_the_complete_manual_to_learn_the_fundamentals_the_strategy_and_the_best_moves_at_the_start_of_the_game.epub
+    0 diagrams | Contains 'beginner' in title   | ingram_2016_chess_the_complete_beginner_s_guide_createspace_independent.epub
+    0 diagrams | Contains 'beginner' in title   | jack_0000_chess_for_beginners_learn_the_wonderful_game_of_the_chess_board_with_strategies_rules_and_techniques_to_win_easily.epub
+
+================================================================================
+BIOGRAPHY (38 books)
+================================================================================
+13032 diagrams | Keyword: fischer_              | fischer_2008_my_60_memorable_games_chess_tactics_chess_strategies_with_bobby_fischer_pavilion_books.epub
+ 4892 diagrams | Keyword: lasker_               | lasker_0000_chess_secrets_i_learned_from_the_masters_pavilion_books_mckay.epub
+ 1594 diagrams | Keyword: alekhine_             | bauer_0000_the_modernized_alekhine_defense.epub
+  991 diagrams | Keyword: fischer_              | unknown_author_1972_fischer_–_spassky_match_of_the_century_revisited_by_tibor_karolyi.epub
+  819 diagrams | Keyword: kasparov_on           | garry_2011_garry_kasparov_on_my_great_predecessors_part_2_everyman_chess.epub
+  801 diagrams | Keyword: morphy_               | bogdanov_0000_rook_endgames_from_morphy_to_carlsen.epub
+  749 diagrams | Keyword: kasparov_on           | garry_1985_garry_kasparov_on_garry_kasparov_part_2_everyman_chess.epub
+  720 diagrams | Keyword: kasparov_on           | garry_2011_garry_kasparov_on_my_great_predecessors_part_1_everyman_chess.epub
+  655 diagrams | Keyword: kasparov_on           | garry_2011_garry_kasparov_on_my_great_predecessors_part_4_everyman_chess.epub
+  655 diagrams | Keyword: kasparov_on           | garry_2011_garry_kasparov_on_my_great_predecessors_part_5_everyman_chess.epub
+  623 diagrams | Keyword: alekhine_             | alekhine_2013_my_best_games_of_chess_russell_enterprises_inc.epub
+  614 diagrams | Keyword: kasparov_on           | kasparov_2011_garry_kasparov_on_my_great_predecessors_part_3_everyman_chess.epub
+  527 diagrams | Keyword: karpov_               | jan_2019_the_longest_game_the_five_kasparov_karpov_matches_for_the_world_chess_championship_new_in_chess.epub
+  431 diagrams | Keyword: morphy_               | macon_2012_paul_morphy_and_the_evolution_of_chess_theory_dover_publications.epub
+  423 diagrams | Keyword: fischer_              | lakdawala_2023_the_unknown_fischer_everyman.epub
+  420 diagrams | Keyword: fischer_              | cyrus_0000_fischer_move_by_move.epub
+  420 diagrams | Keyword: fischer_              | lakdawala_2015_fischer_move_by_move_everyman.epub
+  415 diagrams | Keyword: lasker_               | franco_2018_lasker_move_by_move_everyman.epub
+  407 diagrams | Keyword: capablanca_           | lakdawala_2012_capablanca_move_by_move_everyman.epub
+  380 diagrams | Keyword: fischer_              | franco_2021_bobby_fischer_explained_and_some_stories_zenonchess.epub
+  380 diagrams | Keyword: fischer_              | soltis_2020_bobby_fischer_rediscovered_batsford.epub
+  368 diagrams | Keyword: steinitz_             | pritchett_2022_modern_chess_from_steinitz_to_the_21st_century_thinkers_no_dg.epub
+  365 diagrams | Keyword: morphy_               | franco_2016_morphy_move_by_move_everyman.epub
+  359 diagrams | Keyword: capablanca_           | unknown_author_0000_the_immortal_games_of_capablanca_fred_reinfeld.epub
+  334 diagrams | Keyword: fischer_              | mark_2021_i_was_a_victim_of_bobby_fischer_quality_chess.epub
+  312 diagrams | Keyword: lasker_               | emanuel_2013_lasker_s_manual_of_chess_dover_publications.epub
+  302 diagrams | Keyword: alekhine_             | voronkov_1921_alexander_alekhine_the_russian_sphinx_volume_i.epub
+  281 diagrams | Keyword: alekhine_             | lakdawala_2014_alekhine_defence_move_by_move_everyman.epub
+  254 diagrams | Keyword: fischer_              | bobby_2009_my_60_memorable_games_chess_tactics_chess_strategies_with_bobby_fischer_batsford.epub
+  253 diagrams | Keyword: morphy_               | sergeant_0000_morphy_s_games_of_chess_dover_publications.epub
+  221 diagrams | Keyword: lasker_               | isaak_linder_2010_emanuel_lasker_second_world_chess_champion_russell_enterprises_inc.epub
+  207 diagrams | Keyword: fischer_              | unknown_author_1964_legend_on_the_road_fischer_simul_tour_donaldson.epub
+  201 diagrams | Keyword: karpov_               | erwich_2016_tactics_training_anatoly_karpov_nic.epub
+  175 diagrams | Keyword: alekhine_             | tim_2022_chess_strategy_alekhine_scandinavian_how_to_beat_intermediate_chess_players.epub
+  151 diagrams | Keyword: capablanca_           | capablanca_2016_chess_fundamentals_anboco.epub
+  151 diagrams | Keyword: capablanca_           | unknown_author_0000_henry_bird_edward_lasker_josé_raul_capablanca_chess_strategy_a_complete_guide_for_beginners_to_chess_fundamentals.epub
+  118 diagrams | Keyword: fischer_              | brady_2011_endgame_bobby_fischer_s_remarkable_rise_and_fall_crown_publishers.epub
+    0 diagrams | Keyword: alekhine_             | unknown_author_2021_the_modernized_alekhine_gm_christian_bauer_thinkers_publishing_tls.epub
+
+================================================================================
+GENERAL INTEREST (25 books)
+================================================================================
+  924 diagrams | Keyword: secrets_of            | rakhmanov_2021_rakhmanov_s_secrets_of_opening_preparation_thinkers.epub
+  851 diagrams | Keyword: thinking              | aagaard_2017_gm_preparation_thinking_inside_the_box_quality_chess.epub
+  818 diagrams | Keyword: secrets_of            | muller_0000_secrets_of_pawn_endings.epub
+  721 diagrams | Keyword: art_of                | rudolf_0000_the_art_of_sacrifice_in_chess.epub
+  642 diagrams | Keyword: thinking              | shereshevsky_0000_associative_thinking.epub
+  641 diagrams | Keyword: psychology            | zlatanovic_2024_the_imparable_logic_and_psychology_in_chess_thinkers.epub
+  440 diagrams | Keyword: genius                | unknown_author_0000_forgotten_genius_the_life_games_of_gm_dragoljub_velimirovic_vol_1_georg_mohr_ana_velimir.epub
+  382 diagrams | Keyword: art_of                | neil_2021_attack_the_subtle_art_of_winning_brilliantly_everyman_chess.epub
+  367 diagrams | Keyword: thinking              | benjamin_2018_better_thinking_better_chess_how_a_grandmaster_finds_his_moves_new_in_chess.epub
+  367 diagrams | Keyword: thinking              | joel_2018_better_thinking_better_chess_how_a_grandmaster_finds_his_moves_new_in_chess.epub
+  359 diagrams | Keyword: immortal_games        | unknown_author_0000_the_immortal_games_of_capablanca_fred_reinfeld.epub
+  356 diagrams | Keyword: art_of                | chernev_0000_combinations_the_heart_of_chess.epub
+  345 diagrams | Keyword: art_of                | vladimir_0000_art_of_attack_in_chess.epub
+  342 diagrams | Keyword: art_of                | unknown_author_0000_renaud_kahn_the_art_of_checkmate.epub
+  320 diagrams | Keyword: art_of                | soltis_2014_the_new_art_of_defence_in_chess_batsford.epub
+  296 diagrams | Keyword: thinking              | kalinin_2017_chess_training_for_candidate_masters_accelerate_your_progress_by_thinking_for_yourself_new_in_chess.epub
+  296 diagrams | Keyword: thinking              | unknown_author_2017_alexander_kalinin_chess_training_for_candidate_masters_accelerate_your_progress_by_thinking_for_yourself_new_in_chess.epub
+  200 diagrams | Keyword: art_of                | eugene_2010_the_art_of_chess_combination.epub
+  200 diagrams | Keyword: art_of                | unknown_author_0000_the_art_of_chess_combination.epub
+  200 diagrams | Keyword: art_of                | znoskoborovsky_1959_the_art_of_chess_combination_dover.epub
+  107 diagrams | Keyword: philosophy            | unknown_author_0000_attacking_the_strongpoint_the_philosophy_of_chess_igor_zaitsev.epub
+   96 diagrams | Keyword: thinking              | unknown_author_0000_thinking_with_chess_teaching_children_ages_514.epub
+   23 diagrams | Keyword: psychology            | igor_2015_champion_psychology_remote_chess_academy.epub
+   23 diagrams | Keyword: art_of                | tommy_0000_chess_openings_for_beginners_the_complete_manual_to_learn_the_fundamentals_the_strategy_and_the_best_moves_at_the_start_of_the_game.epub
+   20 diagrams | Keyword: wisdom                | henebry_0000_chess_words_of_wisdom_the_principles_methods_and_essential_knowledge_of_chess_russell_enterprises_inc.epub
+
+================================================================================
+HISTORICAL (31 books)
+================================================================================
+ 1157 diagrams | Keyword: chess_evolution       | sakelsek_2020_the_power_of_tactics3_chess_evolution_with_mikhalchishin_adrian.epub
+  650 diagrams | Keyword: chess_evolution       | sakelsek_2019_the_power_of_tactics1_chess_evolution_with_mikhalchishin_adrian.epub
+  646 diagrams | Keyword: chess_evolution       | mikhalchishin_2018_mem7_mastering_typical_rook_endgames_chess_evolution.epub
+  639 diagrams | Keyword: chess_evolution       | sakelsek_2019_the_power_of_tactics2_chess_evolution_with_mikhalchishin_adrian.epub
+  636 diagrams | Keyword: chess_in_the_         | grivas_2012_chess_analytics_chess_in_the_digital_age_russell_enterprises_inc.epub
+  627 diagrams | Keyword: chess_evolution       | grivas_2017_mem5_mastering_rook_vs_pieces_endgames_chess_evolution.epub
+  614 diagrams | Keyword: chess_evolution       | mikhalchishin_2019_mem8_mastering_essential_rook_endgames_chess_evolution.epub
+  572 diagrams | Keyword: chess_evolution       | grivas_2016_mem4_mastering_queen_vs_pieces_endgames_chess_evolution.epub
+  562 diagrams | Keyword: chess_evolution       | balogh_2016_mem2_minor_piece_endgames1_chess_evolution_with_mikhalchishin_adrian.epub
+  531 diagrams | Keyword: chess_evolution       | sakelsek_2020_defensive_tools_chess_evolution_with_tratar_marko.epub
+  519 diagrams | Keyword: chess_evolution       | efstratios_2020_grivas_opening_laboratory_volume_2_chess_evolution.epub
+  515 diagrams | Keyword: chess_evolution       | efstratios_2020_grivas_opening_laboratory_volume_3_efstratios_grivas_chess_evolution.epub
+  505 diagrams | Keyword: world_champions       | dragan_0000_dynamic_play_in_the_world_champions_masterpieces.epub
+  482 diagrams | Keyword: chess_evolution       | efstratios_2020_grivas_opening_laboratory_volume_4_efstratios_grivas_chess_evolution.epub
+  474 diagrams | Keyword: chess_evolution       | efstratios_2019_grivas_opening_laboratory_volume_1_chess_evolution.epub
+  468 diagrams | Keyword: chess_evolution       | unknown_author_2018_play_the_dutch_tibor_karolyi_part_1_chess_evolution.epub
+  468 diagrams | Keyword: chess_evolution       | unknown_author_2018_play_the_dutch_tibor_karolyi_part_2_chess_evolution.epub
+  463 diagrams | Keyword: chess_evolution       | mikhalchishin_2017_mem6_mastering_basic_rook_endgames_chess_evolution.epub
+  454 diagrams | Keyword: chess_evolution       | sakelsek_2024_mastering_chess_endgame_calculation1_chess_evolution_with_mikhalchishin_adrian.epub
+  434 diagrams | Keyword: chess_evolution       | balogh_2016_mem3_minor_piece_endgames2_chess_evolution_with_mikhalchishin_adrian.epub
+  434 diagrams | Keyword: chess_evolution       | naiditsch_2012_most_instructive_endgames_of_chess_evolution_with_balogh_csaba.epub
+  416 diagrams | Keyword: chess_evolution       | balogh_2016_mem1_queen_and_pawn_chess_evolution_with_mikhalchishin_adrian.epub
+  416 diagrams | Keyword: chess_evolution       | mikhalchishin_2016_the_center_a_modern_strategy_guide_chess_evolution_with_mohr_georg.epub
+  358 diagrams | Keyword: chess_evolution       | naiditsch_2012_best_fighting_games_of_chess_evolution_with_balogh_csaba.epub
+  356 diagrams | Keyword: chess_evolution       | naiditsch_2012_best_attacking_games_of_chess_evolution_with_balogh_csaba.epub
+  351 diagrams | Keyword: chess_evolution       | naiditsch_2012_most_interesting_draws_of_chess_evolution_with_balogh_cs.epub
+  340 diagrams | Keyword: world_championship    | jiganchine_2013_practical_tactics_world_championship_preview_combinations_by_anand_and_carlsen.epub
+  330 diagrams | Keyword: chess_evolution       | naiditsch_2016_most_exciting_games_of_chess_evolution_with_balogh_csaba_maze_sebastien.epub
+  325 diagrams | Keyword: chess_evolution       | naiditsch_2016_most_stunning_victories_of_chess_evolution_with_balogh_csaba.epub
+  316 diagrams | Keyword: chess_evolution       | naiditsch_2012_positional_masterpieces_of_chess_evolution_with_balogh.epub
+  269 diagrams | Keyword: chess_in_the_         | franco_2023_attacking_chess_in_the_21st_century_zenonchess.epub
+
+================================================================================
+LOW DIAGRAM COUNT (<50) (5 books)
+================================================================================
+   49 diagrams | 49 diagrams                    | unknown_author_0000_the_scandinavian_defence_winning_with_qd6_and_g6_marek_soszynski.epub
+   42 diagrams | 42 diagrams                    | werner_0000_mental_toughness_in_chess.epub
+   23 diagrams | 23 diagrams                    | igor_2015_champion_psychology_remote_chess_academy.epub
+   23 diagrams | 23 diagrams                    | tommy_0000_chess_openings_for_beginners_the_complete_manual_to_learn_the_fundamentals_the_strategy_and_the_best_moves_at_the_start_of_the_game.epub
+   20 diagrams | 20 diagrams                    | henebry_0000_chess_words_of_wisdom_the_principles_methods_and_essential_knowledge_of_chess_russell_enterprises_inc.epub
+
+================================================================================
+PUZZLE BOOKS (51 books)
+================================================================================
+11271 diagrams | Keyword: problems              | lászló_2013_chess_problems_combinations_and_games_hachette_uk.epub
+ 2062 diagrams | Keyword: exercises             | unknown_author_0000_chess_exercises_for_beginners_the_tactics_workbook_that_explains.epub
+ 2062 diagrams | Keyword: exercises             | unknown_author_2019_franco_masetti_roberto_messa_chess_exercises_for_beginners_new_in_chess.epub
+ 2034 diagrams | Keyword: exercises             | unknown_author_2019_franco_masetti_roberto_messa_richard_jones_chess_exercises_for_beginners_the_tactics_workbook_that_explains_the_basic_concepts_too_new_in_chess.epub
+ 2002 diagrams | Keyword: exercises             | cicero_2018_checkmate_exercises_advanced_edition1.epub
+ 2002 diagrams | Keyword: exercises             | cicero_2019_checkmate_exercises_from_beginner_to_winner2.epub
+ 2002 diagrams | Keyword: exercises             | cicero_2020_checkmate_exercises_mastering_an_essential_chess_skill2.epub
+ 2001 diagrams | Keyword: exercises             | cicero_2018_checkmate_exercises_from_beginner_to_winner1.epub
+ 1260 diagrams | Keyword: exercises             | willemze_2022_chess_endgame_exercises_for_beginners_nic.epub
+ 1219 diagrams | Keyword: puzzle                | kravtsiv_2020_600_modern_chess_puzzles_gambit.epub
+ 1119 diagrams | Keyword: puzzle                | kravtsiv_2024_400_chess_strategy_puzzles_gambit.epub
+ 1101 diagrams | Keyword: exercises             | erwich_2021_chess_exercises_for_advanced_club_players_nic.epub
+ 1101 diagrams | Keyword: exercises             | frank_2022_chess_exercises_for_advanced_club_players_frank_erwich_new_in_chess.epub
+ 1096 diagrams | Keyword: exercises             | frank_0000_chess_exercises_for_club_players_the_tactics_workbook_that_also_explains_all_key_concepts.epub
+ 1052 diagrams | Keyword: exercises             | erwich_2019_chess_exercises_for_club_players_nic.epub
+ 1028 diagrams | Keyword: puzzle                | unknown_author_0000_endgame_puzzles_by_branko_tadić.epub
+  997 diagrams | Keyword: exercises             | thomas_2000_300_most_important_chess_exercises_batsford.epub
+  949 diagrams | Keyword: workbook              | kuljasevic_2022_how_to_study_chess_on_your_own_workbook1_nic.epub
+  889 diagrams | Keyword: puzzle                | vincent_okoye_0000_the_best_chess_puzzles_the_grand_masters_techniques.epub
+  882 diagrams | Keyword: workbook              | unknown_author_2019_de_la_villa_jesus_100_endgames_you_must_know_workbook_nic.epub
+  856 diagrams | Keyword: workbook              | peter_2021_everyone_s_first_chess_workbook_new_in_chess.epub
+  749 diagrams | Keyword: puzzle                | alberston_0000_chess_mazes_2_the_chess_puzzle_for_everyone_scb_distributors_russell_enterprises_inc.epub
+  603 diagrams | Keyword: problems              | dvoretsky_0000_chess_lessons_solving_problems_avoiding_mistakes.epub
+  595 diagrams | Keyword: workbook              | todd_2021_chess_endgame_workbook_acquiring_skills_to_win_close_games.epub
+  573 diagrams | Keyword: workbook              | todd_0000_chess_strategy_workbook_a_blueprint_for_developing_the_best_plan.epub
+  573 diagrams | Keyword: workbook              | unknown_author_0000_chess_strategy_workbook_a_blueprint.epub
+  549 diagrams | Keyword: workbook              | todd_2019_attacking_the_chess_king_workbook_patterns_and_strategies_for_successful_attacks.epub
+  549 diagrams | Keyword: workbook              | todd_2019_attacking_the_chess_king_workbook_patterns_and_strategies_for_successful_attacks_chess_detective_press.epub
+  534 diagrams | Keyword: workbook              | todd_2019_chess_tactics_and_combinations_workbook_winning_the_battles_between_the_pieces.epub
+  532 diagrams | Keyword: test_your             | unknown_author_2018_sarhan_guliev_logman_guliev_test_your_chess_skills_new_in_chess.epub
+  500 diagrams | Keyword: exercises             | cicero_2017_250_checkmate_exercises_for_improving_player1.epub
+  500 diagrams | Keyword: exercises             | cicero_2017_250_checkmate_exercises_for_improving_player2.epub
+  500 diagrams | Keyword: exercises             | cicero_2017_250_checkmate_exercises_for_improving_player3.epub
+  495 diagrams | Keyword: puzzle                | karsten_2012_the_chess_puzzle_book_4_mastering_the_positional_principles_russell_enterprises.epub
+  486 diagrams | Keyword: test_your             | franco_2014_test_your_chess_everyman.epub
+  454 diagrams | Keyword: workbook              | lakdawala_2022_chess_endgame_magic_and_tacticsthe_smyslov_workbook_carstenchess_hansen_carsten.epub
+  448 diagrams | Keyword: exercises             | ni_2024_winning_chess_exercises_for_kids_penguin.epub
+  433 diagrams | Keyword: exercises             | bricard_2018_strategic_chess_exercises_find_the_right_way_to_outplay_your_opponent_new_in_chess.epub
+  433 diagrams | Keyword: exercises             | unknown_author_2018_bricard_emmanuel_erwich_frank_kosten_anthony_cornelius_strategic_chess_exercises_find_the_right_way_to_outplay_your_opponent_new_in_chess.epub
+  422 diagrams | Keyword: workbook              | rozentalis_2020_to_exchange_or_not_the_ultimate_workbook_thinkers.epub
+  400 diagrams | Keyword: exercises             | cicero_2017_200_checkmate_exercises_from_tournament_games2.epub
+  400 diagrams | Keyword: exercises             | cicero_2017_200_chess_tactics_exercises_from_tournament_games1.epub
+  356 diagrams | Keyword: workbook              | kuljasevic_2025_how_to_study_chess_on_your_own_workbook3_nic.epub
+  351 diagrams | Keyword: workbook              | unknown_author_0000_how_to_study_chess_on_your_own_workbook_vol_1_kuljasevic.epub
+  321 diagrams | Keyword: workbook              | kuljasevic_0000_the_how_to_study_chess_on_your_own_workbook_volume_2.epub
+  311 diagrams | Keyword: puzzle                | brennan_2013_the_world_s_easiest_chess_puzzle_book_with_carson_anthea.epub
+  249 diagrams | Keyword: workbook              | aagaard_2024_conceptual_rook_endgames_workbook_quality_chess.epub
+  207 diagrams | Keyword: puzzle                | adams_2020_desert_island_chess_puzzles2_gambit.epub
+  123 diagrams | Keyword: puzzle                | aksanov_2020_chess_puzzles_for_kids_netboss.epub
+  100 diagrams | Keyword: exercises             | cicero_2017_checkmate_exercises_for_beginners_sampler_edition.epub
+    0 diagrams | Keyword: exercises             | frank_2021_chess_exercises_for_advanced_club_players_new_in_chess.epub
+
+================================================================================
+SUMMARY
+================================================================================
+Total books scanned: 944
+Total flagged books: 181
+
+Note: Some books may appear in multiple categories
+
+These books might be less useful for opening/tactical RAG queries but
+could still be valuable for general chess knowledge, history, and culture.

@@ -22,12 +22,8 @@ import fen_validator
 import query_classifier
 
 from chess_positions import detect_fen, parse_moves_to_fen, extract_chess_positions, filter_relevant_positions, create_lichess_url
-from diagram_processor import extract_moves_from_description, extract_diagram_markers, replace_markers_with_ids, wrap_bare_fens
-from opening_validator import extract_contamination_details, generate_section_with_retry, validate_stage2_diagrams, validate_and_fix_diagrams
-from synthesis_pipeline import stage1_generate_outline, stage2_expand_sections, stage3_final_assembly, synthesize_answer
+from synthesis_pipeline import synthesize_answer
 from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction, search_multi_collection_async
-from tactical_query_detector import is_tactical_query, inject_canonical_diagrams, strip_diagram_markers
-# from backend_html_renderer import apply_backend_html_rendering  # FIXME: Module doesn't exist
 
 # Phase 5.1: RRF multi-collection merge
 import asyncio
@@ -74,36 +70,13 @@ except OSError:
     print("⚠️  spaCy model not found. Run: python -m spacy download en_core_web_sm")
     NLP = None
 
-# Load canonical FENs for middlegame concepts
-print("Loading canonical FENs...")
-CANONICAL_FENS = {}
-try:
-    with open('canonical_fens.json', 'r') as f:
-        CANONICAL_FENS = json.load(f)
-    print(f"✓ Loaded {len(CANONICAL_FENS)} canonical FEN concepts")
-except FileNotFoundError:
-    print("⚠️  canonical_fens.json not found - middlegame queries will use RAG only")
-
-# Load canonical positions library for tactical query bypass
-print("Loading canonical positions library...")
-CANONICAL_POSITIONS = {}
-try:
-    with open('canonical_positions.json', 'r') as f:
-        CANONICAL_POSITIONS = json.load(f)
-    total_positions = sum(len(positions) for positions in CANONICAL_POSITIONS.values())
-    print(f"✓ Loaded {total_positions} canonical positions across {len(CANONICAL_POSITIONS)} categories")
-except FileNotFoundError:
-    print("⚠️  canonical_positions.json not found - tactical query bypass disabled")
-
-# Initialize canonical positions prompt for synthesis
-print("Initializing canonical positions prompt...")
-from synthesis_pipeline import initialize_canonical_prompt
-initialize_canonical_prompt()
+# Dynamic diagram generation REMOVED (Phase 6.1b abandoned)
+# Using static EPUB diagrams only (Phase 6.1a)
 
 # Phase 6.1a: Load static EPUB diagram metadata
 print("Loading EPUB diagram metadata...")
 try:
-    diagram_index.load('diagram_metadata_full.json', min_size_bytes=12000)
+    diagram_index.load('diagram_metadata_full.json', min_size_bytes=2000)
     print(f"✓ Diagram service ready")
 except FileNotFoundError:
     print("⚠️  diagram_metadata_full.json not found - static diagrams disabled")
@@ -218,104 +191,6 @@ def query():
         if expected_signature:
             print(f"✓ Expected signature: {expected_signature}")
 
-        # 🚨 EMERGENCY FIX: Detect tactical queries and bypass GPT diagram generation
-        # DISABLED: Static tactical bypass (ITEM-024.8)
-        if False and CANONICAL_POSITIONS and is_tactical_query(query_text):
-            print("=" * 80)
-            print("🚨 TACTICAL QUERY DETECTED - Option D Emergency Fix Active")
-            print("=" * 80)
-            print(f"Query: {query_text}")
-            print("Bypassing GPT-5 diagram generation, injecting canonical positions...")
-
-            # Still run RAG to get textual context from books
-            ranked_results, rag_timing = execute_rag_query(
-                OPENAI_CLIENT,
-                QDRANT_CLIENT,
-                query_text,
-                COLLECTION_NAME,
-                top_k=TOP_K,
-                top_n=TOP_N,
-                embed_func=embed_query,
-                search_func=semantic_search,
-                rerank_func=gpt5_rerank
-            )
-
-            results = format_rag_results(ranked_results, query_text, extract_positions=True)
-            context_chunks = prepare_synthesis_context(results, None, top_n=8)
-            context = "\n\n".join(context_chunks)
-
-            # Let GPT-5 generate text explanation ONLY (no diagrams)
-            print("Requesting text-only explanation from GPT-5...")
-            response = OPENAI_CLIENT.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": "system", "content": "You are a chess expert. Explain tactical concepts clearly and concisely. DO NOT include any [DIAGRAM] markers or FEN strings in your response."},
-                    {"role": "user", "content": f"Question: {query_text}\n\nContext from chess literature:\n{context[:4000]}\n\nProvide a detailed explanation of this tactical concept. Focus on how it works, when to use it, and key patterns to recognize. Do NOT include diagram markers."}
-                ],
-                max_completion_tokens=2000
-            )
-
-            synthesized_answer = response.choices[0].message.content
-
-            # Strip any diagram markers GPT-5 might have generated anyway
-            synthesized_answer = strip_diagram_markers(synthesized_answer)
-
-            # Inject canonical diagrams programmatically
-            diagram_positions = inject_canonical_diagrams(query_text, CANONICAL_POSITIONS)
-
-            # Generate SVG for injected diagrams
-            from diagram_processor import generate_svg_from_fen
-            for diagram in diagram_positions:
-                if 'fen' in diagram and not diagram.get('svg'):
-                    diagram['svg'] = generate_svg_from_fen(diagram['fen'])
-
-            # === CRITICAL FIX: Re-insert markers for frontend rendering ===
-            # Frontend expects [DIAGRAM_ID:uuid] markers in answer text
-            # This re-establishes the contract between backend and frontend
-            print(f"🔧 Re-inserting {len(diagram_positions)} diagram markers into answer text...")
-
-            # Append markers at end of text with captions
-            marker_text = "\n\n"
-            for i, diagram in enumerate(diagram_positions):
-                marker_text += f"[DIAGRAM_ID:{diagram['id']}]\n"
-                if 'caption' in diagram:
-                    marker_text += f"{diagram['caption']}\n\n"
-
-            synthesized_answer += marker_text
-            print("✅ Markers re-inserted - frontend will now render diagrams")
-
-            total = time.time() - start
-            print(f"✅ EMERGENCY FIX COMPLETE: Injected {len(diagram_positions)} canonical diagrams")
-            print(f"🎯 TOTAL: {total:.2f}s")
-            print("=" * 80)
-
-            # Collect positions from top sources
-            synthesized_positions = collect_answer_positions(results, max_positions=2)
-
-            # Build response
-            response = {
-                'success': True,
-                'query': query_text,
-                'answer': synthesized_answer,
-                'positions': synthesized_positions,
-                'diagram_positions': diagram_positions,  # Canonical diagrams
-                'sources': results[:5],
-                'results': results,
-                'timing': {
-                    **rag_timing,
-                    'synthesis': round(total, 2),
-                    'total': round(total, 2)
-                },
-                'emergency_fix_applied': True  # Flag for debugging
-            }
-
-            # ITEM-024.6: Backend HTML pre-rendering (Option B - Nuclear Fix)
-            # ITEM-024.7: Reverted to JavaScript rendering (Path B - Clean Architecture)
-            # response = apply_backend_html_rendering(response)
-
-            # Return response with canonical diagrams + embedded SVG HTML
-            return jsonify(response)
-
         # Step 2-4: Execute RAG pipeline (embed → search → rerank)
         ranked_results, rag_timing = execute_rag_query(
             OPENAI_CLIENT,
@@ -352,29 +227,16 @@ def query():
             "\n\n".join(context_chunks),  # Join context properly
             opening_name=opening_name,
             expected_signature=expected_signature,
-            validate_stage2_diagrams_func=validate_stage2_diagrams,
-            generate_section_with_retry_func=generate_section_with_retry,
+            validate_stage2_diagrams_func=None,  # Dynamic diagram validation removed
+            generate_section_with_retry_func=None,  # Dynamic diagram validation removed
             canonical_fen=canonical_fen
         )
 
         rag_timing['synthesis'] = round(time.time() - synthesis_start, 2)
         print(f"⏱  3-stage synthesis complete: {rag_timing['synthesis']}s")
 
-        # Step 6.4: POST-PROCESSING - Wrap any bare FEN strings
-        print(f"\n🔧 Post-processing: Wrapping bare FEN strings...")
-        synthesized_answer = wrap_bare_fens(synthesized_answer)
-        print(f"✅ Bare FEN post-processing complete")
-
-        # Step 6.5: Extract and parse diagram markers from synthesized text
-        print(f"\n⏱  Extracting diagram markers...")
-        diagram_start = time.time()
-
-        diagram_positions = extract_diagram_markers(synthesized_answer)
-        synthesized_answer = replace_markers_with_ids(synthesized_answer, diagram_positions)
-
-        rag_timing['diagrams'] = round(time.time() - diagram_start, 2)
-        print(f"⏱  Diagram extraction complete: {rag_timing['diagrams']}s")
-        print(f"📋 Extracted {len(diagram_positions)} diagram positions from synthesis")
+        # Dynamic diagram generation removed - using static EPUB diagrams only
+        diagram_positions = []
 
         total = time.time() - start
         print(f"🎯 TOTAL: {total:.2f}s")
@@ -621,28 +483,16 @@ def query_merged():
             "\n\n".join(context_chunks),
             opening_name=None,
             expected_signature=None,
-            validate_stage2_diagrams_func=validate_stage2_diagrams,
-            generate_section_with_retry_func=generate_section_with_retry,
+            validate_stage2_diagrams_func=None,  # Dynamic diagram validation removed
+            generate_section_with_retry_func=None,  # Dynamic diagram validation removed
             canonical_fen=None
         )
 
         synthesis_time = time.time() - synthesis_start
         print(f"⏱  3-stage synthesis complete: {synthesis_time:.2f}s")
 
-        # Step 12: Post-processing
-        print(f"🔧 Post-processing: Wrapping bare FEN strings...")
-        synthesized_answer = wrap_bare_fens(synthesized_answer)
-
-        # Step 13: Extract diagram markers
-        print(f"⏱  Extracting diagram markers...")
-        diagram_start = time.time()
-
-        diagram_positions = extract_diagram_markers(synthesized_answer)
-        synthesized_answer = replace_markers_with_ids(synthesized_answer, diagram_positions)
-
-        diagram_time = time.time() - diagram_start
-        print(f"⏱  Diagram extraction complete: {diagram_time:.2f}s")
-        print(f"📋 Extracted {len(diagram_positions)} diagram positions")
+        # Dynamic diagram generation removed - using static EPUB diagrams only
+        diagram_positions = []
 
         # Step 14: Collect positions from top sources
         synthesized_positions = collect_answer_positions(final_results, max_positions=2)
@@ -658,6 +508,10 @@ def query_merged():
         for result in final_results[:10]:  # Top 10 results only
             book_name = result.get('book_name', '')
             book_id = diagram_index.get_book_id_from_name(book_name)
+
+            # FIX: Try with .epub extension if initial lookup fails (Qdrant stores without extension)
+            if not book_id and not book_name.endswith(('.epub', '.mobi', '.pgn')):
+                book_id = diagram_index.get_book_id_from_name(book_name + '.epub')
 
             if book_id:
                 # Get all diagrams for this book
@@ -706,7 +560,7 @@ def query_merged():
                 'reranking': round(rerank_time, 2),
                 'rrf_merge': round(merge_time, 2),
                 'synthesis': round(synthesis_time, 2),
-                'diagrams': round(diagram_time, 2),
+                'diagrams': round(diagram_attach_time, 2),
                 'total': round(total, 2)
             },
             'rrf_metadata': {
