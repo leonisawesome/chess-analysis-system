@@ -37,11 +37,11 @@
   - Security: diagram_id endpoint to prevent path traversal
   - Architecture: In-memory index (200 MB acceptable)
 
-**Final Statistics:**
-- **Books:** 979 total (938 original + 41 from .mobi conversion)
+**Final Statistics (Updated November 10, 2025):**
+- **Books:** 946 total (after duplicate cleanup - removed 33 books)
 - **Diagrams:** 724,062 extracted (~16.5 GB)
-- **Qdrant:** 327,779 chunks (cleaned up from 359,929)
-- **Quality filtering:** Removed 17 low-quality books
+- **Qdrant:** 315,554 chunks (cleaned up from 327,779)
+- **Data Cleaning:** Removed 17 low-quality books + 16 duplicate editions + 913 MacOS metadata files
 
 **Time Taken:** 7 days (extraction + integration)
 **Risk Level:** LOW (well-solved with partner consultation)

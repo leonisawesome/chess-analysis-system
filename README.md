@@ -1,6 +1,6 @@
 # Chess Knowledge RAG System
 
-**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 327,779 chunks from 979 chess books (724,062 extracted diagrams) + 1,778 PGN games.**
+**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and 315,554 chunks from 946 chess books (724,062 extracted diagrams) + 1,778 PGN games.**
 
 ---
 
@@ -13,7 +13,7 @@
 - **3-stage synthesis:** Creates coherent answer with chess diagrams
 - **Output:** Professional article with interactive chess positions
 
-### Current Status (November 9, 2025)
+### Current Status (November 10, 2025)
 - ✅ **ITEM-008 Complete:** Sicilian contamination bug eliminated (100% success rate)
 - ✅ **ITEM-011 Complete:** Monolithic refactoring (1,474 → 262 lines, -82.2%)
 - ✅ **ITEM-024.7 Complete:** JavaScript rendering architecture (Path B) - Restored clean separation between backend and frontend
@@ -51,6 +51,13 @@
     - **Ranking Algorithm:** Text similarity (Jaccard) + opening keywords + sequential proximity + quality boost
     - **Security:** Metadata whitelist validation, trusted file paths only, 24-hour cache headers
     - **Partner Consultation:** Synthesized feedback from Gemini, Grok, ChatGPT
+- ✅ **ITEM-030 Complete:** Duplicate Book Cleanup (November 10, 2025)
+  - **Removed:** 917 files total (4 duplicate books + 913 MacOS metadata files)
+  - **Duplicates Deleted:** herman_2014, rozentalis_0000, moskalenko_no_dg, plus 1 other
+  - **Metadata Cleanup:** All `._*` files removed (junk files from external drive copying)
+  - **Final Count:** 946 unique EPUB books (down from 979)
+  - **Qdrant Status:** 315,554 chunks (down from 327,779) - All duplicates removed
+  - **Tool Created:** `find_current_duplicates_fixed.py` for future duplicate detection
 - ✅ **Bug Fix Complete:** Added `book_title` field to Qdrant ingestion
   - **Issue:** Ingestion pipeline only saved `book_name` (filename), not human-readable title
   - **Fix:** Extract title from EPUB metadata using `ebooklib`, fallback to filename if missing
@@ -73,20 +80,20 @@
 ### Data Storage Structure
 ```
 /Volumes/T7 Shield/books/
-├── epub/                      # 938 chess books in EPUB format (after data cleaning)
+├── epub/                      # 946 chess books in EPUB format (after duplicate cleanup)
 │   ├── kotronias_0000_the_safest_scandinavian_reloaded.epub
 │   ├── john_2012_play_the_french_everyman_chess.epub
-│   └── ... (936 more books)
+│   └── ... (944 more books)
 │
 └── images/                    # Extracted diagram images (Phase 6.1a COMPLETE)
     ├── book_{hash}/           # Organized by book ID
     │   ├── book_{hash}_0000.png
     │   ├── book_{hash}_0001.png
-    │   └── ... (692,187 total diagrams across all books)
+    │   └── ... (724,062 total diagrams across all books)
     └── ...
 ```
 
-**Note:** Directory structure updated November 9, 2025 to consolidate all book-related data under `/books/`. Data cleaning removed 17 low-quality books (2 with 0 diagrams, 15 with <63 diagrams).
+**Note:** Directory structure updated November 10, 2025 after duplicate cleanup. Removed 33 duplicate books total (17 low-quality + 16 duplicate editions) + 913 MacOS metadata files.
 
 ---
 
