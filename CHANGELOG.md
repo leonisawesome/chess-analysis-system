@@ -1,0 +1,122 @@
+# Changelog - Completed Items
+
+**Recent first, oldest at bottom**
+
+---
+
+## ITEM-031: Book Ingestion (November 10, 2025) ✅
+
+**Books Added:** 2
+- Dvoretsky's Endgame Manual 6th Ed (1,053 chunks, 1,275 diagrams)
+- Under the Surface 2nd Ed by Markos (346 chunks, 501 diagrams)
+
+**Stats Change:** 920 → 922 books, 309,867 → 311,266 EPUB chunks, 534,467 → 536,243 diagrams
+
+**Bugs Fixed:**
+- add_books_to_corpus.py: Fixed hardcoded wrong path
+- batch_process_epubs.py: Fixed crash on summary report
+
+**Documentation:** Corrected inflated stats from previous sessions
+
+---
+
+## ITEM-030: Duplicate Book Cleanup (Previous session) ✅
+
+- Removed 4 duplicate books
+- macOS `._*` metadata files properly ignored (not deleted)
+- Tool created: `find_current_duplicates_fixed.py`
+
+---
+
+## ITEM-029: Static EPUB Diagram Integration (November 9, 2025) ✅
+
+- Extracted 536,243 diagrams from 922 books
+- Created `diagram_service.py` with in-memory index
+- Flask `/diagrams/<diagram_id>` endpoint
+- Frontend rendering with lazy loading
+- Ranking: Text similarity + keywords + quality boost
+
+---
+
+## ITEM-028: RRF Multi-Collection Merge (Complete) ✅
+
+**Phase 5.1:**
+- Query router with intent classification (8/8 tests passed)
+- RRF merger with k=60 and collection weights
+- Parallel multi-collection search with asyncio
+- `/query_merged` endpoint with complete pipeline
+- UI integration with dual scores and collection badges
+
+**Phase 5.2:** On hold (waiting for PGN corpus expansion to 1M games)
+
+---
+
+## ITEM-027: PGN Ingestion System ✅
+
+- All 1,778 games validated
+- 1,791 chunks in `chess_pgn_repertoire` collection
+- 100% query success rate
+- Variation splitting for oversized games
+
+---
+
+## ITEM-024.7: JavaScript Rendering Architecture ✅
+
+- Restored clean separation between backend and frontend
+- Path B implementation (chessboard.js)
+
+---
+
+## ITEM-011: Monolithic Refactoring (October 2025) ✅
+
+### Problem
+`app.py` was 1,474 lines - unmaintainable monolith with synthesis, chess parsing, and diagram generation all mixed together.
+
+### Solution
+Extracted into 9 specialized modules:
+- `rag_engine.py` - Vector search (105 lines)
+- `reranker.py` - GPT-5 reranking (88 lines)
+- `synthesis_pipeline.py` - 3-stage synthesis (179 lines)
+- `chess_positions.py` - FEN/PGN parsing (122 lines)
+- `diagram_generator.py` - SVG generation (145 lines)
+- `content_formatter.py` - Markdown formatting (89 lines)
+- `validation.py` - Quality checks (67 lines)
+- `query_router.py` - Intent classification (71 lines)
+- `rrf_merger.py` - Multi-collection merge (92 lines)
+
+**Result:** `app.py` reduced to 262 lines (Flask routes only)
+**Reduction:** 82.2% code reduction in main file
+**Architecture:** Clean modular design with single responsibilities
+
+---
+
+## ITEM-008: Sicilian Contamination Bug (October 2025) ✅
+
+### Problem
+Querying "King's Indian Defense" contaminated with Sicilian Defense results:
+- 70% of results were Sicilian instead of King's Indian
+- Root cause: Regeneration feedback loop in 3-stage synthesis
+- Stage 2 would regenerate Stage 1's correct results with wrong opening
+
+### Solution
+**Removed regeneration entirely** - each stage runs once:
+- Stage 1: Generate outline
+- Stage 2: Expand sections (no regeneration)
+- Stage 3: Add diagrams (no regeneration)
+
+### Results
+- **Before:** 30% success rate (7/23 queries succeeded)
+- **After:** 100% success rate (23/23 queries succeeded)
+- No contamination across 50+ validation queries
+
+---
+
+## Earlier Items (2024)
+
+- **ITEM-001:** Initial bug identification (September 2024)
+- **ITEM-002-007:** Various features and fixes
+- See git history for details
+
+---
+
+**Note:** For current status, see [README.md](README.md). This file contains historical completed items only.
