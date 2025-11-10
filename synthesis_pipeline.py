@@ -185,7 +185,7 @@ When synthesizing your answer:
 - Use PGN sources to show concrete move sequences and variations
 - Reference both types naturally in your explanation
 - Focus on clear explanations of strategic concepts and concrete variations
-- DO NOT include diagram markup - diagrams will be provided separately from source materials
+- CRITICAL: You MUST NOT write the text string "[DIAGRAM:" anywhere in your response. All chess diagrams will be provided separately via images. Writing [DIAGRAM: ...] will break the system.
 
 Write 2-3 detailed paragraphs per section."""
 
@@ -332,7 +332,12 @@ Create a cohesive article that flows naturally. Maintain all diagram markers."""
             max_completion_tokens=6000
         )
 
-        return response.choices[0].message.content
+        final_answer = response.choices[0].message.content
+
+        # Strip any residual diagram markers (fallback safety)
+        final_answer = re.sub(r'\[DIAGRAM:[^\]]+\]', '', final_answer)
+
+        return final_answer
 
     except Exception as e:
         print(f"Stage 3 error: {e}")

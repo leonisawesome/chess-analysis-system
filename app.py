@@ -468,8 +468,10 @@ def query_merged():
                 'collection': result['collection'],
                 'rrf_score': result['rrf_score'],
                 'best_rank': result['best_rank'],
-                'fusion_sources': result['fusion_sources']
+                'fusion_sources': result['fusion_sources'],
+                'max_similarity': result['max_similarity']  # Keep for filtering
             }
+            # Note: epub_diagrams added later at line 536 (after formatting)
             # Filter out results with 0 relevance (completely irrelevant)
             if result['max_similarity'] > 0:
                 final_results.append(formatted)
