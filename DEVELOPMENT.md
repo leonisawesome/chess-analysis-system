@@ -20,6 +20,7 @@ See [AGENT_START_HERE.md](AGENT_START_HERE.md#adding-books) for full process.
 ```bash
 # 1. Analyze quality and report scores for approval (everything in staging)
 python analyze_chess_books.py "/Volumes/T7 Shield/books/epub/1new/*.epub"
+# → Results are stored in epub_analysis.db automatically (view with `sqlite3 epub_analysis.db`)
 # → Share the score breakdown so the user can accept/reject each book
 
 # 2. After approval, rename + move approved files into the main corpus (assistant automates this step)

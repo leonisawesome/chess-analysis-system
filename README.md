@@ -101,6 +101,7 @@ python verify_system_stats.py
 ### Add New Books
 - Run the analyzer on anything in `/Volumes/T7 Shield/books/epub/1new/`:
   `python analyze_chess_books.py "/Volumes/T7 Shield/books/epub/1new/*.epub"`
+- (Analyzer automatically writes results into `epub_analysis.db`; use `sqlite3 epub_analysis.db "SELECT filename, score FROM epub_analysis WHERE filename LIKE '%book%';"` if you need to inspect entries.)
 - Send the score report so the user can approve/reject each title
 - After approval, rename/move the approved files into `/Volumes/T7 Shield/books/epub/` (assistant automates this step)
 - Continue with ingestion/diagram extraction per [DEVELOPMENT.md#adding-a-new-book](DEVELOPMENT.md#adding-a-new-book)
