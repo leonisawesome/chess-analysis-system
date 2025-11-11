@@ -39,6 +39,69 @@ from diagram_service import diagram_index
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
 
+FEATURED_MARKER_PATTERN = re.compile(r'\[FEATURED_DIAGRAM_\d+\]')
+SECTION_HEADING_PATTERN = re.compile(r'(##\s+[^\n]+\n)')
+
+
+def enforce_featured_diagram_markers(answer: str, diagram_count: int) -> str:
+    """
+    Ensure the synthesized answer has exactly `diagram_count` [FEATURED_DIAGRAM_X] markers.
+
+    Strategy:
+    1. Strip any existing markers (LLM may emit 0 or 20 of them arbitrarily)
+    2. Reinsert markers after headings and long sections so that the count
+       matches the number of diagrams we actually collected.
+    3. If no diagrams available, remove stale markers entirely so the UI
+       doesn't show literal [FEATURED_DIAGRAM_N] text.
+    """
+    if not answer:
+        return answer
+
+    # Remove any markers the model generated (keeps text clean)
+    cleaned = FEATURED_MARKER_PATTERN.sub('', answer)
+
+    if diagram_count <= 0:
+        if cleaned != answer:
+            print("🧹 Removed stale inline diagram markers (0 diagrams available)")
+        return cleaned
+
+    segments = SECTION_HEADING_PATTERN.split(cleaned)
+    result_segments = []
+    marker_index = 1
+    inserted_markers = 0
+
+    def next_marker(wrap: bool = True) -> str:
+        nonlocal marker_index, inserted_markers
+        marker = f'[FEATURED_DIAGRAM_{marker_index}]'
+        marker_index += 1
+        inserted_markers += 1
+        return f'\n{marker}\n\n' if wrap else marker
+
+    for segment in segments:
+        if not segment:
+            continue
+
+        if SECTION_HEADING_PATTERN.match(segment):
+            result_segments.append(segment)
+            if inserted_markers < diagram_count:
+                result_segments.append(next_marker())
+            continue
+
+        body = segment
+        if inserted_markers < diagram_count and len(body.strip()) >= 400:
+            paragraphs = body.split('\n\n')
+            insert_at = max(1, len(paragraphs) // 2)
+            paragraphs.insert(insert_at, next_marker(wrap=False))
+            body = '\n\n'.join(paragraphs)
+
+        result_segments.append(body)
+
+    while inserted_markers < diagram_count:
+        result_segments.append(next_marker())
+
+    print(f"📍 Inline diagram markers inserted: {inserted_markers}/{diagram_count}")
+    return ''.join(result_segments)
+
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
@@ -276,6 +339,8 @@ def query():
         synthesized_positions = collect_answer_positions(results, max_positions=2)
         print(f"📋 Collected {len(synthesized_positions)} positions for answer section")
 
+        synthesized_answer = enforce_featured_diagram_markers(synthesized_answer, 0)
+
         # Prepare response
         response_data = {
             'success': True,
@@ -459,6 +524,7 @@ def query_merged():
             formatted = {
                 'score': round(result['max_similarity'], 1),  # Use GPT-5 reranking score (0-10 scale)
                 'book_name': book_name,
+                'book_title': payload.get('book_title', book_name),
                 'book': book_name,
                 'chapter_title': chapter,
                 'chapter': chapter,
@@ -512,13 +578,31 @@ def query_merged():
         print(f"📷 Attaching static EPUB diagrams...")
         diagram_attach_start = time.time()
 
-        for result in final_results[:10]:  # Top 10 results only
-            book_name = result.get('book_name', '')
-            book_id = diagram_index.get_book_id_from_name(book_name)
+        for idx, result in enumerate(final_results[:10]):  # Top 10 results only
+            book_name = (result.get('book_name') or '').strip()
+            book_title = (result.get('book_title') or '').strip()
 
-            # FIX: Try with .epub extension if initial lookup fails (Qdrant stores without extension)
-            if not book_id and not book_name.endswith(('.epub', '.mobi', '.pgn')):
-                book_id = diagram_index.get_book_id_from_name(book_name + '.epub')
+            lookup_candidates = []
+            if book_name:
+                lookup_candidates.append(book_name)
+                if not book_name.endswith(('.epub', '.mobi', '.pgn')):
+                    lookup_candidates.extend([
+                        f"{book_name}.epub",
+                        f"{book_name}.mobi"
+                    ])
+            if book_title:
+                lookup_candidates.extend([book_title, book_title.lower()])
+                title_slug = re.sub(r'[^a-z0-9]+', '_', book_title.lower()).strip('_')
+                if title_slug:
+                    lookup_candidates.append(title_slug)
+
+            book_id = None
+            for candidate in lookup_candidates:
+                if not candidate:
+                    continue
+                book_id = diagram_index.get_book_id_from_name(candidate)
+                if book_id:
+                    break
 
             if book_id:
                 # Get all diagrams for this book
@@ -546,6 +630,7 @@ def query_merged():
                 else:
                     result['epub_diagrams'] = []
             else:
+                print(f"[DIAGRAM] No static diagrams found for result {idx}: {book_name or book_title}")
                 result['epub_diagrams'] = []
 
         diagram_attach_time = time.time() - diagram_attach_start
@@ -561,6 +646,12 @@ def query_merged():
                 featured_diagrams.extend(result['epub_diagrams'][:2])
         featured_diagrams = featured_diagrams[:6]  # Max 6 total
         print(f"📷 Featured diagrams for display: {len(featured_diagrams)}")
+
+        # Normalize inline markers so the count matches what we actually have
+        synthesized_answer = enforce_featured_diagram_markers(
+            synthesized_answer,
+            len(featured_diagrams)
+        )
 
         # Prepare response
         response_data = {

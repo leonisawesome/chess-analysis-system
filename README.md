@@ -4,20 +4,20 @@
 
 ---
 
-## ⚠️ CLAUDE: READ [CLAUDE_START_HERE.md](CLAUDE_START_HERE.md) FIRST!
+## ⚠️ START HERE: READ [AGENT_START_HERE.md](AGENT_START_HERE.md) FIRST!
 
 **This repo has 3-4 recurring issues across sessions. Start with the guide above.**
 
 **Quick version:**
 1. Run `python verify_system_stats.py` → Use those numbers, not docs
 2. NEVER delete macOS `._*` files → Filter them out: `if not f.name.startswith('._')`
-3. Test before claiming "fixed" → Previous Claudes didn't actually fix things
+3. Test before claiming "fixed" → Previous assistants didn't actually fix things
 
 ---
 
 ## 📚 Documentation
 
-- **[CLAUDE_START_HERE.md](CLAUDE_START_HERE.md)** - Read this first every session
+- **[AGENT_START_HERE.md](AGENT_START_HERE.md)** - Read this first every session
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design & data flow
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - Common tasks & workflow
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Issues & solutions
@@ -37,7 +37,11 @@
 - ✅ **ITEM-028:** RRF multi-collection merge (EPUB + PGN)
 
 ### Active Priority
-🎯 Frontend verification of static diagram display in browser (backend tested ✅)
+🎯 **ITEM-033:** Fixing inline diagram rendering (HTML displaying as plain text, markers not replaced)
+- Branch: fix/inline-diagram-rendering
+- Partner AI consultation complete (Gemini, ChatGPT, Grok consensus on root cause)
+- Backend now enforces a 1:1 match between `featured_diagrams` and `[FEATURED_DIAGRAM_X]` markers; frontend strips any leftovers to prevent literal markers.
+- Next focus: browser verification + styling polish once inline replacement is fully validated.
 
 ### System Stats (Verified Nov 10, 2025 - 3:30 PM)
 
@@ -208,7 +212,7 @@ See [BACKLOG.md](BACKLOG.md) for detailed planning.
 ## 🤝 Contributing
 
 ### Before Making Changes
-1. Read [CLAUDE_START_HERE.md](CLAUDE_START_HERE.md)
+1. Read [AGENT_START_HERE.md](AGENT_START_HERE.md)
 2. Run `python verify_system_stats.py`
 3. Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for known issues
 
@@ -224,7 +228,7 @@ Longer explanation:
 - Why it changed
 - Side effects
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: Assistant <noreply@example.com>
 ```
 
 ---
@@ -254,7 +258,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 4. Review [SESSION_NOTES.md](SESSION_NOTES.md) for recent changes
 
 ### Filing Issues
-**For Claudes working on this:**
+**For assistant sessions:**
 - Always verify stats with `verify_system_stats.py`
 - Never trust documentation - check actual state
 - Never delete macOS `._*` files
@@ -265,7 +269,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ## 📝 License & Credits
 
 **Author:** Leon (leonisawesome)
-**AI Partner:** Claude (Anthropic)
+**AI Partner:** Multi-agent panel (Gemini, Grok, ChatGPT)
 **Repository:** github.com/leonisawesome/chess-analysis-system
 
 ---

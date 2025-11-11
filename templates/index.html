@@ -482,35 +482,34 @@
     <!-- Chessboard.js -->
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <!-- Chess Diagram Renderer -->
-    <script src="{{ url_for('static', filename='js/diagram-renderer.js') }}?v=1762009042">
+    <script src="{{ url_for('static', filename='js/diagram-renderer.js') }}?v=1762009042"></script>
 
     <!-- INLINE FALLBACK FOR renderAnswerWithDiagrams (ITEM-024.6 Emergency Fix) -->
     <script>
-    console.log("🔧 Checking for renderAnswerWithDiagrams...");
-    
-    // If external JS hasn't loaded, provide inline fallback
-    if (typeof window.renderAnswerWithDiagrams === 'undefined') {
-        console.warn("⚠️ External diagram-renderer.js not loaded, using inline fallback");
-        
-        window.renderAnswerWithDiagrams = function(answer, diagramPositions, container) {
-            console.log("🎨 [FALLBACK] renderAnswerWithDiagrams called");
-            console.log("  Answer length:", answer?.length || 0);
-            console.log("  Diagrams:", diagramPositions?.length || 0);
-            
-            if (!container) {
-                container = document.getElementById('answer-content-container') || document.body;
-            }
-            
-            // Since backend is sending HTML with embedded SVG, just insert it
-            container.innerHTML = answer;
-            
-            console.log("✅ [FALLBACK] Answer inserted with embedded HTML");
-        };
-    } else {
-        console.log("✅ External renderAnswerWithDiagrams loaded successfully");
-    }
+    (function ensureDiagramRenderer() {
+        console.log("🔧 Checking for renderAnswerWithDiagrams...");
+
+        if (typeof window.renderAnswerWithDiagrams === 'undefined') {
+            console.warn("⚠️ External diagram-renderer.js not loaded, using inline fallback");
+
+            window.renderAnswerWithDiagrams = function(answer, diagramPositions, container) {
+                console.log("🎨 [FALLBACK] renderAnswerWithDiagrams called");
+                console.log("  Answer length:", answer?.length || 0);
+                console.log("  Diagrams:", diagramPositions?.length || 0);
+
+                if (!container) {
+                    container = document.getElementById('answer-content-container') || document.body;
+                }
+
+                container.innerHTML = answer;
+
+                console.log("✅ [FALLBACK] Answer inserted with embedded HTML");
+            };
+        } else {
+            console.log("✅ External renderAnswerWithDiagrams loaded successfully");
+        }
+    })();
     </script>
-</script>
 
     <script>
         // Example queries with random selection
@@ -658,9 +657,59 @@
             `;
             resultsDiv.appendChild(answerSection);
 
-            // ITEM-024.6: Backend sends pre-rendered HTML with embedded SVGs - just insert it directly
+            // ITEM-024.6: Process answer with inline featured diagrams
             const answerContainer = document.getElementById('answer-content-container');
-            renderAnswerWithDiagrams(data.answer, data.diagram_positions || [], answerContainer);
+
+            // Replace [FEATURED_DIAGRAM_X] markers with actual EPUB diagram images
+            let processedAnswer = data.answer;
+            if (data.featured_diagrams && data.featured_diagrams.length > 0) {
+                console.log(`✅ Processing ${data.featured_diagrams.length} featured diagrams...`);
+
+                data.featured_diagrams.forEach((diagram, index) => {
+                    const marker = `[FEATURED_DIAGRAM_${index + 1}]`;
+
+                    // Validation: Check if marker exists in text
+                    const markerCount = (processedAnswer.match(new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+                    if (markerCount === 0) {
+                        console.warn(`⚠️ Marker ${marker} not found in answer text`);
+                    } else {
+                        console.log(`📍 Found ${markerCount} occurrence(s) of ${marker}`);
+                    }
+
+                    const diagramHtml = `
+                        <div class="inline-diagram" style="margin: 25px auto; text-align: center; max-width: 500px;">
+                            <img src="${diagram.url}" alt="${diagram.caption}"
+                                 style="max-width: 100%; height: auto; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                                 onerror="this.style.display='none';">
+                            <p style="font-size: 0.9em; color: #666; margin: 12px 0 0 0; line-height: 1.5; font-style: italic;">${diagram.caption}</p>
+                        </div>
+                    `;
+
+                    // Use split/join for robust replacement (replaces ALL occurrences)
+                    const beforeLength = processedAnswer.length;
+                    processedAnswer = processedAnswer.split(marker).join(diagramHtml);
+                    const afterLength = processedAnswer.length;
+
+                    if (afterLength > beforeLength) {
+                        console.log(`✅ Replaced ${marker} with diagram from ${diagram.book_title}`);
+                    } else {
+                        console.warn(`⚠️ No replacement occurred for ${marker}`);
+                    }
+                });
+
+                // Final validation: Check if any markers remain
+                const remainingMarkers = processedAnswer.match(/\[FEATURED_DIAGRAM_\d+\]/g);
+                if (remainingMarkers) {
+                    console.error(`❌ ${remainingMarkers.length} unreplaced markers found:`, remainingMarkers);
+                    processedAnswer = processedAnswer.replace(/\[FEATURED_DIAGRAM_\d+\]/g, '');
+                    console.warn('🧹 Removed leftover [FEATURED_DIAGRAM_X] markers to keep text clean');
+                } else {
+                    console.log(`✅ All diagram markers successfully replaced`);
+                }
+            }
+
+            // Render processed answer with both FEN diagrams and featured EPUB diagrams
+            renderAnswerWithDiagrams(processedAnswer, data.diagram_positions || [], answerContainer);
 
             // Display sources section
             const sourcesSection = document.createElement('div');

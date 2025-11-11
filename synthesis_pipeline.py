@@ -120,7 +120,7 @@ Create an outline that directly answers this question."""
 
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-5-chat-latest",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -185,7 +185,10 @@ When synthesizing your answer:
 - Use PGN sources to show concrete move sequences and variations
 - Reference both types naturally in your explanation
 - Focus on clear explanations of strategic concepts and concrete variations
-- CRITICAL: You MUST NOT write the text string "[DIAGRAM:" anywhere in your response. All chess diagrams will be provided separately via images. Writing [DIAGRAM: ...] will break the system.
+- Place diagram markers where visual examples would enhance understanding
+- Use markers like [FEATURED_DIAGRAM_1], [FEATURED_DIAGRAM_2], etc. to show where diagrams should appear
+- Place diagrams after explaining a concept, not before
+- Spread diagrams throughout the text, don't cluster them
 
 Write 2-3 detailed paragraphs per section."""
 
@@ -198,7 +201,8 @@ Focus: {section['description']}
 Context sources (Books provide concepts, PGN files provide concrete variations):
 {context[:3000]}
 
-Write detailed content for this section. Include 2-4 diagram markers showing key positions.
+Write detailed content for this section. Place 1-2 diagram markers ([FEATURED_DIAGRAM_1], [FEATURED_DIAGRAM_2], etc.)
+where visual examples would help illustrate the concepts. Position markers AFTER explaining a concept.
 Synthesize information from both book sources (strategic ideas) and PGN sources (specific lines)."""
 
         # Add canonical FEN context if provided (for middlegame concepts)
@@ -248,7 +252,7 @@ Do NOT repeat the same FEN multiple times. Show PROGRESSION and VARIATIONS."""
             else:
                 # Standard generation without retry
                 response = openai_client.chat.completions.create(
-                    model="gpt-4o",
+                    model="gpt-5-chat-latest",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": section_prompt}
@@ -301,7 +305,7 @@ PGN game files (concrete variations). Maintain this natural integration.
 
 Guidelines:
 - Write natural transitions between sections
-- Maintain all [DIAGRAM: ...] markers exactly as provided
+- Maintain all [FEATURED_DIAGRAM_X] markers exactly as provided - these show where diagrams will be inserted
 - Keep technical accuracy
 - Use clear, engaging prose
 - Ensure logical flow from introduction to conclusion
@@ -324,7 +328,7 @@ Create a cohesive article that flows naturally. Maintain all diagram markers."""
 
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-5-chat-latest",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": assembly_prompt}
@@ -334,8 +338,12 @@ Create a cohesive article that flows naturally. Maintain all diagram markers."""
 
         final_answer = response.choices[0].message.content
 
-        # Strip any residual diagram markers (fallback safety)
-        final_answer = re.sub(r'\[DIAGRAM:[^\]]+\]', '', final_answer)
+        # Strip any old-format diagram markers (but preserve [FEATURED_DIAGRAM_X])
+        # Old format: [DIAGRAM:fen_string] - remove these
+        # New format: [FEATURED_DIAGRAM_1], [FEATURED_DIAGRAM_2] - keep these for frontend
+        final_answer = re.sub(r'\[DIAGRAM:[^\]]+\]', '', final_answer)  # Remove [DIAGRAM:...]
+        final_answer = re.sub(r'\*\*\{Diagram \d+:[^}]+\}\*\*', '', final_answer)  # Remove **{Diagram N:...}**
+        # [FEATURED_DIAGRAM_X] markers are preserved
 
         return final_answer
 

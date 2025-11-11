@@ -14,7 +14,7 @@ python verify_system_stats.py  # Always run first!
 
 ### Adding a New Book
 
-See [CLAUDE_START_HERE.md](CLAUDE_START_HERE.md#adding-books) for full process.
+See [AGENT_START_HERE.md](AGENT_START_HERE.md#adding-books) for full process.
 
 **Quick version:**
 ```bash
@@ -190,7 +190,7 @@ Longer explanation if needed:
 - Why it changed
 - Any side effects
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: Assistant <noreply@example.com>
 ```
 
 **Types:** Fix, Feature, Docs, Refactor, Test, Chore

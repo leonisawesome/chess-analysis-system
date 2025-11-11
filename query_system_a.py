@@ -94,7 +94,7 @@ Chunks:
 
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-5-chat-latest",
             messages=[
                 {"role": "system", "content": "You are a precise evaluator. Return only a JSON array of scores."},
                 {"role": "user", "content": prompt}

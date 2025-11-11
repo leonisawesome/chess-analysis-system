@@ -96,6 +96,7 @@
     });
 
     // Parse markers and build DOM
+    // ITEM-033 FIX: Use innerHTML to support HTML content (featured diagrams)
     const markerRegex = /\[DIAGRAM_ID:([^\]]+)\]/g;
     let lastIndex = 0;
     const frag = document.createDocumentFragment();
@@ -105,10 +106,15 @@
       const idx = match.index;
       const uuid = match[1];
 
-      // Add text before marker
+      // Add text before marker (parse as HTML to support inline featured diagrams)
       if (idx > lastIndex) {
-        const textNode = document.createTextNode(answer.slice(lastIndex, idx));
-        frag.appendChild(textNode);
+        const textChunk = answer.slice(lastIndex, idx);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = textChunk;
+        // Append all child nodes (preserves HTML structure)
+        while (tempDiv.firstChild) {
+          frag.appendChild(tempDiv.firstChild);
+        }
       }
 
       // Create diagram placeholder
@@ -127,9 +133,14 @@
       lastIndex = idx + match[0].length;
     }
 
-    // Add remaining text
+    // Add remaining text (parse as HTML)
     if (lastIndex < answer.length) {
-      frag.appendChild(document.createTextNode(answer.slice(lastIndex)));
+      const remainingChunk = answer.slice(lastIndex);
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = remainingChunk;
+      while (tempDiv.firstChild) {
+        frag.appendChild(tempDiv.firstChild);
+      }
     }
 
     // Replace container content
@@ -187,22 +198,52 @@
         successCount++;
         console.log('  ✅ Rendered interactive board for:', id);
       }
-      // Fallback to SVG if no FEN
+      // Fallback to SVG/image if no FEN
       else {
         const svgString = diagram.svg || diagram.svg_string || diagram.image;
-        if (!svgString) {
-          console.warn('  ⚠️ No FEN or SVG for ID:', id);
-          return;
-        }
+        const imageUrl = diagram.url || diagram.image_url || diagram.image_url_path;
 
-        const svgEl = parseSvgString(svgString);
-        if (svgEl) {
+        if (svgString) {
+          const svgEl = parseSvgString(svgString);
+          if (svgEl) {
+            const diagramDiv = document.createElement('div');
+            diagramDiv.className = 'chess-diagram';
+            diagramDiv.appendChild(svgEl);
+            wrapper.appendChild(diagramDiv);
+
+            if (diagram.caption) {
+              const caption = document.createElement('p');
+              caption.className = 'diagram-caption';
+              caption.style.fontStyle = 'italic';
+              caption.style.marginTop = '10px';
+              caption.textContent = diagram.caption;
+              wrapper.appendChild(caption);
+            }
+
+            ph.parentNode.replaceChild(wrapper, ph);
+            successCount++;
+            console.log('  ✅ Rendered SVG for:', id);
+          } else {
+            console.error('  ❌ Failed to parse SVG for ID:', id);
+            ph.classList.add('diagram-parse-failed');
+          }
+        } else if (imageUrl) {
+          const img = document.createElement('img');
+          img.src = imageUrl;
+          img.alt = diagram.caption || 'Chess diagram';
+          img.loading = 'lazy';
+          img.style.maxWidth = '100%';
+          img.style.height = 'auto';
+          img.onerror = () => {
+            console.error('  ❌ Failed to load diagram image for ID:', id);
+            img.style.display = 'none';
+          };
+
           const diagramDiv = document.createElement('div');
           diagramDiv.className = 'chess-diagram';
-          diagramDiv.appendChild(svgEl);
+          diagramDiv.appendChild(img);
           wrapper.appendChild(diagramDiv);
 
-          // Add caption below
           if (diagram.caption) {
             const caption = document.createElement('p');
             caption.className = 'diagram-caption';
@@ -212,13 +253,12 @@
             wrapper.appendChild(caption);
           }
 
-          // Replace placeholder
           ph.parentNode.replaceChild(wrapper, ph);
           successCount++;
-          console.log('  ✅ Rendered SVG for:', id);
+          console.log('  ✅ Rendered image for:', id);
         } else {
-          console.error('  ❌ Failed to parse SVG for ID:', id);
-          ph.classList.add('diagram-parse-failed');
+          console.warn('  ⚠️ No FEN, SVG, or image URL for ID:', id);
+          ph.classList.add('diagram-missing');
         }
       }
     });

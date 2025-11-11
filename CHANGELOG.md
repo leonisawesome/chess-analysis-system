@@ -4,6 +4,43 @@
 
 ---
 
+## ITEM-033: Inline Diagram Rendering Fix (November 10-11, 2025) 🔄
+
+**Problem:** Diagrams not displaying inline - HTML showing as plain text, markers not replaced
+- Raw HTML `<div class="inline-diagram"...>` appearing literally in browser
+- `[FEATURED_DIAGRAM_X]` markers visible as plain text (not replaced with images)
+- Only 3 diagrams instead of 5-10 requested by user
+- Wrong diagrams appearing (app store metadata, crossed arrows - not chess positions)
+
+**Evidence:**
+- PDF test: "Explain the Italian Game opening" showed literal HTML and unreplaced markers
+- Second PDF test: "Nimzo-Indian Defense key concepts" showed wrong diagrams
+
+**Root Cause (Partner AI Consensus):**
+1. **Primary:** Frontend using `textContent` instead of `innerHTML` in renderAnswerWithDiagrams
+2. **Secondary:** Marker replacement using fragile `replace()` method (only replaces first occurrence)
+3. **Contributing:** Inconsistent marker formatting (newlines, whitespace variations)
+
+**Partner Consultation:** Gemini, ChatGPT, Grok all identified same root cause and solution
+
+**Solution (Implementing):**
+1. Change `container.textContent = answer` → `container.innerHTML = processedAnswer` (line ~505)
+2. Replace marker replacement with robust `split().join()` method
+3. Add validation logging for debugging
+4. Verify diagram URLs include file extensions
+
+**Branch:** fix/inline-diagram-rendering
+
+### Update (Nov 11, 2025)
+- Added backend guard `enforce_featured_diagram_markers()` so the synthesized answer always has the same number of `[FEATURED_DIAGRAM_X]` markers as the `featured_diagrams` payload (and strips them entirely when no diagrams exist).
+- `/query` legacy endpoint sanitizes outputs the same way, preventing stale markers in archived flows.
+- Frontend now removes any leftover markers after attempting replacements, so literal `[FEATURED_DIAGRAM_X]` text can’t leak into the UI even if data drifts.
+- Verified via `curl /query_merged` that 6 featured diagrams → exactly 6 markers before rendering.
+
+**Status:** 🔄 IN PROGRESS (frontend visual verification still pending)
+
+---
+
 ## ITEM-032: Phase 6.1a Debugging (November 10, 2025) ✅
 
 **Problem:** All 3 diagram features broken after Phase 6.1a deployment

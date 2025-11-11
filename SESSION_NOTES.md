@@ -272,7 +272,7 @@ Dynamic diagram generation never worked reliably:
 
 **Bug 1: add_books_to_corpus.py - Wrong Hardcoded Path**
 - Line 62: `EPUB_DIR = "/Volumes/T7 Shield/epub"` (should be `/books/epub`)
-- User requested previous Claude fix this - wasn't done
+- User requested previous assistant fix this - wasn't done
 - Impact: Incremental book addition completely broken
 - Status: NOT FIXED (will fix before commit)
 
@@ -390,6 +390,84 @@ curl -I http://localhost:5001/diagrams/book_00448974a7ea_0000
 - Interactive PGN diagrams with chessboard.js
 - Playable boards (step through game moves)
 - Different from static EPUB diagrams (for showing games)
+
+---
+
+## UPDATE: 7:45 PM - Inline Diagram Rendering Fix (ITEM-033)
+
+### Problem Discovery
+
+User reported diagrams not displaying inline after testing "Explain the Italian Game opening" query:
+1. **HTML as plain text:** `<div class="inline-diagram" style="...">` showing literally
+2. **Markers not replaced:** `[FEATURED_DIAGRAM_1]` appearing as text
+3. **Wrong diagram count:** Only 3 instead of 5-10 requested
+4. **Wrong diagram content:** App store metadata and arrows instead of chess positions
+
+**Evidence Files:**
+- Latest PDF test showing literal HTML and markers
+- HAR file showing network requests
+
+### Partner AI Consultation
+
+**Process:**
+1. Created `partner_consult_diagram_integration.txt` with comprehensive problem description
+2. Consulted 3 AI systems: Gemini, ChatGPT, Grok
+3. All three unanimously identified same root cause
+
+**Consensus Diagnosis:**
+- **Root Cause:** Frontend `renderAnswerWithDiagrams()` using `textContent` instead of `innerHTML`
+- **Secondary Issue:** Marker replacement using `replace()` only replaces first occurrence
+- **Tertiary Issue:** Whitespace/newline inconsistencies in marker format
+
+**All Three AIs Agreed On:**
+1. This is a simple fix (not architectural redesign needed)
+2. Change line ~505 in index.html from `textContent` to `innerHTML`
+3. Use `split().join()` for robust marker replacement
+4. Add validation logging
+
+### Implementation Plan
+
+**Branch:** fix/inline-diagram-rendering (created)
+
+**Changes Needed:**
+1. **templates/index.html** (~line 505):
+   - Change: `container.textContent = answer`
+   - To: `container.innerHTML = processedAnswer`
+
+2. **templates/index.html** (marker replacement ~line 670):
+   - Change: `processedAnswer = processedAnswer.replace(marker, diagramHtml)`
+   - To: `processedAnswer = processedAnswer.split(marker).join(diagramHtml)`
+
+3. **Add validation:**
+   - Log marker existence before replacement
+   - Log successful/failed replacements
+   - Verify diagram URLs include extensions
+
+4. **Optional (ChatGPT suggestion):**
+   - Add HTML sanitizer for security (DOMPurify or similar)
+
+### Current Status
+
+- ✅ Partner consultation complete (3/3 responses received)
+- ✅ User approved proceeding with fixes
+- ✅ Git branch created: fix/inline-diagram-rendering
+- 🔄 Documentation update in progress
+- ⏳ Code implementation pending
+- ⏳ Browser testing pending
+
+### Next Steps
+
+1. Update documentation (CHANGELOG, SESSION_NOTES, README) ✅
+2. Implement the 3 code changes in index.html
+3. Restart Flask server
+4. Test in browser with DevTools
+5. Verify diagrams display inline (not at bottom)
+6. Verify 5-10 diagrams appear (not 3)
+7. Verify only chess positions (no metadata/arrows)
+8. Git commit with detailed message
+9. Push to GitHub
+
+**Estimated Time:** 30-45 minutes
 
 ---
 
@@ -513,3 +591,27 @@ After deploying Phase 6.1a, discovered all 3 diagram-related features were broke
 
 **Estimated Time:** 15 minutes for frontend verification
 
+---
+
+## UPDATE: 8:55 PM (Nov 11, 2025) – Marker/Diagram Synchronization
+
+### Context
+Browser tests still showed `[FEATURED_DIAGRAM_X]` text because GPT output sometimes contained 10+ markers even when only a handful of EPUB diagrams were available, and the frontend cleanup only ran when replacements succeeded.
+
+### Fixes
+1. **Backend normalization (`app.py:42-103, 338-355, 640-655`):**
+   - Added `enforce_featured_diagram_markers()` to strip whatever markers the model produced and reinsert exactly `len(featured_diagrams)` placeholders (or remove them entirely when zero diagrams are attached).
+   - Legacy `/query` endpoint also calls the helper so archived/testing flows don’t regress.
+2. **Frontend safety net (`templates/index.html:650-707`):**
+   - After attempting replacements, any remaining `[FEATURED_DIAGRAM_X]` tokens are now removed with a warning so literal text never hits the UI again.
+
+### Verification
+- `curl -s http://127.0.0.1:5001/query_merged -H 'Content-Type: application/json' -d '{"query":"Explain knight forks","top_k":5}'` returns 6 featured diagrams and exactly 6 markers prior to rendering.
+- Flask logs confirm marker injection counts and show zero diagram positions (expected for static EPUB flow).
+
+### Follow-Up
+1. Re-run PDF capture flow to confirm inline images render correctly.
+2. Once UI verified, close ITEM-033 and document final QA in README/CHANGELOG.
+3. Consider promoting the new helper to its own module if additional endpoints need the same behavior.
+
+**Time spent:** ~30 minutes (implementation + verification)

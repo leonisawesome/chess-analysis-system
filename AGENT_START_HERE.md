@@ -4,7 +4,7 @@
 
 ## Problem
 
-Previous Claude sessions (3-4 times now) made the same critical mistakes:
+Previous assistant sessions (3-4 times now) made the same critical mistakes:
 1. **Trusted documentation instead of verifying actual state** → Stats were 40% inflated
 2. **Deleted macOS `._*` metadata files** → User had to rebuild them
 3. **Claimed work was "complete" without testing** → Bugs weren't actually fixed
@@ -32,7 +32,7 @@ files = [f for f in dir.glob("*.epub") if not f.name.startswith('._')]
 os.remove(file)  # DON'T DO THIS TO ._* FILES!
 ```
 
-**Why:** macOS creates these on external drives for extended attributes. Mac needs them. User had to rebuild them after previous Claudes deleted them.
+**Why:** macOS creates these on external drives for extended attributes. Mac needs them. User had to rebuild them after previous assistants deleted them.
 
 ### 2. Before Any Commit
 
@@ -92,7 +92,7 @@ Run `verify_system_stats.py` to get latest, but as of now:
 
 ## If User Says "Fix This Again"
 
-It means a previous Claude didn't actually fix it. Don't assume it's done. Verify:
+It means a previous assistant didn't actually fix it. Don't assume it's done. Verify:
 ```bash
 # Check the actual code
 cat -n filename.py | grep "line_number"
