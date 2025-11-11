@@ -18,21 +18,21 @@ See [AGENT_START_HERE.md](AGENT_START_HERE.md#adding-books) for full process.
 
 **Quick version:**
 ```bash
-# 1. Analyze quality
-python analyze_chess_books.py "/path/to/book.epub"
+# 1. Analyze quality and report scores for approval (everything in staging)
+python analyze_chess_books.py "/Volumes/T7 Shield/books/epub/1new/*.epub"
+# → Share the score breakdown so the user can accept/reject each book
 
-# 2. Rename to standard format
-mv "book.epub" "author_year_title_publisher.epub"
+# 2. After approval, rename + move approved files into the main corpus (assistant automates this step)
 
 # 3. Add to Qdrant
 export OPENAI_API_KEY='sk-proj-...'
 export QDRANT_MODE=docker
 python add_books_to_corpus.py book.epub
 
-# 4. Extract diagrams
-python extract_epub_diagrams.py --epub-dir "/Volumes/T7 Shield/books/epub"
+# 4. Extract diagrams (append metadata for the new book; only rebuild the full file if you reprocessed the entire corpus)
+python extract_epub_diagrams.py --book-id book_<hash> --append
 
-# 5. Verify stats
+# 5. Verify stats and update hardcoded homepage counts
 python verify_system_stats.py
 ```
 

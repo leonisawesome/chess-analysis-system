@@ -99,7 +99,12 @@ python verify_system_stats.py
 ```
 
 ### Add New Books
-See [DEVELOPMENT.md#adding-a-new-book](DEVELOPMENT.md#adding-a-new-book)
+- Run the analyzer on anything in `/Volumes/T7 Shield/books/epub/1new/`:
+  `python analyze_chess_books.py "/Volumes/T7 Shield/books/epub/1new/*.epub"`
+- Send the score report so the user can approve/reject each title
+- After approval, rename/move the approved files into `/Volumes/T7 Shield/books/epub/` (assistant automates this step)
+- Continue with ingestion/diagram extraction per [DEVELOPMENT.md#adding-a-new-book](DEVELOPMENT.md#adding-a-new-book)
+- After running `python verify_system_stats.py`, update the hardcoded stats in `templates/index.html` (subtitle + loading message) so the landing page reflects the new counts.
 
 ### Fix a Bug
 See [DEVELOPMENT.md#fixing-a-bug](DEVELOPMENT.md#fixing-a-bug)
@@ -113,7 +118,8 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
 ```
 /Volumes/T7 Shield/books/
-├── epub/                    # 922 EPUB books
+├── epub/                    # Production-ready EPUB/MOBI books
+│   ├── 1new/                # Staging area (pre-analysis files live here)
 │   ├── author_year_title_publisher.epub
 │   └── ...
 │

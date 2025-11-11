@@ -67,7 +67,7 @@ Run `verify_system_stats.py` to get latest, but as of now:
 
 ## Common Tasks
 
-**Adding new books:** See [Ingestion Process in README](README.md#book-ingestion-process)
+**Adding new books:** Run `python analyze_chess_books.py "/Volumes/T7 Shield/books/epub/1new/*.epub"` on whatever the user staged, share the score report for approval, then follow the [full ingestion process in README](README.md#book-ingestion-process) (assistant handles renaming/moving approved titles)
 
 **Fixing bugs:**
 1. Read the issue
