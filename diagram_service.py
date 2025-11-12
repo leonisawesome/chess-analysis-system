@@ -428,9 +428,7 @@ class DiagramIndex:
 
         width = diagram.get('width') or diagram.get('image_width') or 0
         height = diagram.get('height') or diagram.get('image_height') or 0
-        if width and height and (width < 400 or height < 400):
-            return True
-        if diagram.get('size_bytes', 0) < 20000:
+        if width and height and (width < 250 or height < 250):
             return True
 
         return False
