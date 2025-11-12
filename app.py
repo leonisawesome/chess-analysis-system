@@ -632,11 +632,8 @@ def query_merged():
                     break
 
             if book_id:
-                # Get all diagrams for this book
                 all_diagrams = diagram_index.get_diagrams_for_book(book_id)
-
                 if all_diagrams:
-                    # Rank diagrams by relevance to chunk + original query
                     ranked_diagrams = diagram_index.rank_diagrams_for_chunk(
                         all_diagrams,
                         result,
@@ -644,7 +641,6 @@ def query_merged():
                         max_k=5
                     )
 
-                    # Format for frontend
                     result['epub_diagrams'] = [
                         {
                             'id': d['diagram_id'],
@@ -658,8 +654,10 @@ def query_merged():
                 else:
                     result['epub_diagrams'] = []
             else:
-                print(f"[DIAGRAM] No static diagrams found for result {idx}: {book_name or book_title}")
                 result['epub_diagrams'] = []
+
+            if not result['epub_diagrams']:
+                print(f"[DIAGRAM] No static diagrams found for result {idx}: {book_name or book_title}")
 
         diagram_attach_time = time.time() - diagram_attach_start
         total_diagrams = sum(len(r.get('epub_diagrams', [])) for r in final_results[:10])
