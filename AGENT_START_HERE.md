@@ -60,9 +60,9 @@ Update in this order (always):
 
 ## Current System State (Verified Nov 10, 2025 - 3:30 PM)
 
-Run `verify_system_stats.py` to get latest, but as of now:
-- **Books:** 922 EPUB
-- **Production Chunks:** 313,057 (311,266 EPUB + 1,791 PGN)
+Run `verify_system_stats.py` to get latest. Last verified (Nov 11, 2025):
+- **Books:** 937 EPUB
+- **Production Chunks:** ~313k (run script for exact value)
 - **Diagrams:** 536,243
 
 ## Common Tasks

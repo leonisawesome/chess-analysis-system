@@ -22,7 +22,7 @@ Response + Diagrams
 ## System Components
 
 ### 1. Data Layer
-- **EPUB Books:** 922 books, 311,266 chunks
+- **EPUB Books:** 937 books (last verified Nov 11, 2025), ~311k chunks — always run `python verify_system_stats.py` before quoting numbers
 - **PGN Games:** 1,778 games, 1,791 chunks
 - **Diagrams:** 536,243 images from EPUBs
 - **Storage:** External drive `/Volumes/T7 Shield/books/`
@@ -188,7 +188,7 @@ diagrams = attach_diagrams(content, query)
 ├── templates/
 │   └── index.html            # Frontend UI
 └── /Volumes/T7 Shield/books/
-    ├── epub/                 # 922 EPUB files
+    ├── epub/                 # 937 EPUB files (current as of Nov 11, 2025)
     └── images/               # 536,243 diagrams
 ```
 
