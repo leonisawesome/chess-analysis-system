@@ -406,7 +406,9 @@ class DiagramIndex:
             'portrait',
             'banner',
             'toc',
-            'contents'
+            'contents',
+            'gambit_logo',
+            'logo'
         ]
         if any(token in filename for token in filename_metadata_tokens):
             return True
@@ -424,6 +426,10 @@ class DiagramIndex:
         has_chess_term = any(keyword in combined_context for keyword in chess_keywords)
         if len(combined_context) > 50 and not has_chess_term:
             # Long caption with no chess terms - likely metaphorical/illustrative
+            return True
+
+        # If there is literally no context text, treat as metadata unless we have size/dimension
+        if len(context_before.strip()) + len(context_after.strip()) == 0:
             return True
 
         width = diagram.get('width') or diagram.get('image_width') or 0
