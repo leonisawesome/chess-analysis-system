@@ -36,6 +36,26 @@ python extract_epub_diagrams.py --book-id book_<hash> --append
 python verify_system_stats.py
 ```
 
+### Troubleshooting Missing Diagrams
+
+When a query returns prose without inline boards, capture evidence before tweaking the code:
+
+1. Dump the ranked static diagrams for the problematic prompts:
+   ```bash
+   ./scripts/dump_diagram_candidates.py "Italian Game plans" "Italian Game tactics" \
+     --output diagnostics/diagram_debug_italian.json \
+     --markdown diagnostics/diagram_samples_italian.md
+   ```
+   The script loads `diagram_metadata_full.json`, re-runs the ranking heuristic, and records the exact files, captions, and dimensions per book.
+
+2. Inspect `diagnostics/diagram_debug_*.json` (full metadata) or the Markdown table for a quick glance at sizes/context. If a diagram is missing, the `file_path` column will tell you whether the asset itself is gone or the filter removed it.
+
+3. Spot-check a few image files via `sips -g pixelWidth -g pixelHeight <file>` (or Preview) to confirm whether we filtered out real boards or the extraction produced logos/photos.
+
+Document any findings in `assistant_notes.md` (or the relevant ITEM doc) before making additional code changes so we keep a paper trail on what was discovered.
+
+> **Note:** `diagram_service` now lazily reads image dimensions for diagrams missing width/height metadata (uses Pillow). If you see logs complaining about missing dimensions, install the dependency with `pip install pillow` inside the project virtualenv.
+
 # Adding PGN Games
 
 ```bash

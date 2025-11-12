@@ -717,7 +717,8 @@
             }
 
             // Render processed answer with both FEN diagrams and featured EPUB diagrams
-            renderAnswerWithDiagrams(processedAnswer, data.diagram_positions || [], answerContainer);
+            const renderedAnswer = applyBasicMarkdown(processedAnswer);
+            renderAnswerWithDiagrams(renderedAnswer, data.diagram_positions || [], answerContainer);
 
             // Display sources section
             const sourcesSection = document.createElement('div');
@@ -765,6 +766,15 @@
         function formatAnswerText(text) {
             // Convert newlines to paragraphs
             return '<p>' + text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+        }
+
+        function applyBasicMarkdown(text) {
+            if (!text) {
+                return '';
+            }
+            // Bold (**text**)
+            let formatted = text.replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>');
+            return formatted;
         }
 
         function toggleSources() {

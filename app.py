@@ -8,7 +8,7 @@ import os
 import re
 import time
 import json
-from typing import Dict
+from typing import Dict, List
 import chess
 import chess.pgn
 import chess.svg
@@ -113,6 +113,62 @@ def format_diagram_caption(diagram: Dict) -> str:
            or diagram.get('context_after')
            or 'Chess diagram')
     return normalize_caption(raw, max_len=220)
+
+
+def build_featured_diagrams(results: List[Dict], fallback_diagrams: List[Dict], limit: int = 6) -> List[Dict]:
+    """
+    Build a featured diagram list prioritizing top results, then using fallback pools.
+    Ensures we always return up to `limit` unique diagrams so the UI can render a
+    consistent number of inline boards.
+    """
+
+    def add_from(diagrams: List[Dict], cap: int | None = None) -> bool:
+        nonlocal featured
+        if not diagrams:
+            return False
+        selection = diagrams if cap is None else diagrams[:cap]
+        for diagram in selection:
+            diagram_id = diagram.get('id') or diagram.get('diagram_id')
+            if diagram_id and diagram_id in seen:
+                continue
+            featured.append(diagram)
+            if diagram_id:
+                seen.add(diagram_id)
+            if len(featured) >= limit:
+                return True
+        return False
+
+    if limit <= 0:
+        return []
+
+    featured: List[Dict] = []
+    seen = set()
+
+    # Pass 1: top 3 results (max 2 diagrams each to avoid dominance)
+    for result in results[:3]:
+        if add_from(result.get('epub_diagrams', []), cap=2):
+            return featured
+
+    # Pass 2: remaining top results (positions 4-5) any diagrams available
+    for result in results[3:5]:
+        if add_from(result.get('epub_diagrams', [])):
+            return featured
+
+    # Pass 3: use fallback pool to pad out the carousel
+    add_from(fallback_diagrams or [])
+    return featured[:limit]
+
+
+def estimate_diagram_slots(answer: str, base_limit: int = 8) -> int:
+    """
+    Estimate how many inline diagrams we should target based on the size of
+    the synthesized answer. Long paragraphs (>=120 chars) count as slots.
+    """
+    if not answer:
+        return base_limit
+    paragraphs = [p for p in answer.split('\n\n') if len(p.strip()) >= 120]
+    estimated = max(6, min(base_limit, len(paragraphs)))
+    return estimated
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -667,7 +723,9 @@ def query_merged():
         fallback_epub_diagrams = []
         missing_results = [r for r in final_results[:5] if not r.get('epub_diagrams')]
         if total_diagrams == 0 or missing_results:
-            needed = max(2, len(missing_results) or 2)
+            # Always pull a healthy fallback pool so the synthesized answer can
+            # show multiple diagrams even when top results already have some.
+            needed = max(8, (len(missing_results) * 2) or 8)
             fallback_books = diagram_index.search_books_by_query(query_text, max_matches=needed)
             if fallback_books:
                 print(f"📷 Fallback diagram search triggered for books: {fallback_books}")
@@ -701,25 +759,20 @@ def query_merged():
                 print(f"📷 Added {len(fallback_epub_diagrams)} fallback diagrams based on query keywords")
 
         # Per-result backfill: ensure each top result has at least 1 diagram if available
-        fallback_iter = iter(fallback_epub_diagrams)
+        fallback_queue = list(fallback_epub_diagrams)
         for result in final_results[:5]:
-            if result.get('epub_diagrams'):
+            if result.get('epub_diagrams') or not fallback_queue:
                 continue
-            try:
-                extra = next(fallback_iter)
-            except StopIteration:
-                break
-            result['epub_diagrams'] = [extra]
+            result['epub_diagrams'] = [fallback_queue.pop(0)]
 
         # Collect featured diagrams from top 3 EPUB sources for prominent display
-        featured_diagrams = []
-        for result in final_results[:3]:
-            if result.get('epub_diagrams'):
-                featured_diagrams.extend(result['epub_diagrams'][:2])
-        featured_diagrams = featured_diagrams[:6]
-        if not featured_diagrams and fallback_epub_diagrams:
-            featured_diagrams = fallback_epub_diagrams[:6]
-        print(f"📷 Featured diagrams for display: {len(featured_diagrams)}")
+        target_diagram_slots = estimate_diagram_slots(synthesized_answer, base_limit=8)
+        featured_diagrams = build_featured_diagrams(
+            final_results,
+            fallback_epub_diagrams,
+            limit=target_diagram_slots
+        )
+        print(f"📷 Featured diagrams for display: {len(featured_diagrams)} / target {target_diagram_slots} (fallback pool size: {len(fallback_epub_diagrams)})")
 
         # Normalize inline markers so the count matches what we actually have
         synthesized_answer = enforce_featured_diagram_markers(

@@ -12,7 +12,11 @@ import math
 import os
 import re
 import logging
-from typing import List, Dict, Optional, Set
+from typing import List, Dict, Optional, Set, Tuple
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
 
 logger = logging.getLogger(__name__)
 
@@ -188,6 +192,7 @@ class DiagramIndex:
         self.book_name_to_id = {}         # book_name -> book_id (reverse lookup)
         self.total_diagrams = 0
         self.filtered_count = 0
+        self._dimension_cache: Dict[str, Tuple[int, int]] = {}
 
     def load(self, metadata_path: str, min_size_bytes: int = 12000) -> 'DiagramIndex':
         """
@@ -329,8 +334,33 @@ class DiagramIndex:
         value = re.sub(r'[^a-z0-9]+', '_', value)
         return value.strip('_')
 
-    @staticmethod
-    def is_metadata_image(diagram: Dict) -> bool:
+    def _get_image_dimensions(self, diagram: Dict) -> Tuple[int, int]:
+        """
+        Lazily compute image dimensions for diagrams missing width/height.
+        Cached per diagram_id to avoid re-reading from disk.
+        """
+        diagram_id = diagram.get('diagram_id')
+        if not diagram_id:
+            return (0, 0)
+
+        if diagram_id in self._dimension_cache:
+            return self._dimension_cache[diagram_id]
+
+        file_path = diagram.get('file_path')
+        if not file_path or not Image or not os.path.exists(file_path):
+            self._dimension_cache[diagram_id] = (0, 0)
+            return (0, 0)
+
+        try:
+            with Image.open(file_path) as img:
+                width, height = img.size
+        except Exception:
+            width = height = 0
+
+        self._dimension_cache[diagram_id] = (width, height)
+        return (width, height)
+
+    def is_metadata_image(self, diagram: Dict) -> bool:
         """
         Detect if a diagram is likely book metadata/promotional content rather than a chess position.
 
@@ -428,13 +458,27 @@ class DiagramIndex:
             # Long caption with no chess terms - likely metaphorical/illustrative
             return True
 
-        # If there is literally no context text, treat as metadata unless we have size/dimension
-        if len(context_before.strip()) + len(context_after.strip()) == 0:
-            return True
-
         width = diagram.get('width') or diagram.get('image_width') or 0
         height = diagram.get('height') or diagram.get('image_height') or 0
-        if width and height and (width < 250 or height < 250):
+
+        if not (width and height):
+            width, height = self._get_image_dimensions(diagram)
+
+        min_dim = min(width, height) if (width and height) else 0
+        aspect_ratio = (width / height) if (width and height and height != 0) else 0
+        squareish = bool(width and height and 0.78 <= aspect_ratio <= 1.22)
+
+        # If there is literally no context text, treat as metadata only when the
+        # asset is either tiny or clearly non-board shaped. Square, reasonably
+        # sized boards frequently ship without captions, so keep those.
+        if len(context_before.strip()) + len(context_after.strip()) == 0:
+            if not (squareish and min_dim >= 220):
+                return True
+
+        if width and height and min_dim < 170:
+            return True
+
+        if width and height and not squareish and not has_chess_term:
             return True
 
         return False
@@ -486,10 +530,14 @@ class DiagramIndex:
         # Extract chunk information
         chunk_text = chunk.get('text', '')[:2000]  # First 2K chars
         chunk_index = chunk.get('chunk_index', 0)
+        chunk_pos = chunk.get('position_in_document')
+        if chunk_pos is None:
+            chunk_pos = chunk_index
 
         # Detect opening intent from query
         q_tags, q_eco = detect_opening_tags(query)
         opening_intent = bool(q_tags or q_eco)
+        query_tokens = set(tokenize(query))
 
         # Detect opening tags from chunk metadata
         chunk_metadata = " ".join([
@@ -499,6 +547,7 @@ class DiagramIndex:
             chunk.get('section_path', '')
         ])
         r_tags, r_eco = detect_opening_tags(chunk_metadata)
+        chunk_tokens = set(tokenize(chunk_metadata + " " + chunk_text))
 
         # Try to identify chunk's source document
         chunk_doc = chunk.get('chapter_file') or chunk.get('section_path') or ""
@@ -533,14 +582,25 @@ class DiagramIndex:
             # 4. SEQUENTIAL PROXIMITY (position in book)
             proximity = 0.0
             if 'position_in_document' in diagram:
-                delta = abs((diagram['position_in_document'] or 0) - chunk_index)
-                proximity = 0.2 * math.exp(-delta / 10.0)
+                delta = abs((diagram['position_in_document'] or 0) - (chunk_pos or 0))
+                proximity = 0.6 * math.exp(-delta / 6.0)
 
             # 5. QUALITY BOOST (larger images prioritized)
             quality = 0.1 if diagram.get('size_bytes', 0) >= 25000 else 0.0
 
+            # 6. TOPIC ALIGNMENT (query tokens vs diagram/book metadata)
+            topic_alignment = 0.0
+            if query_tokens:
+                diagram_tokens = set(tokenize(diagram_metadata))
+                overlap = len(query_tokens & diagram_tokens)
+                if overlap:
+                    topic_alignment = 0.6 * (overlap / len(query_tokens))
+                elif chunk_tokens:
+                    chunk_overlap = len(chunk_tokens & diagram_tokens)
+                    topic_alignment = 0.4 * (chunk_overlap / len(chunk_tokens)) if chunk_overlap else 0.0
+
             # Total score
-            total_score = opening_match + same_chapter + text_similarity + proximity + quality
+            total_score = opening_match + same_chapter + text_similarity + proximity + quality + topic_alignment
             scores.append((total_score, diagram, raw_similarity, opening_match))
 
         # Sort by score (descending)
