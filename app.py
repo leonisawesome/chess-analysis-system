@@ -8,6 +8,7 @@ import os
 import re
 import time
 import json
+from typing import Dict
 import chess
 import chess.pgn
 import chess.svg
@@ -34,7 +35,7 @@ print("\n*** [CANARY] app.py VERSION: 6.1a-2025-11-10 LOADED ***\n")
 from query_router import get_query_info
 
 # Phase 6.1a: Static EPUB diagram integration
-from diagram_service import diagram_index
+from diagram_service import diagram_index, normalize_caption
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
@@ -88,7 +89,7 @@ def enforce_featured_diagram_markers(answer: str, diagram_count: int) -> str:
             continue
 
         body = segment
-        if inserted_markers < diagram_count and len(body.strip()) >= 400:
+        if inserted_markers < diagram_count and len(body.strip()) >= 200:
             paragraphs = body.split('\n\n')
             insert_at = max(1, len(paragraphs) // 2)
             paragraphs.insert(insert_at, next_marker(wrap=False))
@@ -101,6 +102,16 @@ def enforce_featured_diagram_markers(answer: str, diagram_count: int) -> str:
 
     print(f"📍 Inline diagram markers inserted: {inserted_markers}/{diagram_count}")
     return ''.join(result_segments)
+
+
+def format_diagram_caption(diagram: Dict) -> str:
+    """Generate a clean caption for a static EPUB diagram."""
+    raw = (diagram.get('caption')
+           or diagram.get('diagram_caption')
+           or diagram.get('context_before')
+           or diagram.get('context_after')
+           or 'Chess diagram')
+    return normalize_caption(raw, max_len=220)
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -609,10 +620,11 @@ def query_merged():
                 all_diagrams = diagram_index.get_diagrams_for_book(book_id)
 
                 if all_diagrams:
-                    # Rank diagrams by relevance to chunk
+                    # Rank diagrams by relevance to chunk + original query
                     ranked_diagrams = diagram_index.rank_diagrams_for_chunk(
                         all_diagrams,
-                        result,  # Pass full result dict as "chunk"
+                        result,
+                        query=query_text,
                         max_k=5
                     )
 
@@ -621,7 +633,7 @@ def query_merged():
                         {
                             'id': d['diagram_id'],
                             'url': f"/diagrams/{d['diagram_id']}",
-                            'caption': (d.get('context_before') or d.get('context_after') or 'Chess diagram')[:120],
+                            'caption': format_diagram_caption(d),
                             'book_title': d.get('book_title', 'Unknown'),
                             'position': d.get('position_in_document', 0)
                         }
@@ -637,6 +649,42 @@ def query_merged():
         total_diagrams = sum(len(r.get('epub_diagrams', [])) for r in final_results[:10])
         print(f"📷 Attached {total_diagrams} diagrams across {len([r for r in final_results[:10] if r.get('epub_diagrams')])} results: {diagram_attach_time:.2f}s")
 
+        # Fallback: if no diagrams attached (e.g., PGN-heavy results), source them directly by query
+        fallback_epub_diagrams = []
+        if total_diagrams == 0:
+            fallback_books = diagram_index.search_books_by_query(query_text, max_matches=2)
+            if fallback_books:
+                print(f"📷 Fallback diagram search triggered for books: {fallback_books}")
+            for book_id in fallback_books:
+                diagrams = diagram_index.get_diagrams_for_book(book_id)
+                if not diagrams:
+                    continue
+                pseudo_chunk = {
+                    'text': query_text,
+                    'book_title': diagram_index.get_book_title(book_id) or query_text,
+                    'chapter_title': query_text,
+                    'section_path': '',
+                    'chunk_index': 0
+                }
+                ranked = diagram_index.rank_diagrams_for_chunk(
+                    diagrams,
+                    pseudo_chunk,
+                    query=query_text,
+                    max_k=3
+                )
+                for d in ranked:
+                    fallback_epub_diagrams.append({
+                        'id': d['diagram_id'],
+                        'url': f"/diagrams/{d['diagram_id']}",
+                        'caption': format_diagram_caption(d),
+                        'book_title': d.get('book_title', 'Unknown'),
+                        'position': d.get('position_in_document', 0)
+                    })
+
+            total_diagrams = len(fallback_epub_diagrams)
+            if total_diagrams:
+                print(f"📷 Added {total_diagrams} fallback diagrams based on query keywords")
+
         # Collect featured diagrams from top 3 EPUB sources for prominent display
         featured_diagrams = []
         for result in final_results[:3]:
@@ -645,6 +693,8 @@ def query_merged():
                 # Take max 2 diagrams per source
                 featured_diagrams.extend(result['epub_diagrams'][:2])
         featured_diagrams = featured_diagrams[:6]  # Max 6 total
+        if not featured_diagrams and fallback_epub_diagrams:
+            featured_diagrams = fallback_epub_diagrams[:6]
         print(f"📷 Featured diagrams for display: {len(featured_diagrams)}")
 
         # Normalize inline markers so the count matches what we actually have

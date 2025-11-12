@@ -25,7 +25,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 
 # Import EPUB extraction
-from epub_to_analyzer import extract_epub_text
+from epub_to_analyzer import extract_epub_text, extract_epub_sections
 import tiktoken
 import ebooklib
 from ebooklib import epub
@@ -39,6 +39,8 @@ EMBEDDING_MODEL = "text-embedding-3-small"  # Same as validation
 EMBEDDING_DIM = 1536
 COLLECTION_NAME = "chess_production"
 DB_PATH = "epub_analysis.db"
+QDRANT_MODE = os.getenv("QDRANT_MODE", "docker")
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 QDRANT_PATH = "./qdrant_production_db"
 
 TIERS_TO_INCLUDE = ['HIGH', 'MEDIUM']  # 1,052 books
@@ -168,24 +170,9 @@ def extract_chunks_from_book(book_path: str, book_metadata: Dict) -> List[Dict]:
         List of chunk dicts with text, metadata
     """
     try:
-        # Extract text from EPUB
-        text, error = extract_epub_text(book_path)
+        sections, error = extract_epub_sections(book_path)
 
-        if error:
-            # Silent failure - will be tracked in stats
-            return []
-
-        if not text or not text.strip():
-            return []
-
-        # Chunk the full text
-        chunks = chunk_text_by_tokens(
-            text,
-            chunk_size=CHUNK_SIZE,
-            overlap=CHUNK_OVERLAP
-        )
-
-        if not chunks:
+        if error or not sections:
             return []
 
         # Extract book title from EPUB metadata
@@ -193,19 +180,36 @@ def extract_chunks_from_book(book_path: str, book_metadata: Dict) -> List[Dict]:
 
         # Add metadata to each chunk
         all_chunks = []
-        for chunk_idx, chunk_text in enumerate(chunks):
-            chunk_data = {
-                'text': chunk_text,
-                'book_name': book_metadata['filename'],
-                'book_title': book_title,  # Human-readable title
-                'book_path': book_metadata['full_path'],
-                'book_tier': book_metadata['tier'],
-                'book_score': book_metadata['score'],
-                'chapter_title': book_metadata['filename'],  # Use filename as chapter
-                'chapter_index': 0,
-                'chunk_index': chunk_idx
-            }
-            all_chunks.append(chunk_data)
+        chunk_idx = 0
+
+        for section_index, section in enumerate(sections):
+            section_chunks = chunk_text_by_tokens(
+                section['text'],
+                chunk_size=CHUNK_SIZE,
+                overlap=CHUNK_OVERLAP
+            )
+
+            if not section_chunks:
+                continue
+
+            for chunk_in_section, chunk_text in enumerate(section_chunks):
+                chunk_data = {
+                    'text': chunk_text,
+                    'book_name': book_metadata['filename'],
+                    'book_title': book_title,  # Human-readable title
+                    'book_path': book_metadata['full_path'],
+                    'book_tier': book_metadata['tier'],
+                    'book_score': book_metadata['score'],
+                    'chapter_title': section.get('chapter_title') or book_metadata['filename'],
+                    'chapter_index': section_index,
+                    'section_path': section.get('section_path', section.get('chapter_title')),
+                    'section_index': section_index,
+                    'chunk_in_section': chunk_in_section,
+                    'html_document': section.get('html_document'),
+                    'chunk_index': chunk_idx
+                }
+                all_chunks.append(chunk_data)
+                chunk_idx += 1
 
         return all_chunks
 
@@ -296,6 +300,10 @@ def upload_to_qdrant(qdrant_client: QdrantClient, chunks: List[Dict]):
                 'book_score': chunk['book_score'],
                 'chapter_title': chunk['chapter_title'],
                 'chapter_index': chunk['chapter_index'],
+                'section_path': chunk.get('section_path'),
+                'section_index': chunk.get('section_index'),
+                'chunk_in_section': chunk.get('chunk_in_section'),
+                'html_document': chunk.get('html_document'),
                 'chunk_index': chunk['chunk_index']
             }
         )
@@ -339,8 +347,12 @@ def main():
     # Initialize clients
     print("1️⃣  Initializing clients...")
     openai_client = OpenAI(api_key=api_key)
-    qdrant_client = QdrantClient(path=QDRANT_PATH)
-    print("   ✅ OpenAI and Qdrant clients ready")
+    if QDRANT_MODE.lower() == 'docker':
+        qdrant_client = QdrantClient(url=QDRANT_URL)
+        print(f"   ✅ OpenAI client ready\n   ✅ Qdrant (docker) at {QDRANT_URL}")
+    else:
+        qdrant_client = QdrantClient(path=QDRANT_PATH)
+        print(f"   ✅ OpenAI client ready\n   ✅ Qdrant (local) at {QDRANT_PATH}")
 
     # Get books to process
     print(f"\n2️⃣  Loading books from database...")

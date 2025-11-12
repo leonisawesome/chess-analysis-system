@@ -241,6 +241,12 @@ class DiagramIndex:
         """Get all diagrams for a specific book."""
         return self.by_book.get(book_id, [])
 
+    def get_book_title(self, book_id: str) -> Optional[str]:
+        diagrams = self.by_book.get(book_id)
+        if not diagrams:
+            return None
+        return diagrams[0].get('book_title') or diagrams[0].get('source_file') or diagrams[0].get('epub_filename')
+
     def get_diagram_by_id(self, diagram_id: str) -> Optional[Dict]:
         """Get a single diagram by ID."""
         return self.by_id.get(diagram_id)
@@ -288,6 +294,35 @@ class DiagramIndex:
             if key and key not in self.book_name_to_id:
                 self.book_name_to_id[key] = book_id
 
+    def search_books_by_query(self, query: str, max_matches: int = 3) -> List[str]:
+        """Return book IDs whose titles share tokens with the user query."""
+        if not query:
+            return []
+
+        tokens = [t for t in re.findall(r"[a-z0-9]+", query.lower()) if len(t) >= 4]
+        if not tokens:
+            return []
+
+        token_set = set(tokens)
+        candidates = []
+
+        for book_id, diagrams in self.by_book.items():
+            title = (diagrams[0].get('book_title') or diagrams[0].get('source_file') or '').lower()
+            if not title:
+                continue
+            title_tokens = set(re.findall(r"[a-z0-9]+", title))
+            overlap = token_set & title_tokens
+            if not overlap:
+                continue
+            score = len(overlap) / len(token_set)
+            candidates.append((score, -len(title_tokens), book_id))
+
+        if not candidates:
+            return []
+
+        candidates.sort(key=lambda x: (-x[0], x[1]))
+        return [book_id for _, _, book_id in candidates[:max_matches]]
+
     @staticmethod
     def _slugify(value: str) -> str:
         value = value.lower()
@@ -334,13 +369,36 @@ class DiagramIndex:
             'metaphor',
             'icon',
             'symbol',
-            'graphic'
+            'graphic',
+            # Non-diagram artifacts (chapter banners, author bios, photos)
+            'chapter guide',
+            'chapter overview',
+            'chapter summary',
+            'preface',
+            'introduction',
+            'about the author',
+            'coach',
+            'nationally ranked',
+            'national champion',
+            'has taught over',
+            'biography',
+            'dedication',
+            'photo credit'
         ]
 
         # If context contains promotional/metaphorical text, exclude it
         for keyword in metadata_keywords:
             if keyword in combined_context:
                 return True
+
+        filename = (diagram.get('original_filename') or diagram.get('image_file') or '').lower()
+        diagram_id = diagram.get('diagram_id', '').lower()
+
+        filename_metadata_tokens = ['cover', 'chapter', 'preface', 'introduction', 'about_', 'author', 'coach', 'portrait', 'banner']
+        if any(token in filename for token in filename_metadata_tokens):
+            return True
+        if diagram_id.endswith('_0000') or diagram_id.endswith('_0001'):
+            return True
 
         # If BOTH contexts are empty or very short (< 20 chars), likely metadata
         if len(context_before.strip()) < 20 and len(context_after.strip()) < 20:
@@ -356,6 +414,13 @@ class DiagramIndex:
         has_chess_term = any(keyword in combined_context for keyword in chess_keywords)
         if len(combined_context) > 50 and not has_chess_term:
             # Long caption with no chess terms - likely metaphorical/illustrative
+            return True
+
+        width = diagram.get('width') or diagram.get('image_width') or 0
+        height = diagram.get('height') or diagram.get('image_height') or 0
+        if width and height and (width < 400 or height < 400):
+            return True
+        if diagram.get('size_bytes', 0) < 20000:
             return True
 
         return False
@@ -448,7 +513,8 @@ class DiagramIndex:
                 same_chapter = 2.0
 
             # 3. TEXT OVERLAP (Jaccard similarity)
-            text_similarity = 0.8 * jaccard_similarity(chunk_text, diagram_context)
+            raw_similarity = jaccard_similarity(chunk_text, diagram_context)
+            text_similarity = 0.8 * raw_similarity
 
             # 4. SEQUENTIAL PROXIMITY (position in book)
             proximity = 0.0
@@ -461,20 +527,31 @@ class DiagramIndex:
 
             # Total score
             total_score = opening_match + same_chapter + text_similarity + proximity + quality
-            scores.append((total_score, diagram))
+            scores.append((total_score, diagram, raw_similarity, opening_match))
 
         # Sort by score (descending)
         scores.sort(key=lambda x: x[0], reverse=True)
 
         # If opening intent detected, prefer opening-matched diagrams
         if opening_intent:
-            matched = [diagram for score, diagram in scores if score >= 3.5]
+            matched = [diagram for score, diagram, _, match in scores if match >= 3.5]
             if len(matched) >= 2:
                 # Sufficient opening-matched diagrams found
                 return matched[:max_k]
 
+        # Drop diagrams with negligible textual overlap to avoid mismatched openings
+        similarity_floor = 0.08 if opening_intent else 0.04
+        score_floor = 0.6 if opening_intent else 0.25
+        filtered = [
+            (score, diagram)
+            for score, diagram, raw_sim, _ in scores
+            if score >= score_floor and raw_sim >= similarity_floor
+        ]
+
+        candidate_scores = filtered if filtered else [(score, diagram) for score, diagram, _, _ in scores]
+
         # Default: return top k by score
-        top_diagrams = [diagram for _, diagram in scores[:max_k]]
+        top_diagrams = [diagram for _, diagram in candidate_scores[:max_k]]
 
         # Fallback: Ensure at least 2 diagrams if available (even if low score)
         if len(top_diagrams) < min(2, len(diagrams)):

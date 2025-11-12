@@ -18,10 +18,9 @@ See [AGENT_START_HERE.md](AGENT_START_HERE.md#adding-books) for full process.
 
 **Quick version:**
 ```bash
-# 1. Analyze quality and report scores for approval (everything in staging)
-python analyze_chess_books.py "/Volumes/T7 Shield/books/epub/1new/*.epub"
-# → Results are stored in epub_analysis.db automatically (view with `sqlite3 epub_analysis.db`)
-# → Share the score breakdown so the user can accept/reject each book
+# 1. Analyze everything the user staged (writes scores + tiers into epub_analysis.db)
+scripts/analyze_staged_books.sh
+# → Share the SQLite report so the user can accept/reject each book
 
 # 2. After approval, rename + move approved files into the main corpus (assistant automates this step)
 
@@ -266,3 +265,18 @@ python3 -m py_compile file.py
 
 **For architecture details, see [ARCHITECTURE.md](ARCHITECTURE.md)**
 **For troubleshooting, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)**
+# Removing a Book
+
+```bash
+# Recommended: automatic cleanup (filesystem + SQLite + Qdrant)
+python scripts/remove_books.py <filename>.epub
+
+# Preview the actions first
+python scripts/remove_books.py --dry-run <filename>.epub
+```
+
+Manual fallback if the script can’t run:
+1. Delete the EPUB (`/Volumes/T7 Shield/books/epub/`) and its image folder (`/Volumes/T7 Shield/books/images/<book_id>`).
+2. Remove the row from `epub_analysis.db` (`DELETE FROM epub_analysis WHERE filename = ?`).
+3. Delete Qdrant points for `book_name = <filename>.epub`.
+4. Run `python verify_all_deletions.py` to ensure no chunks remain.

@@ -46,6 +46,11 @@
 **Time Taken:** 7 days (extraction + integration)
 **Risk Level:** LOW (well-solved with partner consultation)
 
+### Ingestion Hardening (NEW)
+- [x] **Chunk metadata enrichment** – capture chapter/section headings when chunking each EPUB so `add_books_to_corpus.py` writes `chapter_title`/`section_path` into every payload. Improves diagram-to-text alignment and future analytics.
+- [ ] **Diagram tagging at extraction** – enhance `extract_epub_diagrams.py` to store width/height plus a `diagram_type` flag (`board`, `chapter_banner`, `portrait`, etc.) so runtime filtering stops guessing and we can refresh bad books incrementally.
+- [ ] **Analyzer metric refresh** – feed the existing `InstructionalLanguageDetector` output into `epub_analysis.db` so approvals see a richer breakdown than raw keyword counts.
+
 ---
 
 ### Phase 6.2: Interactive PGN Diagrams ⭐ MUST HAVE

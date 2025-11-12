@@ -6,7 +6,7 @@ Extracts text from EPUB files and analyzes them using chess_rag_system component
 
 import sys
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List, Dict
 import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
@@ -16,6 +16,65 @@ from chess_rag_system.analysis.instructional_detector import InstructionalLangua
 from chess_rag_system.analysis.semantic_analyzer import ChessSemanticAnalyzer
 from chess_rag_system.scoring.rag_evaluator import RAGFitnessEvaluator
 from chess_rag_system.core.models import SemanticAnalysisResult, RAGFitnessResult
+
+
+def extract_epub_sections(epub_path: str) -> Tuple[List[Dict], Optional[str]]:
+    """
+    Extract structured sections (text + headings) from an EPUB.
+
+    Returns:
+        tuple: (sections, error_message)
+        sections is a list of dicts with text, chapter_title, section_path, html_document
+    """
+    try:
+        book = epub.read_epub(epub_path)
+        sections: List[Dict] = []
+
+        for item in book.get_items():
+            if item.get_type() != ebooklib.ITEM_DOCUMENT:
+                continue
+
+            try:
+                content = item.get_content().decode('utf-8', errors='ignore')
+            except Exception:
+                content = item.get_content()
+
+            soup = BeautifulSoup(content, 'html.parser')
+            text = soup.get_text(separator='\n', strip=True)
+            if not text:
+                continue
+
+            heading = None
+            for level in ['h1', 'h2', 'h3', 'h4']:
+                tag = soup.find(level)
+                if tag:
+                    heading = tag.get_text(" ", strip=True)
+                    break
+
+            if not heading:
+                first_para = soup.find('p')
+                if first_para and first_para.get_text(strip=True):
+                    heading = first_para.get_text(" ", strip=True)[:120]
+
+            if not heading:
+                heading = Path(item.get_name()).stem.replace('_', ' ').title()
+
+            sections.append({
+                'text': text,
+                'chapter_title': heading[:200],
+                'section_path': heading[:200],
+                'html_document': item.get_name()
+            })
+
+        if not sections:
+            return [], "No text content found in EPUB"
+
+        return sections, None
+
+    except FileNotFoundError:
+        return [], f"File not found: {epub_path}"
+    except Exception as e:
+        return [], f"EPUB extraction error: {str(e)}"
 
 
 def extract_epub_text(epub_path: str) -> Tuple[Optional[str], Optional[str]]:
@@ -31,25 +90,11 @@ def extract_epub_text(epub_path: str) -> Tuple[Optional[str], Optional[str]]:
         - error_message explains why extraction failed
     """
     try:
-        book = epub.read_epub(epub_path)
+        sections, error = extract_epub_sections(epub_path)
+        if error:
+            return None, error
 
-        # Extract text from all document items
-        chapters = []
-        for item in book.get_items():
-            if item.get_type() == ebooklib.ITEM_DOCUMENT:
-                # Parse HTML content
-                soup = BeautifulSoup(item.get_content(), 'html.parser')
-
-                # Extract text, preserving some structure
-                text = soup.get_text(separator='\n', strip=True)
-                if text:
-                    chapters.append(text)
-
-        if not chapters:
-            return None, "No text content found in EPUB"
-
-        # Join all chapters
-        full_text = '\n\n'.join(chapters)
+        full_text = '\n\n'.join(section['text'] for section in sections)
 
         # Basic quality check
         word_count = len(full_text.split())
