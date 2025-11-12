@@ -250,7 +250,7 @@ def embed_chunks_batch(openai_client: OpenAI, chunks: List[Dict]) -> List[Dict]:
                 embedded_chunks.append(chunk_with_embedding)
 
             embedded_count += len(batch)
-            if embedded_count % 5000 == 0 or embedded_count == total:
+            if embedded_count % 2000 == 0 or embedded_count == total:
                 elapsed = time.time() - start_time
                 print(f"   • Embedded {embedded_count}/{total} chunks ({embedded_count/total*100:.1f}%) in {elapsed/60:.1f} min")
 
@@ -289,7 +289,8 @@ def create_production_collection(qdrant_client: QdrantClient):
 
 def upload_to_qdrant(qdrant_client: QdrantClient, chunks: List[Dict]):
     """Upload embedded chunks to Qdrant."""
-    print(f"\n📤 Uploading {len(chunks)} chunks to Qdrant...")
+    total_points = len(chunks)
+    print(f"\n📤 Uploading {total_points} chunks to Qdrant...")
 
     points = []
     for i, chunk in enumerate(chunks):
@@ -315,12 +316,18 @@ def upload_to_qdrant(qdrant_client: QdrantClient, chunks: List[Dict]):
 
     # Upload in batches
     batch_size = 100
+    uploaded = 0
+    start_time = time.time()
     for i in range(0, len(points), batch_size):
         batch = points[i:i + batch_size]
         qdrant_client.upsert(
             collection_name=COLLECTION_NAME,
             points=batch
         )
+        uploaded += len(batch)
+        if uploaded % 5000 == 0 or uploaded == total_points:
+            elapsed = time.time() - start_time
+            print(f"   • Uploaded {uploaded}/{total_points} points ({uploaded/total_points*100:.1f}%) in {elapsed/60:.1f} min")
 
         if (i + batch_size) % 10000 == 0:
             print(f"   Uploaded {min(i + batch_size, len(points)):,}/{len(points):,} chunks")
@@ -376,15 +383,17 @@ def main():
     all_chunks = []
     failed_books = []
 
+    progress_bar = tqdm(total=len(books), desc="Extracting", unit="book")
     for idx, book in enumerate(books, start=1):
-        if idx == 1:
-            progress_bar = tqdm(total=len(books), desc="Extracting", unit="book")
-        progress_bar.update()
         chunks = extract_chunks_from_book(book['full_path'], book)
         if chunks:
             all_chunks.extend(chunks)
         else:
             failed_books.append(book['filename'])
+        if idx % 25 == 0 or idx == len(books):
+            progress_bar.set_postfix({"chunks": len(all_chunks)})
+        progress_bar.update(1)
+    progress_bar.close()
 
     print(f"   ✅ Extracted {len(all_chunks):,} chunks from {len(books) - len(failed_books)} books")
     if failed_books:
