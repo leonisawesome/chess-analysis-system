@@ -569,7 +569,7 @@ class DiagramIndex:
 
         # Fallback: Ensure at least 2 diagrams if available (even if low score)
         if len(top_diagrams) < min(2, len(diagrams)):
-            remaining = [diagram for _, diagram in scores[len(top_diagrams):2]]
+            remaining = [entry[1] for entry in scores[len(top_diagrams):2]]
             top_diagrams = (top_diagrams + remaining)[:max_k]
 
         return top_diagrams
