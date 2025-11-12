@@ -708,6 +708,14 @@
                 }
             }
 
+            if (data.results && Array.isArray(data.results)) {
+                data.results.forEach((result, idx) => {
+                    if (!result.epub_diagrams || result.epub_diagrams.length === 0) {
+                        console.warn(`⚠️ Result ${idx + 1} (${result.book_name || result.book}) has no epub diagrams`);
+                    }
+                });
+            }
+
             // Render processed answer with both FEN diagrams and featured EPUB diagrams
             renderAnswerWithDiagrams(processedAnswer, data.diagram_positions || [], answerContainer);
 
