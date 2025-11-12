@@ -665,8 +665,10 @@ def query_merged():
 
         # Fallback: if no diagrams attached (e.g., PGN-heavy results), source them directly by query
         fallback_epub_diagrams = []
-        if total_diagrams == 0:
-            fallback_books = diagram_index.search_books_by_query(query_text, max_matches=2)
+        missing_results = [r for r in final_results[:5] if not r.get('epub_diagrams')]
+        if total_diagrams == 0 or missing_results:
+            needed = max(2, len(missing_results) or 2)
+            fallback_books = diagram_index.search_books_by_query(query_text, max_matches=needed)
             if fallback_books:
                 print(f"📷 Fallback diagram search triggered for books: {fallback_books}")
             for book_id in fallback_books:
@@ -695,9 +697,8 @@ def query_merged():
                         'position': d.get('position_in_document', 0)
                     })
 
-            total_diagrams = len(fallback_epub_diagrams)
-            if total_diagrams:
-                print(f"📷 Added {total_diagrams} fallback diagrams based on query keywords")
+            if fallback_epub_diagrams:
+                print(f"📷 Added {len(fallback_epub_diagrams)} fallback diagrams based on query keywords")
 
         # Per-result backfill: ensure each top result has at least 1 diagram if available
         fallback_iter = iter(fallback_epub_diagrams)
