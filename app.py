@@ -709,6 +709,17 @@ def query_merged():
         featured_diagrams = featured_diagrams[:6]  # Max 6 total
         if not featured_diagrams and fallback_epub_diagrams:
             featured_diagrams = fallback_epub_diagrams[:6]
+
+        # Per-result backfill: ensure each top result has at least 2 diagrams if available
+        fallback_iter = iter(fallback_epub_diagrams)
+        for result in final_results[:5]:
+            if result.get('epub_diagrams'):
+                continue
+            try:
+                extra = next(fallback_iter)
+            except StopIteration:
+                break
+            result['epub_diagrams'] = [extra]
         print(f"📷 Featured diagrams for display: {len(featured_diagrams)}")
 
         # Normalize inline markers so the count matches what we actually have
