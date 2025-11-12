@@ -39,6 +39,7 @@ from diagram_service import diagram_index, normalize_caption
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
+ENABLE_PGN_COLLECTION = False  # Toggle PGN corpus until chess_pgn_repertoire is rebuilt
 
 FEATURED_MARKER_PATTERN = re.compile(r'\[FEATURED_DIAGRAM_\d+\]')
 SECTION_HEADING_PATTERN = re.compile(r'(##\s+[^\n]+\n)')
@@ -439,24 +440,36 @@ def query_merged():
 
         # Define collections with balanced retrieval (50+50)
         collections = {
-            'chess_production': 50,         # EPUB books
-            'chess_pgn_repertoire': 50      # PGN games
+            'chess_production': 50  # EPUB books
         }
+        if ENABLE_PGN_COLLECTION:
+            collections['chess_pgn_repertoire'] = 50  # PGN games
 
-        # Run parallel searches using asyncio
-        epub_results, pgn_results = asyncio.run(
-            search_multi_collection_async(
+        if ENABLE_PGN_COLLECTION:
+            epub_results, pgn_results = asyncio.run(
+                search_multi_collection_async(
+                    QDRANT_CLIENT,
+                    query_vector,
+                    collections,
+                    search_func=semantic_search
+                )
+            )
+        else:
+            epub_results = semantic_search(
                 QDRANT_CLIENT,
                 query_vector,
-                collections,
-                search_func=semantic_search
+                top_k=collections['chess_production'],
+                collection_name='chess_production'
             )
-        )
+            pgn_results = []
 
         search_time = time.time() - search_start
         print(f"   Parallel search: {search_time:.2f}s")
         print(f"   EPUB candidates: {len(epub_results)}")
-        print(f"   PGN candidates: {len(pgn_results)}")
+        if ENABLE_PGN_COLLECTION:
+            print(f"   PGN candidates: {len(pgn_results)}")
+        else:
+            print("   PGN collection disabled (skipping)")
 
         # Step 5: Rerank each collection independently with GPT-5
         print(f"⏱  Reranking collections...")
@@ -465,8 +478,10 @@ def query_merged():
         # Rerank EPUB results
         ranked_epub = gpt5_rerank(OPENAI_CLIENT, query_text, epub_results, top_k=50)
 
-        # Rerank PGN results
-        ranked_pgn = gpt5_rerank(OPENAI_CLIENT, query_text, pgn_results, top_k=50)
+        # Rerank PGN results (if enabled)
+        ranked_pgn = []
+        if ENABLE_PGN_COLLECTION and pgn_results:
+            ranked_pgn = gpt5_rerank(OPENAI_CLIENT, query_text, pgn_results, top_k=50)
 
         rerank_time = time.time() - rerank_start
         print(f"   Reranking: {rerank_time:.2f}s")
@@ -486,14 +501,15 @@ def query_merged():
             })
 
         pgn_formatted = []
-        for i, (candidate, score) in enumerate(ranked_pgn):
-            payload = candidate.payload
-            pgn_formatted.append({
-                'id': f"pgn_{payload.get('source_file', '')}_{i}",
-                'score': score,
-                'collection': 'chess_pgn_repertoire',
-                'payload': payload
-            })
+        if ENABLE_PGN_COLLECTION:
+            for i, (candidate, score) in enumerate(ranked_pgn):
+                payload = candidate.payload
+                pgn_formatted.append({
+                    'id': f"pgn_{payload.get('source_file', '')}_{i}",
+                    'score': score,
+                    'collection': 'chess_pgn_repertoire',
+                    'payload': payload
+                })
 
         # Step 7: Apply RRF merge with collection weights
         print(f"⏱  Applying RRF merge (k=60)...")
@@ -726,7 +742,7 @@ def query_merged():
                 'query_type': query_type,
                 'collection_weights': weights,
                 'epub_candidates': len(epub_results),
-                'pgn_candidates': len(pgn_results),
+                'pgn_candidates': len(pgn_results) if ENABLE_PGN_COLLECTION else 0,
                 'merged_count': len(merged_results),
                 'top_n': len(top_merged)
             }
@@ -761,6 +777,8 @@ def fen_to_lichess():
 @app.route('/query_pgn', methods=['POST', 'GET'])
 def query_pgn():
     """Test endpoint for querying PGN collection only."""
+    if not ENABLE_PGN_COLLECTION:
+        return jsonify({'error': 'PGN collection is currently disabled'}), 503
     try:
         # Get query from POST or GET
         if request.method == 'POST':

@@ -394,15 +394,25 @@ class DiagramIndex:
         filename = (diagram.get('original_filename') or diagram.get('image_file') or '').lower()
         diagram_id = diagram.get('diagram_id', '').lower()
 
-        filename_metadata_tokens = ['cover', 'chapter', 'preface', 'introduction', 'about_', 'author', 'coach', 'portrait', 'banner']
+        filename_metadata_tokens = [
+            'cover',
+            'chapter_',
+            'chapter-',
+            'preface',
+            'introduction',
+            'about_',
+            'author',
+            'coach',
+            'portrait',
+            'banner',
+            'toc',
+            'contents'
+        ]
         if any(token in filename for token in filename_metadata_tokens):
             return True
-        if diagram_id.endswith('_0000') or diagram_id.endswith('_0001'):
-            return True
 
-        # If BOTH contexts are empty or very short (< 20 chars), likely metadata
-        if len(context_before.strip()) < 20 and len(context_after.strip()) < 20:
-            return True
+        # Early diagrams (e.g., _0000) can still be valid boards, so keep them unless
+        # other metadata rules trigger.
 
         # If caption doesn't contain chess-specific terms, likely not a chess diagram
         chess_keywords = [
