@@ -699,18 +699,7 @@ def query_merged():
             if total_diagrams:
                 print(f"📷 Added {total_diagrams} fallback diagrams based on query keywords")
 
-        # Collect featured diagrams from top 3 EPUB sources for prominent display
-        featured_diagrams = []
-        for result in final_results[:3]:
-            # Check if result has epub_diagrams (indicates it's from an EPUB source)
-            if result.get('epub_diagrams'):
-                # Take max 2 diagrams per source
-                featured_diagrams.extend(result['epub_diagrams'][:2])
-        featured_diagrams = featured_diagrams[:6]  # Max 6 total
-        if not featured_diagrams and fallback_epub_diagrams:
-            featured_diagrams = fallback_epub_diagrams[:6]
-
-        # Per-result backfill: ensure each top result has at least 2 diagrams if available
+        # Per-result backfill: ensure each top result has at least 1 diagram if available
         fallback_iter = iter(fallback_epub_diagrams)
         for result in final_results[:5]:
             if result.get('epub_diagrams'):
@@ -720,6 +709,15 @@ def query_merged():
             except StopIteration:
                 break
             result['epub_diagrams'] = [extra]
+
+        # Collect featured diagrams from top 3 EPUB sources for prominent display
+        featured_diagrams = []
+        for result in final_results[:3]:
+            if result.get('epub_diagrams'):
+                featured_diagrams.extend(result['epub_diagrams'][:2])
+        featured_diagrams = featured_diagrams[:6]
+        if not featured_diagrams and fallback_epub_diagrams:
+            featured_diagrams = fallback_epub_diagrams[:6]
         print(f"📷 Featured diagrams for display: {len(featured_diagrams)}")
 
         # Normalize inline markers so the count matches what we actually have
