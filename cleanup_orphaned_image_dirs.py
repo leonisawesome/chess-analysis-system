@@ -12,8 +12,8 @@ import subprocess
 from pathlib import Path
 from typing import Set
 
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
-images_dir = Path("/Volumes/T7 Shield/books/images")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
+images_dir = Path("/Volumes/T7 Shield/rag/books/images")
 
 print("=" * 80)
 print("CLEANING UP ORPHANED IMAGE DIRECTORIES")

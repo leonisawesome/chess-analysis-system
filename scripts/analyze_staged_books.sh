@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Run the canonical EPUB analyzer against the staging directory.
-# Ensures every file in /Volumes/T7 Shield/books/epub/1new ends up in epub_analysis.db.
+# Ensures every file in /Volumes/T7 Shield/rag/books/epub/1new ends up in epub_analysis.db.
 
 set -euo pipefail
 
-STAGING_DIR="/Volumes/T7 Shield/books/epub/1new"
+STAGING_DIR="/Volumes/T7 Shield/rag/books/epub/1new"
 DB_PATH="epub_analysis.db"
 
 if [[ ! -d "$STAGING_DIR" ]]; then

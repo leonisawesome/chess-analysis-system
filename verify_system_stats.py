@@ -25,7 +25,7 @@ def verify_system_stats():
     print("\n⚠️  WARNING: ALWAYS USE THESE STATS, NOT DOCUMENTATION!\n")
 
     # 1. Count EPUB files
-    epub_dir = Path("/Volumes/T7 Shield/books/epub")
+    epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
     if not epub_dir.exists():
         print(f"❌ ERROR: EPUB directory not found: {epub_dir}")
         return
@@ -63,7 +63,7 @@ def verify_system_stats():
         return
 
     # 3. Count diagrams
-    diagram_dir = Path("/Volumes/T7 Shield/books/images")
+    diagram_dir = Path("/Volumes/T7 Shield/rag/books/images")
     if not diagram_dir.exists():
         print(f"❌ ERROR: Diagram directory not found: {diagram_dir}")
         return

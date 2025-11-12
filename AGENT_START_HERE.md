@@ -60,16 +60,17 @@ Update in this order (always):
 
 ## Current System State (Verified Nov 10, 2025 - 3:30 PM)
 
-Run `verify_system_stats.py` to get latest. Last verified (Nov 11, 2025):
+Run `verify_system_stats.py` to get latest. Last verified (Nov 12, 2025):
 - **Books:** 937 EPUB
-- **Production Chunks:** ~313k (run script for exact value)
+- **Production Chunks:** ~359k (run script for exact value)
 - **Diagrams:** 536,243
+- **PGN Status:** Collection temporarily offline while we rebuild
 
 ## Common Tasks
 
-**Adding new books:** Run `scripts/analyze_staged_books.sh` against whatever the user staged (processes `/Volumes/T7 Shield/books/epub/1new/` and updates `epub_analysis.db`), share the SQLite score report for approval, then follow the [full ingestion process in README](README.md#book-ingestion-process) (assistant handles renaming/moving approved titles)
+**Adding new books:** Run `scripts/analyze_staged_books.sh` against whatever the user staged (processes `/Volumes/T7 Shield/rag/books/epub/1new/` and updates `epub_analysis.db`), share the SQLite score report for approval, then follow the [full ingestion process in README](README.md#book-ingestion-process) (assistant handles renaming/moving approved titles)
 
-**Adding new PGNs:** Run `python pgn_quality_analyzer.py "/Volumes/T7 Shield/pgn/staging" --db pgn_analysis.db` to score every staged PGN, share the EVS summary for approval, then chunk + ingest only the approved files (`analyze_pgn_games.py` → `add_pgn_to_corpus.py`).
+**Adding new PGNs:** Run `python pgn_quality_analyzer.py "/Volumes/T7 Shield/rag/pgn/1new" --db pgn_analysis.db` to score every staged PGN, share the EVS summary for approval, then chunk + ingest only the approved files (`analyze_pgn_games.py` → `add_pgn_to_corpus.py`).
 
 **Fixing bugs:**
 1. Read the issue

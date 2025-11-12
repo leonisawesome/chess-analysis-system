@@ -2,6 +2,11 @@
 **Date:** 2025-11-10
 **Last Updated:** 2:15 PM
 
+## Session 2025-11-12 (Addendum)
+- **Corpus locations:** Final EPUBs now live under `/Volumes/T7 Shield/rag/books/epub` with diagrams in `/Volumes/T7 Shield/rag/books/images`. Any ingestion/removal script should point there (updated repo-wide).
+- **PGN staging:** New PGN batches go to `/Volumes/T7 Shield/rag/pgn/1new` before scoring/approval. The Chess Publishing 2021 bundle was merged into `chess_publishing_2021_master.pgn` in that folder.
+- **Network note:** This sandbox blocked outbound SSH, so pushes had to happen from the host machine. If you see `Could not resolve hostname github.com`, push locally or restart with network access enabled.
+
 ## CURRENT STATUS: ✅ ITEM-031 COMPLETE - 2 BOOKS INGESTED + BUGS DOCUMENTED
 
 ### Flask Server Status
@@ -14,7 +19,7 @@
 - **Loaded Diagrams:** 526,463 (from 920 books)
 - **Filtered Out:** 8,003 small images (< 2KB)
 - **Total Extracted:** 534,466 diagrams
-- **Storage:** `/Volumes/T7 Shield/books/images/`
+- **Storage:** `/Volumes/T7 Shield/rag/books/images/`
 - **Metadata:** `diagram_metadata_full.json` (385MB)
 
 ### What Was Accomplished This Session
@@ -106,7 +111,7 @@ Test the interface:
 1. Check Flask loaded diagrams: `grep "Loaded.*diagrams" flask_final.log`
 2. Verify threshold: `grep "min_size_bytes" app.py` should show 2000
 3. Check metadata exists: `ls -lh diagram_metadata_full.json` (should be ~385MB)
-4. Verify image exists: `ls -lh "/Volumes/T7 Shield/books/images/book_00448974a7ea/book_00448974a7ea_0000.gif"`
+4. Verify image exists: `ls -lh "/Volumes/T7 Shield/rag/books/images/book_00448974a7ea/book_00448974a7ea_0000.gif"`
 
 ### If Query Times Out
 - OpenAI API might be slow
@@ -114,7 +119,7 @@ Test the interface:
 - Normal processing: Embedding (5-6s) + Search (1-2s) + Reranking (15-20s) + FEN parsing (variable)
 
 ### If External Drive Missing
-- Diagrams stored on `/Volumes/T7 Shield/books/images/`
+- Diagrams stored on `/Volumes/T7 Shield/rag/books/images/`
 - Mount external drive before starting Flask
 - Check with: `ls /Volumes/T7\ Shield/books/images/ | head -5`
 

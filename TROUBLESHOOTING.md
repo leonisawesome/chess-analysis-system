@@ -60,7 +60,7 @@ pip install -r requirements.txt
 ### 1. add_books_to_corpus.py - Hardcoded Wrong Path
 - **Status:** ✅ FIXED (Nov 10, 2025)
 - **Was:** Line 62 had `/Volumes/T7 Shield/epub` (missing `/books/`)
-- **Fix:** Updated to `/Volumes/T7 Shield/books/epub`
+- **Fix:** Updated to `/Volumes/T7 Shield/rag/books/epub`
 
 ### 2. batch_process_epubs.py - Summary Report Crash
 - **Status:** ✅ FIXED (Nov 10, 2025)
@@ -87,7 +87,7 @@ Use those numbers, not README stats (README has been wrong multiple times).
 **Check diagram service loaded them:**
 ```bash
 grep "Loaded.*diagrams" flask_final.log
-ls "/Volumes/T7 Shield/books/images/book_*" | wc -l
+ls "/Volumes/T7 Shield/rag/books/images/book_*" | wc -l
 ```
 
 ### Qdrant collection missing points

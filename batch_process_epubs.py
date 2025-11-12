@@ -362,8 +362,8 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: python batch_process_epubs.py <epub_directory> [db_path]")
         print("\nExample:")
-        print('  python batch_process_epubs.py "/Volumes/T7 Shield/books/epub/"')
-        print('  python batch_process_epubs.py "/Volumes/T7 Shield/books/epub/" "results.db"')
+        print('  python batch_process_epubs.py "/Volumes/T7 Shield/rag/books/epub/"')
+        print('  python batch_process_epubs.py "/Volumes/T7 Shield/rag/books/epub/" "results.db"')
         sys.exit(1)
 
     epub_directory = sys.argv[1]

@@ -4,8 +4,8 @@ EPUB Diagram Extraction Pipeline
 Extracts chess diagrams from EPUB files and stores them with metadata for Qdrant linking.
 
 Usage:
-    python extract_epub_diagrams.py --epub-dir "/Volumes/T7 Shield/books/epub" \\
-                                     --output-dir "/Volumes/T7 Shield/books/images" \\
+    python extract_epub_diagrams.py --epub-dir "/Volumes/T7 Shield/rag/books/epub" \\
+                                     --output-dir "/Volumes/T7 Shield/rag/books/images" \\
                                      --metadata-file "diagram_metadata.json"
 
     # Test on single book
@@ -393,13 +393,13 @@ def main():
     parser.add_argument(
         '--epub-dir',
         type=Path,
-        default=Path("/Volumes/T7 Shield/books/epub"),
+        default=Path("/Volumes/T7 Shield/rag/books/epub"),
         help="Directory containing EPUB files"
     )
     parser.add_argument(
         '--output-dir',
         type=Path,
-        default=Path("/Volumes/T7 Shield/books/images"),
+        default=Path("/Volumes/T7 Shield/rag/books/images"),
         help="Output directory for extracted images"
     )
     parser.add_argument(

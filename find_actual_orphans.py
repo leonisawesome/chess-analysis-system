@@ -6,8 +6,8 @@ Uses the exact same book ID generation method as extract_epub_diagrams.py
 import hashlib
 from pathlib import Path
 
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
-images_dir = Path("/Volumes/T7 Shield/books/images")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
+images_dir = Path("/Volumes/T7 Shield/rag/books/images")
 
 # Get all EPUBs (excluding Mac metadata files)
 epub_files = [f for f in epub_dir.glob("*.epub") if not f.name.startswith('._')]

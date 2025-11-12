@@ -6,8 +6,8 @@ import hashlib
 import subprocess
 from pathlib import Path
 
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
-images_dir = Path("/Volumes/T7 Shield/books/images")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
+images_dir = Path("/Volumes/T7 Shield/rag/books/images")
 
 # Get valid book IDs from EPUBs
 epub_files = [f for f in epub_dir.glob("*.epub") if not f.name.startswith('._')]

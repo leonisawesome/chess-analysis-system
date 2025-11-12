@@ -8,7 +8,7 @@ from collections import Counter
 from pathlib import Path
 import json
 
-EPUB_DIR = Path("/Volumes/T7 Shield/books/epub")
+EPUB_DIR = Path("/Volumes/T7 Shield/rag/books/epub")
 
 def get_removed_mobi_filenames():
     """Get list of .mobi filenames that were removed as duplicates."""

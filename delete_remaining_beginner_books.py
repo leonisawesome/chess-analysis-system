@@ -17,8 +17,8 @@ books_to_delete = [
     "unknown_author_2018_international_master_arthur_van_de_oudeweetering_chess_pattern_recognition_for_beginners_the_fundamental_guide_to_spotting_key_moves_in_the_middlegame_new_in_chess.epub",
 ]
 
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
-images_dir = Path("/Volumes/T7 Shield/books/images")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
+images_dir = Path("/Volumes/T7 Shield/rag/books/images")
 
 print("=" * 80)
 print("DELETING REMAINING BEGINNER BOOKS")

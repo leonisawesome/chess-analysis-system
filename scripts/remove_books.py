@@ -12,8 +12,8 @@ from typing import Dict, Optional
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest_models
 
-EPUB_DIR = Path("/Volumes/T7 Shield/books/epub")
-IMAGES_DIR = Path("/Volumes/T7 Shield/books/images")
+EPUB_DIR = Path("/Volumes/T7 Shield/rag/books/epub")
+IMAGES_DIR = Path("/Volumes/T7 Shield/rag/books/images")
 DB_PATH = Path("epub_analysis.db")
 DIAGRAM_METADATA = Path("diagram_metadata_full.json")
 COLLECTION_NAME = "chess_production"

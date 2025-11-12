@@ -2,7 +2,7 @@
 """
 Rebuild diagram_metadata_full.json from extracted diagrams on disk.
 
-This scans all book directories in /Volumes/T7 Shield/books/images/
+This scans all book directories in /Volumes/T7 Shield/rag/books/images/
 and creates a complete metadata file without re-extracting.
 """
 
@@ -12,7 +12,7 @@ from pathlib import Path
 from collections import defaultdict
 from tqdm import tqdm
 
-IMAGES_DIR = Path("/Volumes/T7 Shield/books/images")
+IMAGES_DIR = Path("/Volumes/T7 Shield/rag/books/images")
 OUTPUT_FILE = "diagram_metadata_full.json"
 
 def get_image_info(image_path):

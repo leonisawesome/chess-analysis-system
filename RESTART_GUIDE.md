@@ -111,7 +111,7 @@ ls /Volumes/T7\ Shield/books/images/ | head -5
 
 **Project:** `/Users/leon/Downloads/python/chess-analysis-system/`
 **Server:** http://localhost:5001
-**Diagrams:** `/Volumes/T7 Shield/books/images/`
+**Diagrams:** `/Volumes/T7 Shield/rag/books/images/`
 **Qdrant:** http://localhost:6333 (Docker, auto-starts)
 **Modified:** `app.py` line 106 (min_size_bytes=2000)
 

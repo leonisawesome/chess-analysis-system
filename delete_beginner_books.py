@@ -27,8 +27,8 @@ books_to_delete = [
     "unknown_author_0000_henry_bird_edward_lasker_josé_raul_capablanca_chess_strategy_a_complete_guide_for_beginners_to_chess_fundamentals.epub",
 ]
 
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
-images_dir = Path("/Volumes/T7 Shield/books/images")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
+images_dir = Path("/Volumes/T7 Shield/rag/books/images")
 
 print("=" * 80)
 print("DELETING BEGINNER BOOKS")

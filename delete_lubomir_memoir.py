@@ -11,8 +11,8 @@ from qdrant_client.models import Filter, FieldCondition, MatchValue
 # Book to delete
 filename = "lubomir_2022_life_at_play_a_chess_memoir_new_in_chess.epub"
 
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
-images_dir = Path("/Volumes/T7 Shield/books/images")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
+images_dir = Path("/Volumes/T7 Shield/rag/books/images")
 
 print("=" * 80)
 print("DELETING MEMOIR BOOK")

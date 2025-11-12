@@ -36,8 +36,8 @@ EPUB_FILES_TO_REMOVE = [
     "unknown_author_0000_birth_of_the_chess_queen.epub"
 ]
 
-EPUB_DIR = Path("/Volumes/T7 Shield/books/epub")
-IMAGES_DIR = Path("/Volumes/T7 Shield/books/images")
+EPUB_DIR = Path("/Volumes/T7 Shield/rag/books/epub")
+IMAGES_DIR = Path("/Volumes/T7 Shield/rag/books/images")
 
 def remove_from_qdrant():
     """Remove chunks from Qdrant for specified book IDs."""

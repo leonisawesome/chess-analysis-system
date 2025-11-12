@@ -11,8 +11,8 @@ from qdrant_client.models import Filter, FieldCondition, MatchValue
 # Book to delete
 filename = "cyrus_0000_fischer_move_by_move.epub"
 
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
-images_dir = Path("/Volumes/T7 Shield/books/images")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
+images_dir = Path("/Volumes/T7 Shield/rag/books/images")
 
 print("=" * 80)
 print("DELETING DUPLICATE CYRUS/LAKDAWALA BOOK")

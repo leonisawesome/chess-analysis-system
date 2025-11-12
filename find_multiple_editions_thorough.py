@@ -49,7 +49,7 @@ def normalize_title_aggressive(filename):
     return title
 
 # Scan current files
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
 current_files = sorted([f.name for f in epub_dir.glob("*.epub")])
 
 print(f"Scanning {len(current_files)} books for multiple editions...")

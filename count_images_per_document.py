@@ -40,6 +40,6 @@ def count_images_per_doc(epub_path):
             print(f"  {doc['doc']}: {doc['count']} images")
 
 if __name__ == '__main__':
-    count_images_per_doc("/Volumes/T7 Shield/books/epub/kotronias_0000_the_safest_scandinavian_reloaded.epub")
-    count_images_per_doc("/Volumes/T7 Shield/books/epub/john_2012_play_the_french_everyman_chess.epub")
-    count_images_per_doc("/Volumes/T7 Shield/books/epub/simeonidis_2020_carlsens_neo_moller_nic.epub")
+    count_images_per_doc("/Volumes/T7 Shield/rag/books/epub/kotronias_0000_the_safest_scandinavian_reloaded.epub")
+    count_images_per_doc("/Volumes/T7 Shield/rag/books/epub/john_2012_play_the_french_everyman_chess.epub")
+    count_images_per_doc("/Volumes/T7 Shield/rag/books/epub/simeonidis_2020_carlsens_neo_moller_nic.epub")

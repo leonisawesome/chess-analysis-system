@@ -24,7 +24,7 @@ def normalize_title(filename):
     return re.sub(r'_+', '_', title).strip('_').lower()
 
 # Scan CURRENT epub files on disk
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
 current_files = sorted([f.name for f in epub_dir.glob("*.epub")])
 
 print(f"Scanning {len(current_files)} CURRENT EPUB files on disk...")

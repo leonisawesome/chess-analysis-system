@@ -11,8 +11,8 @@ from qdrant_client.models import Filter, FieldCondition, MatchValue
 # Book to delete (duplicate)
 filename = "alexander_1908_my_best_games_of_chess_russell_enterprises_inc.epub"
 
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
-images_dir = Path("/Volumes/T7 Shield/books/images")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
+images_dir = Path("/Volumes/T7 Shield/rag/books/images")
 
 print("=" * 80)
 print("DELETING DUPLICATE ALEKHINE BOOK")

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Convert .mobi files to EPUB format using Calibre
 
-MOBI_DIR="/Volumes/T7 Shield/books/epub"
+MOBI_DIR="/Volumes/T7 Shield/rag/books/epub"
 LOG_FILE="mobi_conversion.log"
 
 echo "🔄 MOBI → EPUB Batch Conversion" | tee "$LOG_FILE"

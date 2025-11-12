@@ -8,8 +8,8 @@ from pathlib import Path
 import json
 from extract_epub_diagrams import extract_diagrams_from_epub
 
-EPUB_DIR = Path("/Volumes/T7 Shield/books/epub")
-OUTPUT_DIR = Path("/Volumes/T7 Shield/books/images")
+EPUB_DIR = Path("/Volumes/T7 Shield/rag/books/epub")
+OUTPUT_DIR = Path("/Volumes/T7 Shield/rag/books/images")
 CONVERTED_LIST = Path("mobi_converted_epubs.txt")
 
 def main():

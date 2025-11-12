@@ -46,7 +46,7 @@ def inspect_images(epub_path):
 
 if __name__ == '__main__':
     # Inspect the book with 587 images
-    inspect_images("/Volumes/T7 Shield/books/epub/kotronias_0000_the_safest_scandinavian_reloaded.epub")
+    inspect_images("/Volumes/T7 Shield/rag/books/epub/kotronias_0000_the_safest_scandinavian_reloaded.epub")
 
     # And the one with 797
-    inspect_images("/Volumes/T7 Shield/books/epub/john_2012_play_the_french_everyman_chess.epub")
+    inspect_images("/Volumes/T7 Shield/rag/books/epub/john_2012_play_the_french_everyman_chess.epub")

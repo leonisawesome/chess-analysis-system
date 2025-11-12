@@ -60,12 +60,12 @@ Document any findings in `assistant_notes.md` (or the relevant ITEM doc) before 
 
 ```bash
 # 1. Score staged PGNs (writes per-file summaries into pgn_analysis.db)
-python pgn_quality_analyzer.py "/Volumes/T7 Shield/pgn/staging" --db pgn_analysis.db --json pgn_scores.json
+python pgn_quality_analyzer.py "/Volumes/T7 Shield/rag/pgn/1new" --db pgn_analysis.db --json pgn_scores.json
 
 # 2. Share the EVS report for approval (only approved files move on)
 
 # 3. Chunk + ingest the approved PGNs
-python analyze_pgn_games.py "/Volumes/T7 Shield/pgn/approved" --output approved_pgn_chunks.json
+python analyze_pgn_games.py "/Volumes/T7 Shield/rag/pgn/approved" --output approved_pgn_chunks.json
 python add_pgn_to_corpus.py approved_pgn_chunks.json --collection chess_pgn
 ```
 
@@ -311,7 +311,7 @@ python scripts/remove_books.py --dry-run <filename>.epub
 ```
 
 Manual fallback if the script can’t run:
-1. Delete the EPUB (`/Volumes/T7 Shield/books/epub/`) and its image folder (`/Volumes/T7 Shield/books/images/<book_id>`).
+1. Delete the EPUB (`/Volumes/T7 Shield/rag/books/epub/`) and its image folder (`/Volumes/T7 Shield/rag/books/images/<book_id>`).
 2. Remove the row from `epub_analysis.db` (`DELETE FROM epub_analysis WHERE filename = ?`).
 3. Delete Qdrant points for `book_name = <filename>.epub`.
 4. Run `python verify_all_deletions.py` to ensure no chunks remain.

@@ -13,7 +13,7 @@
 
 **What Was Built:**
 1. ✅ Extract PNG/SVG diagrams from EPUB files → 724,062 diagrams extracted
-2. ✅ Store diagrams in `/Volumes/T7 Shield/books/images/{book_id}/`
+2. ✅ Store diagrams in `/Volumes/T7 Shield/rag/books/images/{book_id}/`
 3. ✅ Link diagrams to text chunks via book-level matching + relevance ranking
 4. ✅ Display diagrams in search results with responsive UI
 
@@ -214,7 +214,7 @@ System: [Searches PGN collection with context]
   - **Test:** 2,046 diagrams from 3 books (100% success)
   - **Full Extraction:** COMPLETE (979 books total after all processing)
   - **Final Stats:** 724,062 diagrams extracted, ~16.5 GB total disk usage
-  - **Output:** `/Volumes/T7 Shield/books/images/{book_id}/`
+  - **Output:** `/Volumes/T7 Shield/rag/books/images/{book_id}/`
   - **Data Cleaning:** Removed 17 low-quality books (9 batch 1, 8 batch 2 including 1 duplicate)
     - Batch 1: 9 books with <30 diagrams (7-29 range)
     - Batch 2: 7 books with 30-63 diagrams + 1 Silman duplicate (875 diagrams)
@@ -246,6 +246,7 @@ System: [Searches PGN collection with context]
   - **Current Solution:** Static EPUB diagrams only (Phase 6.1a - 724,062 diagrams extracted)
   - **Testing Status:** Flask running successfully at http://localhost:5001, ready for diagram testing
 - 📦 **PGN Corpus Expansion:** Scale from 1,778 → 1M games
+- 🗣 **Conversational Follow-ups / Depth Control:** Add session-aware follow-up queries ("tell me more") and a UI depth selector (Concise/Standard/Deep) once the corpus is refreshed.
 - 🔄 **Phase 5.2 Resume:** Re-validate RRF after PGN corpus expansion
 
 ---

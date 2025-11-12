@@ -1,6 +1,6 @@
 # Chess Knowledge RAG System
 
-**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and ~313k chunks from 937 chess books (536,243 extracted diagrams) + 1,778 PGN games (run `python verify_system_stats.py` for latest counts).**
+**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and ~359k chunks from 937 chess books (536,243 extracted diagrams). PGN ingestion is temporarily paused while we rebuild the corpus (run `python verify_system_stats.py` for latest counts).**
 
 ---
 
@@ -99,12 +99,12 @@ python verify_system_stats.py
 ```
 
 ### Add New Books
-- Run the canonical analyzer wrapper (processes **everything** in `/Volumes/T7 Shield/books/epub/1new/` and writes to `epub_analysis.db`):
+- Run the canonical analyzer wrapper (processes **everything** in `/Volumes/T7 Shield/rag/books/epub/1new/` and writes to `epub_analysis.db`):
   ```bash
   scripts/analyze_staged_books.sh
   ```
 - Review `epub_analysis.db` (e.g. `sqlite3 epub_analysis.db "SELECT filename, score FROM epub_analysis ORDER BY score DESC;"`) and send the score report so the user can approve/reject each title.
-- After approval, rename/move the approved files into `/Volumes/T7 Shield/books/epub/` (assistant automates this step)
+- After approval, rename/move the approved files into `/Volumes/T7 Shield/rag/books/epub/` (assistant automates this step)
 - Continue with ingestion/diagram extraction per [DEVELOPMENT.md#adding-a-new-book](DEVELOPMENT.md#adding-a-new-book)
 - After running `python verify_system_stats.py`, update the hardcoded stats in `templates/index.html` (subtitle + loading message) so the landing page reflects the new counts.
 
@@ -127,8 +127,8 @@ Use the helper script whenever possible:
 ```bash
 python scripts/remove_books.py <filename>.epub
 ```
-- Deletes the EPUB from `/Volumes/T7 Shield/books/epub/`
-- Removes the associated image folder under `/Volumes/T7 Shield/books/images/`
+- Deletes the EPUB from `/Volumes/T7 Shield/rag/books/epub/`
+- Removes the associated image folder under `/Volumes/T7 Shield/rag/books/images/`
 - Clears the row from `epub_analysis.db`
 - Issues the Qdrant delete for that `book_name`
 
@@ -136,8 +136,8 @@ python scripts/remove_books.py <filename>.epub
 
 Manual process (only if you can’t run the script):
 1. Delete source files  
-   `rm "/Volumes/T7 Shield/books/epub/<file>.epub"`  
-   `rm -rf "/Volumes/T7 Shield/books/images/<book_id>"`
+   `rm "/Volumes/T7 Shield/rag/books/epub/<file>.epub"`  
+   `rm -rf "/Volumes/T7 Shield/rag/books/images/<book_id>"`
 2. Purge analyzer records  
    `sqlite3 epub_analysis.db "DELETE FROM epub_analysis WHERE filename = '<file>.epub';"`
 3. Delete Qdrant chunks (see script snippet above)

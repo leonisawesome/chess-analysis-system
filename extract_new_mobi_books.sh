@@ -1,9 +1,9 @@
 #!/bin/bash
 # Extract diagrams from 41 newly converted EPUB files
 
-EPUB_DIR="/Volumes/T7 Shield/books/epub"
+EPUB_DIR="/Volumes/T7 Shield/rag/books/epub"
 TEMP_DIR="/tmp/mobi_converted_epubs"
-OUTPUT_DIR="/Volumes/T7 Shield/books/images"
+OUTPUT_DIR="/Volumes/T7 Shield/rag/books/images"
 LIST_FILE="mobi_converted_epubs.txt"
 
 echo "Creating temp directory..."

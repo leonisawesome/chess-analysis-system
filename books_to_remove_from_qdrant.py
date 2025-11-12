@@ -8,7 +8,7 @@ from pathlib import Path
 from collections import defaultdict
 
 # Scan current EPUB files
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
 current_files = sorted([f.name for f in epub_dir.glob("*.epub")])
 
 # Load diagram counts

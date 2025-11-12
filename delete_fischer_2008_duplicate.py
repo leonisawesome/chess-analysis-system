@@ -12,8 +12,8 @@ from qdrant_client.models import Filter, FieldCondition, MatchValue
 # Book to delete (corrupted extraction)
 filename = "fischer_2008_my_60_memorable_games_chess_tactics_chess_strategies_with_bobby_fischer_pavilion_books.epub"
 
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
-images_dir = Path("/Volumes/T7 Shield/books/images")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
+images_dir = Path("/Volumes/T7 Shield/rag/books/images")
 
 print("=" * 80)
 print("DELETING DUPLICATE FISCHER BOOK (CORRUPTED EXTRACTION)")

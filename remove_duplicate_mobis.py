@@ -7,7 +7,7 @@ Also removes newly converted duplicate .epub files from the partial conversion.
 from pathlib import Path
 import json
 
-EPUB_DIR = Path("/Volumes/T7 Shield/books/epub")
+EPUB_DIR = Path("/Volumes/T7 Shield/rag/books/epub")
 METADATA_FILE = Path("diagram_metadata_full.json")
 
 def load_extracted_books():

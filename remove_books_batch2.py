@@ -32,8 +32,8 @@ EPUB_FILES_TO_REMOVE = [
     "jeremy_2010_how_to_reassess_your_chess_fourth_edition_siles_press.epub"
 ]
 
-EPUB_DIR = Path("/Volumes/T7 Shield/books/epub")
-IMAGES_DIR = Path("/Volumes/T7 Shield/books/images")
+EPUB_DIR = Path("/Volumes/T7 Shield/rag/books/epub")
+IMAGES_DIR = Path("/Volumes/T7 Shield/rag/books/images")
 
 def remove_from_qdrant():
     """Remove chunks from Qdrant for specified book IDs."""

@@ -35,7 +35,7 @@ Response with diagram URLs
 - No restart needed after reboot (persistent storage)
 
 **Diagram Storage:**
-- Location: `/Volumes/T7 Shield/books/images/`
+- Location: `/Volumes/T7 Shield/rag/books/images/`
 - Format: `book_{hash}/book_{hash}_{index}.{ext}`
 - Total: 534,466 diagrams from 920 books
 - Metadata: `diagram_metadata_full.json` (385MB JSON file)
@@ -96,7 +96,7 @@ def get_by_book(book_id: str) -> list[dict]:
 {
   "diagram_id": "book_00448974a7ea_0000",
   "book_id": "book_00448974a7ea",
-  "file_path": "/Volumes/T7 Shield/books/images/book_00448974a7ea/book_00448974a7ea_0000.gif",
+  "file_path": "/Volumes/T7 Shield/rag/books/images/book_00448974a7ea/book_00448974a7ea_0000.gif",
   "size_bytes": 2680,
   "format": ".gif",
   "width": 200,
@@ -191,8 +191,8 @@ def serve_diagram(diagram_id):
 - **Total:** ~1.1GB RAM
 
 ### Disk Usage
-- Diagrams: ~15GB (/Volumes/T7 Shield/books/images/)
-- EPUBs: ~8GB (/Volumes/T7 Shield/books/epub/)
+- Diagrams: ~15GB (/Volumes/T7 Shield/rag/books/images/)
+- EPUBs: ~8GB (/Volumes/T7 Shield/rag/books/epub/)
 - Qdrant data: ~2GB (vector storage)
 - Metadata: ~400MB (JSON files)
 
@@ -211,7 +211,7 @@ WARNING:app:Invalid diagram ID requested: book_xxxxx_xxxx
 
 **2. External Drive Not Mounted**
 ```
-FileNotFoundError: /Volumes/T7 Shield/books/images/book_xxx/book_xxx_xxx.gif
+FileNotFoundError: /Volumes/T7 Shield/rag/books/images/book_xxx/book_xxx_xxx.gif
 ```
 **Cause:** External drive disconnected or unmounted
 **Fix:** Reconnect drive, restart Flask

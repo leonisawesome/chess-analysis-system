@@ -5,8 +5,8 @@ Simple verification: Do all 920 EPUBs have corresponding image directories?
 import hashlib
 from pathlib import Path
 
-epub_dir = Path("/Volumes/T7 Shield/books/epub")
-images_dir = Path("/Volumes/T7 Shield/books/images")
+epub_dir = Path("/Volumes/T7 Shield/rag/books/epub")
+images_dir = Path("/Volumes/T7 Shield/rag/books/images")
 
 # Get all EPUBs
 epub_files = sorted([f for f in epub_dir.glob("*.epub") if not f.name.startswith('._')])

@@ -24,12 +24,12 @@ while true; do
 
     echo ""
     echo "📁 Books Processed:"
-    book_count=$(ls "/Volumes/T7 Shield/books/images" 2>/dev/null | wc -l | tr -d ' ')
+    book_count=$(ls "/Volumes/T7 Shield/rag/books/images" 2>/dev/null | wc -l | tr -d ' ')
     echo "   $book_count book directories created"
 
     echo ""
     echo "💾 Storage Used:"
-    du -sh "/Volumes/T7 Shield/books/images" 2>/dev/null || echo "   Calculating..."
+    du -sh "/Volumes/T7 Shield/rag/books/images" 2>/dev/null || echo "   Calculating..."
 
     echo ""
     echo "🔄 Latest Activity:"
