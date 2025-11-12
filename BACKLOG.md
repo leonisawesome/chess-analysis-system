@@ -50,6 +50,8 @@
 - [x] **Chunk metadata enrichment** – capture chapter/section headings when chunking each EPUB so `add_books_to_corpus.py` writes `chapter_title`/`section_path` into every payload. Improves diagram-to-text alignment and future analytics.
 - [ ] **Diagram tagging at extraction** – enhance `extract_epub_diagrams.py` to store width/height plus a `diagram_type` flag (`board`, `chapter_banner`, `portrait`, etc.) so runtime filtering stops guessing and we can refresh bad books incrementally.
 - [ ] **Analyzer metric refresh** – feed the existing `InstructionalLanguageDetector` output into `epub_analysis.db` so approvals see a richer breakdown than raw keyword counts.
+- [ ] **Chunk-level pruning pipeline** – ship a scheduled job that queries Qdrant for low-tier sources (e.g., `book_tier = LOW`, `evs_score < threshold`) and deletes those chunks + analyzer rows so the RAG doesn’t accumulate noise as it grows.
+- [ ] **PGN mega-file splitter** – add a helper script to break multi-hundred-thousand-game PGN files into smaller batches before running `pgn_quality_analyzer.py`, keeping analysis memory-safe and letting us reject bad segments earlier.
 
 ---
 
