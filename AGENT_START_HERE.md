@@ -69,6 +69,8 @@ Run `verify_system_stats.py` to get latest. Last verified (Nov 11, 2025):
 
 **Adding new books:** Run `scripts/analyze_staged_books.sh` against whatever the user staged (processes `/Volumes/T7 Shield/books/epub/1new/` and updates `epub_analysis.db`), share the SQLite score report for approval, then follow the [full ingestion process in README](README.md#book-ingestion-process) (assistant handles renaming/moving approved titles)
 
+**Adding new PGNs:** Run `python pgn_quality_analyzer.py "/Volumes/T7 Shield/pgn/staging" --db pgn_analysis.db` to score every staged PGN, share the EVS summary for approval, then chunk + ingest only the approved files (`analyze_pgn_games.py` → `add_pgn_to_corpus.py`).
+
 **Fixing bugs:**
 1. Read the issue
 2. Locate the file

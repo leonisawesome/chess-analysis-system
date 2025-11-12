@@ -36,6 +36,21 @@ python extract_epub_diagrams.py --book-id book_<hash> --append
 python verify_system_stats.py
 ```
 
+# Adding PGN Games
+
+```bash
+# 1. Score staged PGNs (writes per-file summaries into pgn_analysis.db)
+python pgn_quality_analyzer.py "/Volumes/T7 Shield/pgn/staging" --db pgn_analysis.db --json pgn_scores.json
+
+# 2. Share the EVS report for approval (only approved files move on)
+
+# 3. Chunk + ingest the approved PGNs
+python analyze_pgn_games.py "/Volumes/T7 Shield/pgn/approved" --output approved_pgn_chunks.json
+python add_pgn_to_corpus.py approved_pgn_chunks.json --collection chess_pgn
+```
+
+Keep the EVS score in each chunk’s metadata so we can trace/remove noisy games later.
+
 ### Fixing a Bug
 
 ```bash

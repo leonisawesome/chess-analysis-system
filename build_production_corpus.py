@@ -231,25 +231,29 @@ def embed_chunks_batch(openai_client: OpenAI, chunks: List[Dict]) -> List[Dict]:
     """
     embedded_chunks = []
     total = len(chunks)
+    embedded_count = 0
+    start_time = time.time()
 
     for i in range(0, total, EMBED_BATCH_SIZE):
         batch = chunks[i:i + EMBED_BATCH_SIZE]
         batch_texts = [c['text'] for c in batch]
 
         try:
-            # Embed batch
             response = openai_client.embeddings.create(
                 model=EMBEDDING_MODEL,
                 input=batch_texts
             )
 
-            # Add embeddings to chunks
             for j, chunk in enumerate(batch):
                 chunk_with_embedding = chunk.copy()
                 chunk_with_embedding['embedding'] = response.data[j].embedding
                 embedded_chunks.append(chunk_with_embedding)
 
-            # Rate limiting
+            embedded_count += len(batch)
+            if embedded_count % 5000 == 0 or embedded_count == total:
+                elapsed = time.time() - start_time
+                print(f"   • Embedded {embedded_count}/{total} chunks ({embedded_count/total*100:.1f}%) in {elapsed/60:.1f} min")
+
             time.sleep(0.1)
 
         except Exception as e:
@@ -372,7 +376,10 @@ def main():
     all_chunks = []
     failed_books = []
 
-    for book in tqdm(books, desc="Extracting", unit="book"):
+    for idx, book in enumerate(books, start=1):
+        if idx == 1:
+            progress_bar = tqdm(total=len(books), desc="Extracting", unit="book")
+        progress_bar.update()
         chunks = extract_chunks_from_book(book['full_path'], book)
         if chunks:
             all_chunks.extend(chunks)

@@ -108,6 +108,20 @@ python verify_system_stats.py
 - Continue with ingestion/diagram extraction per [DEVELOPMENT.md#adding-a-new-book](DEVELOPMENT.md#adding-a-new-book)
 - After running `python verify_system_stats.py`, update the hardcoded stats in `templates/index.html` (subtitle + loading message) so the landing page reflects the new counts.
 
+### Add PGN Games
+1. Score staged PGNs before anything touches Qdrant:
+   ```bash
+   python pgn_quality_analyzer.py "/path/to/pgn_dir" --db pgn_analysis.db --json pgn_scores.json
+   ```
+   This writes one summary row per PGN file (avg EVS, annotation density, etc.) into `pgn_analysis.db`.
+2. Share the score report with the user for approval (same workflow as EPUBs). Only approved PGNs advance.
+3. Convert approved PGNs into chunks and ingest:
+   ```bash
+   python analyze_pgn_games.py /Volumes/T7\ Shield/pgn/approved --output approved_pgn_chunks.json
+   python add_pgn_to_corpus.py approved_pgn_chunks.json --collection chess_pgn
+   ```
+   Keep the EVS score in each chunk’s metadata so we can query/delete low-quality games later.
+
 ### Remove A Book (EPUB + Metadata)
 Use the helper script whenever possible:
 ```bash
