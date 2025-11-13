@@ -686,3 +686,81 @@ Browser tests still showed `[FEATURED_DIAGRAM_X]` text because GPT output someti
 7. ⏳ Git commit all changes
 
 **Estimated Time to Complete:** 15-20 minutes
+
+---
+
+## SESSION: Nov 13, 2025 (12:04-12:09 PM) – Chessable PGN Combination ✅
+
+### What Was Accomplished
+
+**Task:** Combine and deduplicate 2,024 PGN files from Chessable courses into a single master file.
+
+**Script Created:**
+- `scripts/combine_pgn_corpus.py` - New deduplication tool
+- Features:
+  - Recursive directory traversal for .pgn files
+  - MD5 hash-based duplicate detection
+  - Streaming file combination (memory efficient)
+  - CSV reports for duplicates and skipped files
+  - Heartbeat progress logging every 200 files
+  - Proper Unicode handling
+
+**Results:**
+- **✅ Unique files written:** 1,995 files
+- **🔄 Duplicates detected:** 12 files (same content, different locations)
+- **⚠️ Files skipped:** 17 files (encoding errors + 1 macOS metadata file)
+- **📁 Total files processed:** 2,024 files
+- **⏱ Processing time:** ~30 seconds
+- **📦 Output file size:** 1.8 GB (19.4 million lines)
+
+**Output Files:**
+1. `/Volumes/T7 Shield/rag/pgn/1new/chessable_master.pgn` - 1.8 GB master corpus
+2. `/Volumes/T7 Shield/rag/pgn/1new/chessable_duplicates.csv` - 12 duplicate entries
+3. `/Volumes/T7 Shield/rag/pgn/1new/chessable_skipped.csv` - 17 skipped entries
+
+### Duplicate Files Analysis
+
+**Duplicates (12 files):** All correctly detected via MD5 hash
+- Duplicate courses stored in both `/1Video/` and `/2PGN/` directories
+- Examples:
+  - "Mastering Chess Middlegames" (GM Panchenko) - 2 copies
+  - "Accelerated Dragon" (GM Bok) - 2 copies
+  - "50-Day Endgame Challenge" (GM Aveskulov) - 3 copies
+  - "100 Endgames You Must Know" (IM Bartholomew) - 2 copies
+
+**Reason:** Video courses often include downloadable PGN files that get stored separately.
+
+### Skipped Files Analysis
+
+**Encoding Errors (16 files):** Non-UTF-8 encodings (Latin-1, Windows-1252)
+- "Mastering Chess Strategy" (GM Hellsten) - byte 0xfc at position 44410
+- "Kramnik - Move by Move" - byte 0xfc at position 578
+- "First Steps Caro Kann Defence" - byte 0xbd at position 54764
+- Several Everyman Chess books with accented characters (ü, é, á)
+
+**Other Issues (1 file):**
+- Trailing space in filename caused "file not found" error
+- Path: `/Survive & Thrive.../Survive & Thrive... .pgn` (note trailing space)
+
+**Recommendation:** The 16 encoding-error files could be recovered by:
+1. Detecting encoding with `chardet` library
+2. Re-reading with detected encoding (likely 'latin-1' or 'cp1252')
+3. Converting to UTF-8 before writing to master file
+
+### Technical Notes
+
+- **MD5 hashing:** Efficiently detected duplicates across 2,024 files
+- **Streaming writes:** Handled 1.8 GB output without memory issues
+- **Progress logging:** Heartbeat every 200 files kept process transparent
+- **Error handling:** Graceful skip + logging for problematic files
+- **Performance:** Processed 2,024 files (analyzing + deduplicating + writing 1.8 GB) in ~30 seconds
+
+### Next Steps
+
+1. **Optional:** Enhance script to handle non-UTF-8 files with encoding detection
+2. **Ready for analysis:** `chessable_master.pgn` can now be processed with:
+   ```bash
+   python analyze_pgn_games.py /Volumes/T7\ Shield/rag/pgn/1new/chessable_master.pgn \
+       --output chessable_chunks.json
+   ```
+3. **Ingestion:** After chunking, ingest with `add_pgn_to_corpus.py`
