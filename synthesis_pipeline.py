@@ -17,6 +17,36 @@ print("\n*** [CANARY] synthesis_pipeline.py VERSION: 6.1a-2025-11-10 LOADED ***\
 # Global variable to hold canonical library prompt
 CANONICAL_POSITIONS_PROMPT = None
 
+LENGTH_PRESETS = {
+    "concise": {
+        "label": "Concise",
+        "section_guidance": "Keep each section to ONE tight paragraph (~4 sentences). Focus on key ideas and cite at most one short illustrative variation.",
+        "section_reminder": "Limit this section to ~120-150 words. State the plan, give one concrete line, and move on.",
+        "assembly_guidance": "Overall article should be 3-4 short paragraphs (~250-350 words) highlighting critical takeaways quickly.",
+        "diagram_target": 6,
+        "stage2_tokens": 1800,
+        "stage3_tokens": 2800
+    },
+    "balanced": {
+        "label": "Balanced",
+        "section_guidance": "Write 1-2 detailed paragraphs per section blending strategy plus a representative variation.",
+        "section_reminder": "Aim for ~180-220 words so the reader sees both principles and one concrete line.",
+        "assembly_guidance": "Deliver 3-4 sections (~450-550 words total) with smooth transitions between strategy and sample moves.",
+        "diagram_target": 8,
+        "stage2_tokens": 2600,
+        "stage3_tokens": 4200
+    },
+    "in_depth": {
+        "label": "In-Depth",
+        "section_guidance": "Provide 2-3 paragraphs per section, layering strategic ideas with multiple annotated variations or plans.",
+        "section_reminder": "Take your time (~250+ words) and include both prose plus 1-2 concrete branches to illustrate the concept.",
+        "assembly_guidance": "Produce a reference-style article (~650-800+ words) with rich transitions and explicit practical advice.",
+        "diagram_target": 10,
+        "stage2_tokens": 3200,
+        "stage3_tokens": 6000
+    }
+}
+
 def build_canonical_positions_prompt():
     """
     Build a SIMPLIFIED prompt section from canonical_positions.json.
@@ -148,7 +178,8 @@ def stage2_expand_sections(openai_client: OpenAI, sections: list, query: str,
                           expected_signature: str = None,
                           validate_stage2_diagrams_func = None,
                           generate_section_with_retry_func = None,
-                          canonical_fen: str = None) -> list:
+                          canonical_fen: str = None,
+                          length_config: dict | None = None) -> list:
     """
     Stage 2: Expand each section with detailed content and diagram markers.
 
@@ -192,6 +223,9 @@ When synthesizing your answer:
 
 Write 2-3 detailed paragraphs per section."""
 
+    if length_config and length_config.get("section_guidance"):
+        system_prompt += f"\n\nLength Preference:\n{length_config['section_guidance']}\n"
+
     for i, section in enumerate(sections, 1):
         section_prompt = f"""Question: {query}
 
@@ -204,6 +238,9 @@ Context sources (Books provide concepts, PGN files provide concrete variations):
 Write detailed content for this section. Place 1-2 diagram markers ([FEATURED_DIAGRAM_1], [FEATURED_DIAGRAM_2], etc.)
 where visual examples would help illustrate the concepts. Position markers AFTER explaining a concept.
 Synthesize information from both book sources (strategic ideas) and PGN sources (specific lines)."""
+
+        if length_config and length_config.get("section_reminder"):
+            section_prompt += f"\n\nLength preference: {length_config['section_reminder']}"
 
         # Add canonical FEN context if provided (for middlegame concepts)
         if canonical_fen:
@@ -257,7 +294,7 @@ Do NOT repeat the same FEN multiple times. Show PROGRESSION and VARIATIONS."""
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": section_prompt}
                     ],
-                    max_completion_tokens=3000
+                    max_completion_tokens=(length_config or {}).get("stage2_tokens", 3000)
                 )
 
                 content = response.choices[0].message.content
@@ -283,7 +320,8 @@ Do NOT repeat the same FEN multiple times. Show PROGRESSION and VARIATIONS."""
 
 
 def stage3_final_assembly(openai_client: OpenAI, expanded_sections: list,
-                         query: str, opening_name: str = None) -> str:
+                         query: str, opening_name: str = None,
+                         length_config: dict | None = None) -> str:
     """
     Stage 3: Assemble final answer with smooth transitions.
 
@@ -311,6 +349,9 @@ Guidelines:
 - Ensure logical flow from introduction to conclusion
 - Preserve the balance between conceptual explanations and concrete examples"""
 
+    if length_config and length_config.get("assembly_guidance"):
+        system_prompt += f"\n\nLength Preference:\n{length_config['assembly_guidance']}\n"
+
     sections_text = "\n\n".join([
         f"## {section['title']}\n{section['content']}"
         for section in expanded_sections
@@ -333,7 +374,7 @@ Create a cohesive article that flows naturally. Maintain all diagram markers."""
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": assembly_prompt}
             ],
-            max_completion_tokens=6000
+            max_completion_tokens=(length_config or {}).get("stage3_tokens", 6000)
         )
 
         final_answer = response.choices[0].message.content
@@ -360,7 +401,8 @@ def synthesize_answer(openai_client: OpenAI, query: str, context: str,
                      opening_name: str = None, expected_signature: str = None,
                      validate_stage2_diagrams_func = None,
                      generate_section_with_retry_func = None,
-                     canonical_fen: str = None) -> str:
+                     canonical_fen: str = None,
+                     length_mode: str = "balanced") -> str:
     """
     Main synthesis pipeline: orchestrates all 3 stages.
 
@@ -377,6 +419,9 @@ def synthesize_answer(openai_client: OpenAI, query: str, context: str,
         Final synthesized answer
     """
     print(f"🎯 Starting 3-stage synthesis for: {query}")
+    length_mode = length_mode if length_mode in LENGTH_PRESETS else "balanced"
+    length_config = LENGTH_PRESETS[length_mode]
+    print(f"   Length preference: {length_config['label']}")
 
     # Stage 1: Generate outline
     print("  Stage 1: Generating outline...")
@@ -394,13 +439,20 @@ def synthesize_answer(openai_client: OpenAI, query: str, context: str,
         expected_signature,
         validate_stage2_diagrams_func,
         generate_section_with_retry_func,
-        canonical_fen
+        canonical_fen,
+        length_config
     )
     print(f"    ✓ Expanded {len(expanded)} sections")
 
     # Stage 3: Final assembly
     print("  Stage 3: Final assembly...")
-    final_answer = stage3_final_assembly(openai_client, expanded, query, opening_name)
+    final_answer = stage3_final_assembly(
+        openai_client,
+        expanded,
+        query,
+        opening_name,
+        length_config
+    )
     print(f"    ✓ Assembled final answer ({len(final_answer)} chars)")
 
     return final_answer

@@ -69,6 +69,61 @@
             border-color: #3498db;
         }
 
+        .length-control {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+            background: #fbfbfb;
+        }
+
+        .length-control-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .length-slider {
+            width: 100%;
+            margin: 10px 0;
+            accent-color: #3498db;
+        }
+
+        .length-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #95a5a6;
+        }
+
+        .length-labels span.active {
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        .length-description {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .length-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #e8f4ff;
+            color: #1e6fb6;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.85em;
+            margin-bottom: 12px;
+        }
+
         .search-btn {
             background: #3498db;
             color: white;
@@ -461,6 +516,29 @@
                 placeholder="Ask a chess question... (e.g., How do I improve my calculation in the middlegame?)"
                 onkeypress="if(event.key === 'Enter') search()"
             >
+            <div class="length-control">
+                <div class="length-control-header">
+                    <span>Answer Length</span>
+                    <span id="lengthChoiceLabel">Balanced • 3-4 sections</span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="1"
+                    value="1"
+                    id="lengthSlider"
+                    class="length-slider"
+                >
+                <div class="length-labels">
+                    <span data-index="0">Concise</span>
+                    <span data-index="1">Balanced</span>
+                    <span data-index="2">In-Depth</span>
+                </div>
+                <p class="length-description" id="lengthDescription">
+                    Balanced: Default 3-4 sections mixing strategy explanations with concrete PGN examples.
+                </p>
+            </div>
             <button class="search-btn" onclick="search()" id="searchBtn">
                 Search
             </button>
@@ -512,6 +590,27 @@
     </script>
 
     <script>
+        const LENGTH_MODES = [
+            {
+                id: "concise",
+                label: "Concise",
+                summary: "Short overview (~250 words)",
+                description: "Focus on one paragraph per section, highlight the main plan, and cite a single concrete variation."
+            },
+            {
+                id: "balanced",
+                label: "Balanced",
+                summary: "Default (3-4 sections)",
+                description: "Blend strategy explanations with at least one PGN-backed variation in each section."
+            },
+            {
+                id: "in_depth",
+                label: "In-Depth",
+                summary: "Reference-style (~700+ words)",
+                description: "Layer multiple variations per section and expand on plans, move-order nuances, and practical tips."
+            }
+        ];
+
         // Example queries with random selection
         const allExampleQueries = [
             "How do I improve my calculation in the middlegame?",
@@ -567,12 +666,63 @@
                 button.onclick = () => setQuery(query);
                 exampleButtons.appendChild(button);
             });
+
+            updateLengthModeUI(parseInt(document.getElementById('lengthSlider')?.value || '1', 10));
+            const slider = document.getElementById('lengthSlider');
+            if (slider) {
+                slider.addEventListener('input', (event) => {
+                    updateLengthModeUI(parseInt(event.target.value, 10));
+                });
+            }
+            document.querySelectorAll('.length-labels span').forEach(span => {
+                span.addEventListener('click', () => {
+                    const idx = parseInt(span.dataset.index || '0', 10);
+                    updateLengthModeUI(idx);
+                });
+            });
         });
+
+        function updateLengthModeUI(index) {
+            const slider = document.getElementById('lengthSlider');
+            const label = document.getElementById('lengthChoiceLabel');
+            const description = document.getElementById('lengthDescription');
+            const labelSpans = document.querySelectorAll('.length-labels span');
+            if (!slider || !label || !description) {
+                return;
+            }
+            const safeIndex = Math.min(Math.max(isNaN(index) ? 1 : index, 0), LENGTH_MODES.length - 1);
+            const meta = LENGTH_MODES[safeIndex];
+            slider.value = safeIndex;
+            label.textContent = `${meta.label} • ${meta.summary}`;
+            description.textContent = `${meta.label}: ${meta.description}`;
+            labelSpans.forEach(span => {
+                const spanIndex = parseInt(span.dataset.index || '0', 10);
+                span.classList.toggle('active', spanIndex === safeIndex);
+            });
+        }
+
+        function getSelectedLengthMode() {
+            const slider = document.getElementById('lengthSlider');
+            const index = slider ? parseInt(slider.value || '1', 10) : 1;
+            const safeIndex = Math.min(Math.max(isNaN(index) ? 1 : index, 0), LENGTH_MODES.length - 1);
+            return LENGTH_MODES[safeIndex].id;
+        }
+
+        function getLengthMetadata(mode) {
+            return LENGTH_MODES.find(m => m.id === mode) || LENGTH_MODES[1];
+        }
+
+        function getLengthLabelFromMode(mode) {
+            const meta = getLengthMetadata(mode);
+            return `${meta.label} • ${meta.summary}`;
+        }
 
         function search() {
             console.log("=== SEARCH FUNCTION CALLED ===");
             const query = document.getElementById('queryInput').value.trim();
+            const lengthMode = getSelectedLengthMode();
             console.log("Query:", query);
+            console.log("Length mode:", lengthMode);
 
             if (!query) {
                 alert('Please enter a question');
@@ -593,7 +743,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ query: query })
+                body: JSON.stringify({ query: query, length_mode: lengthMode })
             })
             .then(response => {
                 console.log("Response received:", response.status);
@@ -656,6 +806,14 @@
                 <div class="answer-content" id="answer-content-container"></div>
             `;
             resultsDiv.appendChild(answerSection);
+
+            const heading = answerSection.querySelector('h2');
+            if (heading) {
+                const lengthChip = document.createElement('div');
+                lengthChip.className = 'length-chip';
+                lengthChip.textContent = `Length preference: ${getLengthLabelFromMode(data.length_mode || 'balanced')}`;
+                heading.insertAdjacentElement('afterend', lengthChip);
+            }
 
             // ITEM-024.6: Process answer with inline featured diagrams
             const answerContainer = document.getElementById('answer-content-container');

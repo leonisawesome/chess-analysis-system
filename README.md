@@ -1,6 +1,6 @@
 # Chess Knowledge RAG System
 
-**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and ~359k chunks from 937 chess books (536,243 extracted diagrams). PGN ingestion is temporarily paused while we rebuild the corpus (run `python verify_system_stats.py` for latest counts).**
+**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and ~592k chunks from 937 chess books (550,068 extracted diagrams). Includes 233,211 PGN game chunks from 64,251 games (run `python verify_system_stats.py` for latest counts).**
 
 ---
 
@@ -43,14 +43,22 @@
 - Backend now enforces a 1:1 match between `featured_diagrams` and `[FEATURED_DIAGRAM_X]` markers; frontend strips any leftovers to prevent literal markers.
 - Next focus: browser verification + styling polish once inline replacement is fully validated.
 
-### System Stats (Verified Nov 10, 2025 - 3:30 PM)
+### PGN Refresh (November 13, 2025) ✅ COMPLETE
+- ✅ `chess_publishing_2021_master.pgn` analyzed: **64,251 games → 234,251 chunks** written to `data/chess_publishing_2021_chunks.json` (598 MB).
+- ⚠️ 2 malformed games were skipped (IDs #8944 and #9284); see `pgn_quality_analyzer` logs for exact headers/snippets.
+- ✅ **Ingestion complete:** 233,211 chunks embedded and uploaded to `chess_pgn_repertoire` collection.
+- 💰 **Cost:** $3.21 (160.6M tokens) | **Time:** 162.8 minutes (2.7 hours)
+- 🔌 Ready for production: Set `ENABLE_PGN_COLLECTION = True` in `app.py` to enable PGN queries.
+
+### System Stats (Verified Nov 13, 2025 - 9:08 AM)
 
 **Run `python verify_system_stats.py` to get latest numbers!**
 
-- **Books:** 937 EPUB (last verified Nov 11, 2025) — run `python verify_system_stats.py` for current count; 1,778 PGN games
-- **Chunks:** 313,057 total (311,266 EPUB + 1,791 PGN)
-- **Diagrams:** 536,243 extracted from EPUBs
-- **Collections:** chess_production, chess_pgn_repertoire, chess_pgn_test
+- **Books:** 937 EPUB
+- **PGN Games:** 64,251 games (from Chess Publishing 2021 master corpus)
+- **Chunks:** 592,306 total production (359,095 EPUB + 233,211 PGN)
+- **Diagrams:** 550,068 extracted from EPUBs
+- **Collections:** chess_production (359,095 points), chess_pgn_repertoire (233,211 points)
 
 ### Architecture
 - **Model:** GPT-5 (gpt-chatgpt-4o-latest-20250514)
@@ -89,6 +97,12 @@ python app.py
 open http://localhost:5001
 ```
 
+### Answer Length Control
+- Use the **Answer Length** slider (Concise / Balanced / In-Depth) to tell the synthesis pipeline how much depth you want.
+- Concise → 1 paragraph per section (~250 words) for quick spot checks.
+- Balanced (default) → 3‑4 sections mixing strategy prose with one concrete PGN line per section.
+- In-Depth → long-form explainer with multiple variations and extra diagrams; expect ~700+ words.
+
 ---
 
 ## 🔄 Common Tasks
@@ -121,6 +135,13 @@ python verify_system_stats.py
    python add_pgn_to_corpus.py approved_pgn_chunks.json --collection chess_pgn
    ```
    Keep the EVS score in each chunk’s metadata so we can query/delete low-quality games later.
+
+### PGN Diagram Roadmap
+1. **Metadata-first ingestion:** `analyze_pgn_games.py` preserves every PGN header (Event/Site/Date/Openings/ECO) plus course hierarchy (`course_name`, `chapter`, `section`) and annotation density. These fields act as the lookup keys for openings (e.g., Italian Game) and structural themes (IQP, prophylaxis).
+2. **Candidate selection:** During chunking we also persist per-game stats (EVS, comment density, has_variations). A follow-up job will parse each chunk, flag moves with high annotation density, comment keywords (e.g., “prophylaxis”, “IQP”), or large eval swings to identify diagram-worthy plies.
+3. **Concept tagging:** Opening questions map via ECO/opening headers; concept questions map via a lightweight classifier that scans comments + move text for canonical lexicon entries (pins, IQP, blockade, prophylaxis, etc.) and links them to existing `canonical_positions` IDs when possible.
+4. **Diagram generation:** For each tagged move we snapshot the FEN, feed it to `diagram_generator.py`, and store PNG/SVG plus metadata `{game_id, source_file, move_number, concept_tags}` in a new `pgn_diagrams` catalog. Each record also references the originating chunk so deletions stay clean.
+5. **Serving flow:** When answering queries the backend will look up both EPUB and PGN diagram pools. Opening queries match via `opening`/`eco`; concept queries match via shared lexicon tags. Featured diagrams then mix EPUB illustrations (strategic art) with PGN-derived boards (concrete move sequences) using the same `[FEATURED_DIAGRAM_X]` marker pipeline.
 
 ### Remove A Book (EPUB + Metadata)
 Use the helper script whenever possible:

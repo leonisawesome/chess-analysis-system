@@ -7,6 +7,7 @@ Writes per-file summaries into SQLite (pgn_analysis.db) and optional JSON.
 """
 
 import argparse
+import io
 import json
 import re
 import sqlite3
@@ -72,6 +73,11 @@ class FileSummary:
     last_analyzed: str
 
 
+def _extract_header(raw_game: str, tag: str) -> str:
+    match = re.search(rf'\[{tag}\s+"([^"]*)"\]', raw_game)
+    return match.group(1).strip() if match else "Unknown"
+
+
 class PGNQualityAnalyzer:
     def __init__(self, db_path: Path):
         self.db_path = db_path
@@ -123,7 +129,13 @@ class PGNQualityAnalyzer:
         cues = sum(1 for pattern in EDU_KEYWORDS if re.search(pattern, text))
         return min(cues * 2.5, 15.0)
 
-    def score_game(self, game: chess.pgn.Game) -> Optional[GameScore]:
+    def score_game(
+        self,
+        game: chess.pgn.Game,
+        *,
+        file_name: str = "",
+        game_index: int = 0,
+    ) -> Optional[GameScore]:
         if game is None:
             return None
         headers = dict(game.headers)
@@ -131,7 +143,18 @@ class PGNQualityAnalyzer:
         if total_moves == 0:
             return None
 
-        text = str(game)
+        try:
+            text = str(game)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            event = headers.get("Event", "Unknown")
+            site = headers.get("Site", "Unknown")
+            date = headers.get("Date", "Unknown")
+            location = (
+                f"{file_name} Game #{game_index} "
+                f"[Event: {event} | Site: {site} | Date: {date}]"
+            )
+            print(f"   ⚠️  Failed to stringify {location}: {exc}", file=sys.stderr)
+            return None
         annotation_count = len(ANNOTATION_PATTERN.findall(text)) + len(NAG_PATTERN.findall(text))
         annotation_density = annotation_count / max(total_moves, 1)
         comments = COMMENT_PATTERN.findall(text)
@@ -170,19 +193,103 @@ class PGNQualityAnalyzer:
             game_type=game_type,
         )
 
+    def _iter_streaming_games(self, filepath: Path):
+        """
+        Yields raw PGN text for giant multi-game files without loading everything
+        into memory. ChessBase/HIARCS style dumps always start each game with an
+        [Event ...] header, so we split on that sentinel.
+        """
+        with open(filepath, "r", encoding="utf-8", errors="ignore") as handle:
+            buffer: List[str] = []
+            for line in handle:
+                stripped = line.lstrip()
+                if stripped.startswith("[Event "):
+                    if buffer:
+                        yield "".join(buffer).strip()
+                        buffer = [line]
+                    else:
+                        buffer.append(line)
+                else:
+                    buffer.append(line)
+            if buffer:
+                yield "".join(buffer).strip()
+
+    def _log_faulty_game(
+        self,
+        filename: str,
+        game_index: int,
+        event: str,
+        site: str,
+        date: str,
+        reason: str,
+        snippet: str,
+    ):
+        print(
+            f"   ⚠️  {filename} Game #{game_index} "
+            f"[Event: {event} | Site: {site} | Date: {date}] failed: {reason}",
+            file=sys.stderr,
+        )
+        clean_snippet = snippet.replace("\n", " ")[:140]
+        print(f"      Snippet: {clean_snippet}", file=sys.stderr)
+
     def analyze_file(self, filepath: Path) -> Optional[FileSummary]:
         scores: List[GameScore] = []
-        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-            while True:
-                game = chess.pgn.read_game(f)
-                if game is None:
-                    break
-                scored = self.score_game(game)
-                if scored:
-                    scores.append(scored)
+        skipped_games = 0
+
+        for idx, raw_game in enumerate(self._iter_streaming_games(filepath), start=1):
+            if not raw_game:
+                continue
+            event = _extract_header(raw_game, "Event")
+            site = _extract_header(raw_game, "Site")
+            date = _extract_header(raw_game, "Date")
+            try:
+                game = chess.pgn.read_game(io.StringIO(raw_game + "\n\n"))
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                skipped_games += 1
+                self._log_faulty_game(
+                    filepath.name,
+                    idx,
+                    event,
+                    site,
+                    date,
+                    f"Parser error: {exc}",
+                    raw_game,
+                )
+                continue
+
+            if game is None:
+                skipped_games += 1
+                self._log_faulty_game(
+                    filepath.name,
+                    idx,
+                    event,
+                    site,
+                    date,
+                    "Parser returned None",
+                    raw_game,
+                )
+                continue
+
+            scored = self.score_game(game, file_name=filepath.name, game_index=idx)
+            if scored:
+                scores.append(scored)
+            else:
+                skipped_games += 1
+                self._log_faulty_game(
+                    filepath.name,
+                    idx,
+                    event,
+                    site,
+                    date,
+                    "Scoring skipped (see earlier warnings)",
+                    raw_game,
+                )
 
         if not scores:
             return None
+
+        if skipped_games:
+            print(f"   ⚠️  {skipped_games} games skipped (see log for details)")
 
         evs_scores = [g.evs for g in scores]
         total_games = len(scores)
@@ -239,10 +346,10 @@ class PGNQualityAnalyzer:
 
 
 def iter_pgn_files(path: Path) -> List[Path]:
-    if path.is_file() and path.suffix.lower() == ".pgn":
+    if path.is_file() and path.suffix.lower() == ".pgn" and not path.name.startswith("._"):
         return [path]
     if path.is_dir():
-        return sorted(path.glob("*.pgn"))
+        return sorted(p for p in path.glob("*.pgn") if not p.name.startswith("._"))
     return []
 
 

@@ -23,7 +23,7 @@ import fen_validator
 import query_classifier
 
 from chess_positions import detect_fen, parse_moves_to_fen, extract_chess_positions, filter_relevant_positions, create_lichess_url
-from synthesis_pipeline import synthesize_answer
+from synthesis_pipeline import synthesize_answer, LENGTH_PRESETS
 from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction, search_multi_collection_async
 
 # Phase 5.1: RRF multi-collection merge
@@ -39,7 +39,9 @@ from diagram_service import diagram_index, normalize_caption
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
-ENABLE_PGN_COLLECTION = False  # Toggle PGN corpus until chess_pgn_repertoire is rebuilt
+ENABLE_PGN_COLLECTION = True  # PGN corpus rebuild complete (233,211 chunks ingested Nov 13, 2025)
+DEFAULT_LENGTH_MODE = "balanced"
+LENGTH_MODE_CHOICES = set(LENGTH_PRESETS.keys())
 
 FEATURED_MARKER_PATTERN = re.compile(r'\[FEATURED_DIAGRAM_\d+\]')
 SECTION_HEADING_PATTERN = re.compile(r'(##\s+[^\n]+\n)')
@@ -299,8 +301,12 @@ def query():
         start = time.time()
 
         # Step 1: Parse request
-        data = request.get_json()
+        data = request.get_json() or {}
         query_text = data.get('query', '').strip()
+        requested_length_mode = data.get('length_mode', DEFAULT_LENGTH_MODE)
+        length_mode = requested_length_mode if requested_length_mode in LENGTH_MODE_CHOICES else DEFAULT_LENGTH_MODE
+        length_config = LENGTH_PRESETS.get(length_mode, LENGTH_PRESETS[DEFAULT_LENGTH_MODE])
+        print(f"📝 Length preference: {length_mode}")
         t1 = time.time()
         print(f"⏱  Request parsing: {t1-start:.2f}s")
 
@@ -363,7 +369,8 @@ def query():
             expected_signature=expected_signature,
             validate_stage2_diagrams_func=None,  # Dynamic diagram validation removed
             generate_section_with_retry_func=None,  # Dynamic diagram validation removed
-            canonical_fen=canonical_fen
+            canonical_fen=canonical_fen,
+            length_mode=DEFAULT_LENGTH_MODE
         )
 
         rag_timing['synthesis'] = round(time.time() - synthesis_start, 2)
@@ -471,6 +478,10 @@ def query_merged():
         # Step 1: Parse request
         data = request.get_json()
         query_text = data.get('query', '').strip()
+        requested_length_mode = data.get('length_mode', DEFAULT_LENGTH_MODE)
+        length_mode = requested_length_mode if requested_length_mode in LENGTH_MODE_CHOICES else DEFAULT_LENGTH_MODE
+        length_config = LENGTH_PRESETS.get(length_mode, LENGTH_PRESETS[DEFAULT_LENGTH_MODE])
+        print(f"📝 Length preference: {length_mode}")
         t1 = time.time()
         print(f"⏱  Request parsing: {t1-start:.2f}s")
 
@@ -641,7 +652,8 @@ def query_merged():
             expected_signature=None,
             validate_stage2_diagrams_func=None,  # Dynamic diagram validation removed
             generate_section_with_retry_func=None,  # Dynamic diagram validation removed
-            canonical_fen=None
+            canonical_fen=None,
+            length_mode=length_mode
         )
 
         synthesis_time = time.time() - synthesis_start
@@ -766,7 +778,10 @@ def query_merged():
             result['epub_diagrams'] = [fallback_queue.pop(0)]
 
         # Collect featured diagrams from top 3 EPUB sources for prominent display
-        target_diagram_slots = estimate_diagram_slots(synthesized_answer, base_limit=8)
+        target_diagram_slots = estimate_diagram_slots(
+            synthesized_answer,
+            base_limit=length_config.get('diagram_target', 8)
+        )
         featured_diagrams = build_featured_diagrams(
             final_results,
             fallback_epub_diagrams,
@@ -790,6 +805,7 @@ def query_merged():
             'featured_diagrams': featured_diagrams,  # Add featured diagrams
             'sources': final_results[:5],
             'results': final_results,
+            'length_mode': length_mode,
             'timing': {
                 'embedding': round(embed_time, 2),
                 'search': round(search_time, 2),

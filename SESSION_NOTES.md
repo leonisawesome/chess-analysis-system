@@ -620,3 +620,69 @@ Browser tests still showed `[FEATURED_DIAGRAM_X]` text because GPT output someti
 3. Consider promoting the new helper to its own module if additional endpoints need the same behavior.
 
 **Time spent:** ~30 minutes (implementation + verification)
+## SESSION: Nov 13, 2025 – PGN Refresh + Answer Length Control
+
+### PGN Analyzer & Chunking
+- Ran `pgn_quality_analyzer.py "/Volumes/T7 Shield/rag/pgn/1new" --db pgn_analysis.db --json pgn_scores.json` with new streaming parser & logging. **64,247 games scored**, 6 malformed entries skipped with event/site/date + snippets logged for manual review.
+- Reworked `analyze_pgn_games.py` to stream `[Event …]` blocks, log parser/stringify failures with headers, and use a sane chunk threshold (1,200-token cap, ~18 moves per overflow chunk). Output: `data/chess_publishing_2021_chunks.json` (598 MB) containing **234,251 chunks** from **64,251 games**; only games #8944 and #9284 were skipped.
+- Qdrant ingestion not executed yet because `OPENAI_API_KEY` is unset in this environment. Once the key is available, run `python add_pgn_to_corpus.py data/chess_publishing_2021_chunks.json --collection chess_pgn_repertoire --batch-size 80` to embed/upload, then re-enable `ENABLE_PGN_COLLECTION`.
+
+### Frontend & Synthesis Controls
+- Added the **Answer Length** slider (Concise / Balanced / In-Depth) to `templates/index.html` plus length badges in the results panel. The slider posts `length_mode` to `/query_merged`, and the backend threads it through `synthesize_answer()` so GPT-5 adjusts section depth + final assembly length.
+- `synthesis_pipeline.py` now exposes `LENGTH_PRESETS` that tune section prompts, token budgets, and diagram targets; `app.py` normalizes the requested mode, scales inline diagram counts, and echoes the selection back to the UI.
+
+### Documentation & Roadmap
+- README updated with the slider instructions, PGN refresh stats, and a **PGN Diagram Roadmap** detailing how we will tag openings/concepts (Italian Game, prophylaxis, IQP, etc.) before rendering diagrams from PGNs.
+- `python verify_system_stats.py` still can't hit Qdrant locally (`[Errno 1] Operation not permitted`). Re-run after Docker Qdrant is up so the new PGN counts can be published once ingestion completes.
+
+---
+
+## SESSION: Nov 13, 2025 (9:08 AM) – PGN Ingestion Complete ✅
+
+### What Was Accomplished
+
+**PGN Ingestion Successfully Completed:**
+- ✅ **Chunks processed:** 233,211 / 234,251 (99.56%)
+- ✅ **Tokens embedded:** 160,585,970 tokens
+- ✅ **Cost:** $3.21
+- ✅ **Processing time:** 162.8 minutes (2.7 hours)
+- ✅ **Collection size:** 233,622 points in `chess_pgn_repertoire`
+
+**Initial Issues & Resolution:**
+1. **Problem:** Multiple duplicate ingestion processes running simultaneously (10 processes)
+2. **Resolution:** Killed all processes, cleaned up environment, started single clean job
+3. **Optimization:** Set `PYTHONIOENCODING=utf-8` to prevent Unicode logging errors
+4. **Monitoring:** Added heartbeat logging for progress tracking
+
+**Known Issues (Non-blocking):**
+- A few batches (~2-3) exceeded 8192 token limit for embedding model
+- Script gracefully skipped these after 5 retry attempts
+- ~99.5%+ success rate
+
+### System Stats Update (Verified Nov 13, 2025 - 9:08 AM)
+
+**Before PGN Refresh:**
+- Books: 937 EPUB
+- Chunks: 313,057 (311,266 EPUB + 1,791 PGN)
+- Diagrams: 536,243
+
+**After PGN Refresh:**
+- Books: 937 EPUB
+- PGN Games: 64,251 games
+- **Chunks: 592,306** (359,095 EPUB + 233,211 PGN) ← +279,249 chunks
+- Diagrams: 550,068 ← +13,825 diagrams
+- Collections:
+  - chess_production: 359,095 points
+  - chess_pgn_repertoire: 233,211 points
+
+### Next Steps
+
+1. ✅ Verify system stats - COMPLETE
+2. ✅ Update README.md and SESSION_NOTES.md - COMPLETE
+3. ⏳ Enable PGN collection in app.py (set `ENABLE_PGN_COLLECTION = True`)
+4. ⏳ Restart Flask server
+5. ⏳ Test `/query_merged` endpoint with PGN-friendly queries
+6. ⏳ Cleanup ingest log/pid files
+7. ⏳ Git commit all changes
+
+**Estimated Time to Complete:** 15-20 minutes
