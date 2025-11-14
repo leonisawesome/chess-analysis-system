@@ -194,6 +194,26 @@ class DiagramIndex:
         self.filtered_count = 0
         self._dimension_cache: Dict[str, Tuple[int, int]] = {}
 
+    def _normalize_file_path(self, path: Optional[str]) -> Optional[str]:
+        """
+        Normalize legacy diagram paths.
+
+        Some metadata entries reference `/Volumes/T7 Shield/books/...`
+        but the actual files now live under `/Volumes/T7 Shield/rag/books/...`.
+        """
+        if not path:
+            return path
+        if os.path.exists(path):
+            return path
+        substitutions = [
+            path.replace("/Volumes/T7 Shield/books/", "/Volumes/T7 Shield/rag/books/"),
+            path.replace("\\Volumes\\T7 Shield\\books\\", "\\Volumes\\T7 Shield\\rag\\books\\"),
+        ]
+        for candidate in substitutions:
+            if candidate != path and os.path.exists(candidate):
+                return candidate
+        return path
+
     def load(self, metadata_path: str, min_size_bytes: int = 12000) -> 'DiagramIndex':
         """
         Load diagram metadata from JSON file.
@@ -216,6 +236,12 @@ class DiagramIndex:
         for diagram in data['diagrams']:
             # Quality filter: Skip small images (likely icons/ribbons)
             if diagram.get('size_bytes', 0) < min_size_bytes:
+                self.filtered_count += 1
+                continue
+
+            file_path = self._normalize_file_path(diagram.get('file_path'))
+            diagram['file_path'] = file_path
+            if not file_path or not os.path.exists(file_path):
                 self.filtered_count += 1
                 continue
 

@@ -7,6 +7,7 @@ Writes per-file summaries into SQLite (pgn_analysis.db) and optional JSON.
 """
 
 import argparse
+import csv
 import io
 import json
 import re
@@ -199,8 +200,14 @@ class PGNQualityAnalyzer:
         into memory. ChessBase/HIARCS style dumps always start each game with an
         [Event ...] header, so we split on that sentinel.
         """
-        with open(filepath, "r", encoding="utf-8", errors="ignore") as handle:
-            buffer: List[str] = []
+        buffer: List[str] = []
+        try:
+            handle = open(filepath, "r", encoding="utf-8", errors="ignore")
+        except FileNotFoundError as exc:
+            print(f"   ⚠️  Missing file while streaming games: {filepath} ({exc})")
+            return
+
+        with handle:
             for line in handle:
                 stripped = line.lstrip()
                 if stripped.startswith("[Event "):
@@ -234,6 +241,9 @@ class PGNQualityAnalyzer:
 
     def analyze_file(self, filepath: Path) -> Optional[FileSummary]:
         scores: List[GameScore] = []
+        if not filepath.exists():
+            print(f"   ⚠️  Missing file on disk, skipping: {filepath}")
+            return None
         skipped_games = 0
 
         for idx, raw_game in enumerate(self._iter_streaming_games(filepath), start=1):
@@ -349,7 +359,7 @@ def iter_pgn_files(path: Path) -> List[Path]:
     if path.is_file() and path.suffix.lower() == ".pgn" and not path.name.startswith("._"):
         return [path]
     if path.is_dir():
-        return sorted(p for p in path.glob("*.pgn") if not p.name.startswith("._"))
+        return sorted(p for p in path.rglob("*.pgn") if p.is_file() and not p.name.startswith("._"))
     return []
 
 
@@ -359,6 +369,9 @@ def main():
     parser.add_argument("--db", default="pgn_analysis.db", help="SQLite database path")
     parser.add_argument("--json", help="Optional JSON output file")
     parser.add_argument("--limit", type=int, help="Only analyze first N files")
+    parser.add_argument("--print-summary", action="store_true", help="Print per-file summary table (sorted by avg EVS)")
+    parser.add_argument("--summary-csv", help="Optional CSV path for per-file summaries")
+    parser.add_argument("--worst", type=int, help="Limit summary output to the lowest N avg EVS files")
     args = parser.parse_args()
 
     files = iter_pgn_files(Path(args.pgn_path))
@@ -398,6 +411,58 @@ def main():
             json.dump({"summaries": summaries}, f, indent=2)
         print(f"JSON summary written to {out_path}")
 
+    if (args.print_summary or args.summary_csv) and summaries:
+        ordered = sorted(summaries, key=lambda s: s["avg_evs"])
+        if args.worst:
+            ordered = ordered[: args.worst]
+        if args.print_summary:
+            header = f"{'AVG':>6} {'MED':>6} {'HQ':>5} {'MQ':>5} {'LQ':>5} {'MOVES':>7}  Filename"
+            print("\nPer-file summary (lowest avg EVS first):")
+            print(header)
+            print("-" * len(header))
+            for summary in ordered:
+                print(
+                    f"{summary['avg_evs']:6.2f} "
+                    f"{summary['median_evs']:6.2f} "
+                    f"{summary['high_quality']:5d} "
+                    f"{summary['medium_quality']:5d} "
+                    f"{summary['low_quality']:5d} "
+                    f"{summary['avg_moves']:7.1f}  "
+                    f"{summary['filename']}"
+                )
+        if args.summary_csv:
+            out_csv = Path(args.summary_csv)
+            out_csv.parent.mkdir(parents=True, exist_ok=True)
+            with open(out_csv, "w", encoding="utf-8", newline="") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(
+                    [
+                        "filename",
+                        "total_games",
+                        "high_quality",
+                        "medium_quality",
+                        "low_quality",
+                        "avg_evs",
+                        "median_evs",
+                        "avg_annotation_density",
+                        "avg_moves",
+                    ]
+                )
+                for summary in ordered:
+                    writer.writerow(
+                        [
+                            summary["filename"],
+                            summary["total_games"],
+                            summary["high_quality"],
+                            summary["medium_quality"],
+                            summary["low_quality"],
+                            summary["avg_evs"],
+                            summary["median_evs"],
+                            summary["avg_annotation_density"],
+                            summary["avg_moves"],
+                        ]
+                    )
+            print(f"Summary CSV written to {out_csv}")
 
 if __name__ == "__main__":
     main()

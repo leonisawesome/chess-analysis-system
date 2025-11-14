@@ -1,6 +1,4 @@
 # Chess Analysis System - Session Notes
-**Date:** 2025-11-10
-**Last Updated:** 2:15 PM
 
 ## Session 2025-11-12 (Addendum)
 - **Corpus locations:** Final EPUBs now live under `/Volumes/T7 Shield/rag/books/epub` with diagrams in `/Volumes/T7 Shield/rag/books/images`. Any ingestion/removal script should point there (updated repo-wide).

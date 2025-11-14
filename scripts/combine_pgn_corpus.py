@@ -1,239 +1,239 @@
 #!/usr/bin/env python3
 """
-Combine multiple PGN files into a single deduplicated master file.
+Combine multiple PGN files into a deduplicated master PGN.
 
 Features:
-- Recursively walks directory tree to find all .pgn files
-- Detects duplicates using MD5 hash of file contents
-- Streams unique files into output master PGN
-- Generates CSV reports for duplicates and skipped files
-- Progress heartbeat logging for long-running operations
+- Recursively scans a root directory for .pgn files
+- Detects duplicates via MD5 hash
+- Skips non-English/Spanish PGNs by default (logged + copied to foreign dir)
+- Copies skipped files (encoding/permission errors) for manual triage
+- Emits CSV reports for duplicates, skipped files, and foreign-language files
+- Heartbeat logging for long-running jobs
+
+Example:
+python scripts/combine_pgn_corpus.py \\
+    --root "/Volumes/chess/1Modern Chess" \\
+    --output "/Volumes/T7 Shield/rag/pgn/1new/modern.pgn" \\
+    --duplicates "/Volumes/T7 Shield/rag/pgn/1new/modern_duplicates.csv" \\
+    --skipped "/Volumes/T7 Shield/rag/pgn/1new/modern_skipped.csv" \\
+    --foreign "/Volumes/T7 Shield/rag/pgn/1new/modern_foreign.csv" \\
+    --skipped-dir "/Volumes/T7 Shield/rag/pgn/1new/skipped_pgns" \\
+    --foreign-dir "/Volumes/T7 Shield/rag/pgn/1new/foreign_pgns"
 """
 
-import os
-import sys
+from __future__ import annotations
+
 import argparse
-import hashlib
 import csv
+import hashlib
+import os
+import shutil
+import sys
 from pathlib import Path
-from typing import Set, Dict, Tuple, List
+from typing import Dict, Iterable, List, Optional, Tuple
+
+try:
+    from langdetect import detect as detect_language  # type: ignore
+except ImportError:  # pragma: no cover
+    detect_language = None
+
+ALLOWED_LANGS = {"en", "es"}
 
 
-def compute_file_hash(file_path: str) -> str:
-    """Compute MD5 hash of file contents for duplicate detection."""
-    md5_hash = hashlib.md5()
+def normalize_path(path: str) -> Path:
+    return Path(path).expanduser()
+
+
+def iter_pgn_files(root: Path) -> Iterable[Path]:
+    if not root.exists():
+        raise FileNotFoundError(f"Root directory not found: {root}")
+    for path in root.rglob("*.pgn"):
+        if path.is_file():
+            yield path
+
+
+def md5_file(path: Path, chunk_size: int = 8192) -> str:
+    hasher = hashlib.md5()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(chunk_size), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def write_csv(path: Path, rows: Iterable[Tuple[str, str]], headers: Tuple[str, str]):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(headers)
+        for row in rows:
+            writer.writerow(row)
+
+
+def guess_language(text: str) -> Optional[str]:
+    if not detect_language:
+        return None
+    snippet = text[:10_000]
     try:
-        with open(file_path, 'rb') as f:
-            # Read in chunks to handle large files
-            for chunk in iter(lambda: f.read(8192), b''):
-                md5_hash.update(chunk)
-        return md5_hash.hexdigest()
-    except Exception as e:
-        raise IOError(f"Failed to hash file: {e}")
+        return detect_language(snippet)
+    except Exception:
+        return None
 
 
-def find_pgn_files(root_dir: str) -> List[str]:
-    """Recursively find all .pgn files in directory tree."""
-    pgn_files = []
-    root_path = Path(root_dir)
+def safe_copy(src: Path, dst_dir: Optional[str]):
+    if not dst_dir:
+        return
+    try:
+        target_dir = Path(dst_dir)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        dst = target_dir / src.name
+        try:
+            shutil.copy2(src, dst)
+        except PermissionError:
+            shutil.copy(src, dst)
+    except Exception as exc:  # noqa: BLE001
+        print(f"⚠️  Failed to copy {src} -> {dst_dir}: {exc}")
 
-    if not root_path.exists():
-        raise FileNotFoundError(f"Root directory does not exist: {root_dir}")
 
-    for file_path in root_path.rglob("*.pgn"):
-        if file_path.is_file():
-            pgn_files.append(str(file_path))
-
-    return sorted(pgn_files)
-
-
-def combine_pgn_files(
-    root_dir: str,
-    output_file: str,
-    duplicates_csv: str,
-    skipped_csv: str,
-    log_every: int = 200
-) -> Tuple[int, int, int]:
-    """
-    Combine PGN files with deduplication.
-
-    Returns:
-        (unique_count, duplicate_count, skipped_count)
-    """
-    print(f"🔍 Scanning for PGN files in: {root_dir}")
-    pgn_files = find_pgn_files(root_dir)
-    total_files = len(pgn_files)
-    print(f"📊 Found {total_files} PGN files")
-
-    if total_files == 0:
-        print("⚠️  No PGN files found")
-        return 0, 0, 0
-
-    # Track seen hashes and their original file paths
+def combine_pgns(
+    root: Path,
+    output: Path,
+    duplicates_report: Path,
+    skipped_report: Path,
+    foreign_report: Path,
+    *,
+    log_every: int = 200,
+    keep_foreign: bool = False,
+    skipped_dir: Optional[str] = None,
+    foreign_dir: Optional[str] = None,
+) -> Dict[str, int]:
+    output.parent.mkdir(parents=True, exist_ok=True)
     seen_hashes: Dict[str, str] = {}
     duplicates: List[Tuple[str, str]] = []
     skipped: List[Tuple[str, str]] = []
-    unique_count = 0
+    foreign: List[Tuple[str, str]] = []
+    total = 0
+    unique = 0
 
-    # Ensure output directory exists
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    if output.exists():
+        output.unlink()
 
-    print(f"📝 Writing unique PGN files to: {output_file}")
-    print(f"⏱  Progress updates every {log_every} files...")
-    print()
-
-    with open(output_file, 'w', encoding='utf-8') as out_f:
-        for idx, pgn_path in enumerate(pgn_files, 1):
-            # Heartbeat logging
-            if idx % log_every == 0:
-                print(f"[heartbeat] Processed {idx}/{total_files} files "
-                      f"({unique_count} unique, {len(duplicates)} duplicates, "
-                      f"{len(skipped)} skipped)")
+    with output.open("w", encoding="utf-8") as master:
+        for file_path in iter_pgn_files(root):
+            total += 1
+            if log_every and total % log_every == 0:
+                print(
+                    f"[heartbeat] Processed {total:,} files | "
+                    f"unique={unique:,} | duplicates={len(duplicates):,} | "
+                    f"skipped={len(skipped):,} | foreign={len(foreign):,}"
+                )
 
             try:
-                # Compute hash for duplicate detection
-                file_hash = compute_file_hash(pgn_path)
+                digest = md5_file(file_path)
+            except Exception as exc:  # noqa: BLE001
+                skipped.append((str(file_path), f"hash_error: {exc}"))
+                safe_copy(file_path, skipped_dir)
+                continue
 
-                if file_hash in seen_hashes:
-                    # Duplicate detected
-                    original_path = seen_hashes[file_hash]
-                    duplicates.append((pgn_path, original_path))
+            if digest in seen_hashes:
+                duplicates.append((str(file_path), seen_hashes[digest]))
+                continue
+
+            try:
+                text = file_path.read_text(encoding="utf-8", errors="ignore").strip()
+            except Exception as exc:  # noqa: BLE001
+                skipped.append((str(file_path), f"read_error: {exc}"))
+                safe_copy(file_path, skipped_dir)
+                continue
+
+            lang = guess_language(text)
+            if lang and lang not in ALLOWED_LANGS:
+                foreign.append((str(file_path), lang))
+                safe_copy(file_path, foreign_dir)
+                if not keep_foreign:
                     continue
 
-                # New unique file - add to output
-                seen_hashes[file_hash] = pgn_path
+            seen_hashes[digest] = str(file_path)
+            unique += 1
+            if unique > 1:
+                master.write("\n\n")
+            master.write(text)
 
-                # Read and append content
-                with open(pgn_path, 'r', encoding='utf-8') as in_f:
-                    content = in_f.read()
+    write_csv(duplicates_report, duplicates, headers=("duplicate_path", "original_path"))
+    write_csv(skipped_report, skipped, headers=("path", "error"))
+    write_csv(foreign_report, foreign, headers=("path", "language"))
 
-                    # Ensure proper spacing between games
-                    if unique_count > 0:
-                        out_f.write('\n\n')
-
-                    out_f.write(content)
-                    unique_count += 1
-
-            except UnicodeDecodeError as e:
-                skipped.append((pgn_path, f"Encoding error: {e}"))
-                print(f"⚠️  Skipped (encoding): {pgn_path}")
-            except PermissionError as e:
-                skipped.append((pgn_path, f"Permission denied: {e}"))
-                print(f"⚠️  Skipped (permission): {pgn_path}")
-            except Exception as e:
-                skipped.append((pgn_path, f"Error: {e}"))
-                print(f"⚠️  Skipped (error): {pgn_path} - {e}")
-
-    # Final progress
-    print()
-    print(f"[heartbeat] Processed {total_files}/{total_files} files "
-          f"({unique_count} unique, {len(duplicates)} duplicates, "
-          f"{len(skipped)} skipped)")
-    print()
-
-    # Write duplicates report
-    if duplicates:
-        print(f"📋 Writing duplicates report: {duplicates_csv}")
-        with open(duplicates_csv, 'w', newline='', encoding='utf-8') as csv_f:
-            writer = csv.writer(csv_f)
-            writer.writerow(['duplicate_path', 'original_path'])
-            writer.writerows(duplicates)
-
-    # Write skipped files report
-    if skipped:
-        print(f"📋 Writing skipped files report: {skipped_csv}")
-        with open(skipped_csv, 'w', newline='', encoding='utf-8') as csv_f:
-            writer = csv.writer(csv_f)
-            writer.writerow(['skipped_path', 'reason'])
-            writer.writerows(skipped)
-
-    return unique_count, len(duplicates), len(skipped)
+    return {
+        "total": total,
+        "unique": unique,
+        "duplicates": len(duplicates),
+        "skipped": len(skipped),
+        "foreign": len(foreign),
+    }
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description='Combine PGN files with deduplication',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Example:
-  python combine_pgn_corpus.py \\
-      --root "/Volumes/chess/1Chessable" \\
-      --output "/Volumes/T7 Shield/rag/pgn/1new/chessable_master.pgn" \\
-      --duplicates "chessable_duplicates.csv" \\
-      --skipped "chessable_skipped.csv" \\
-      --log-every 200
-        """
-    )
+def parse_args(argv: List[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Combine PGNs with deduplication and language filtering.")
+    parser.add_argument("--root", required=True, help="Root directory containing PGN files.")
+    parser.add_argument("--output", required=True, help="Destination master PGN file.")
+    parser.add_argument("--duplicates", required=True, help="CSV path for duplicate report.")
+    parser.add_argument("--skipped", required=True, help="CSV path for skipped files.")
+    parser.add_argument("--foreign", required=True, help="CSV path for foreign-language files.")
+    parser.add_argument("--skipped-dir", help="Directory to copy skipped files into.")
+    parser.add_argument("--foreign-dir", help="Directory to copy foreign-language files into.")
+    parser.add_argument("--keep-foreign", action="store_true", help="Include foreign-language files in master PGN.")
+    parser.add_argument("--log-every", type=int, default=200, help="Heartbeat interval (default: 200 files).")
+    return parser.parse_args(argv)
 
-    parser.add_argument(
-        '--root',
-        required=True,
-        help='Root directory to scan for PGN files'
-    )
-    parser.add_argument(
-        '--output',
-        required=True,
-        help='Output master PGN file path'
-    )
-    parser.add_argument(
-        '--duplicates',
-        required=True,
-        help='CSV file for duplicate files report'
-    )
-    parser.add_argument(
-        '--skipped',
-        required=True,
-        help='CSV file for skipped files report'
-    )
-    parser.add_argument(
-        '--log-every',
-        type=int,
-        default=200,
-        help='Heartbeat logging interval (default: 200)'
-    )
 
-    args = parser.parse_args()
+def main(argv: List[str]) -> int:
+    args = parse_args(argv)
+    root = normalize_path(Path(args.root))
+    output = normalize_path(Path(args.output))
+    duplicates = normalize_path(Path(args.duplicates))
+    skipped = normalize_path(Path(args.skipped))
+    foreign = normalize_path(Path(args.foreign))
 
     print("=" * 80)
     print("PGN CORPUS COMBINER")
     print("=" * 80)
-    print(f"Root directory: {args.root}")
-    print(f"Output file: {args.output}")
-    print(f"Duplicates CSV: {args.duplicates}")
-    print(f"Skipped CSV: {args.skipped}")
+    print(f"Root directory : {root}")
+    print(f"Output PGN     : {output}")
+    print(f"Duplicates CSV : {duplicates}")
+    print(f"Skipped CSV    : {skipped}")
+    print(f"Foreign CSV    : {foreign}")
     print("=" * 80)
+
+    stats = combine_pgns(
+        root,
+        output,
+        duplicates,
+        skipped,
+        foreign,
+        log_every=args.log_every,
+        keep_foreign=args.keep_foreign,
+        skipped_dir=args.skipped_dir,
+        foreign_dir=args.foreign_dir,
+    )
+
     print()
+    print("=" * 80)
+    print("FINAL STATISTICS")
+    print("=" * 80)
+    print(f"✅ Unique files written : {stats['unique']:,}")
+    print(f"🔄 Duplicates detected  : {stats['duplicates']:,}")
+    print(f"⚠️  Files skipped        : {stats['skipped']:,}")
+    print(f"🌐 Foreign-language skip : {stats['foreign']:,}")
+    print(f"📁 Total files processed : {stats['total']:,}")
+    print("=" * 80)
 
-    try:
-        unique, duplicates, skipped = combine_pgn_files(
-            args.root,
-            args.output,
-            args.duplicates,
-            args.skipped,
-            args.log_every
-        )
-
-        print()
-        print("=" * 80)
-        print("FINAL STATISTICS")
-        print("=" * 80)
-        print(f"✅ Unique files written: {unique}")
-        print(f"🔄 Duplicates detected: {duplicates}")
-        print(f"⚠️  Files skipped: {skipped}")
-        print(f"📁 Total files processed: {unique + duplicates + skipped}")
-        print("=" * 80)
-
-        if duplicates > 0:
-            print(f"📋 Duplicate details: {args.duplicates}")
-        if skipped > 0:
-            print(f"📋 Skipped file details: {args.skipped}")
-
-        return 0
-
-    except Exception as e:
-        print(f"❌ Error: {e}", file=sys.stderr)
-        return 1
+    if stats["duplicates"]:
+        print(f"📋 Duplicate details: {duplicates}")
+    if stats["skipped"]:
+        print(f"📋 Skipped file details: {skipped}")
+    if stats["foreign"]:
+        print(f"📋 Foreign-language details: {foreign}")
+    return 0
 
 
-if __name__ == '__main__':
-    sys.exit(main())
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

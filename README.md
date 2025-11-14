@@ -136,6 +136,67 @@ python verify_system_stats.py
    ```
    Keep the EVS score in each chunk’s metadata so we can query/delete low-quality games later.
 
+### Combine Raw PGN Drops
+- Use `scripts/combine_pgn_corpus.py` to deduplicate massive PGN folders before analysis/ingest. This tool:
+  - Walks the tree recursively and filters macOS ghost files (`._*`)
+  - Eliminates duplicates via MD5 hash
+  - Skips non-English/Spanish annotations **by default** (logged + copied to a `--foreign-dir`)
+  - Copies skipped files (encoding/permission issues) into `--skipped-dir` for manual fixes
+  - Emits CSV reports for duplicates, skipped files, and foreign-language files
+- Example (Modern Chess corpus):
+  ```bash
+  pip install langdetect  # one-time dependency
+  python scripts/combine_pgn_corpus.py \
+      --root "/Volumes/chess/1Modern Chess" \
+      --output "/Volumes/T7 Shield/rag/pgn/1new/modern.pgn" \
+      --duplicates "/Volumes/T7 Shield/rag/pgn/1new/modern_duplicates.csv" \
+      --skipped "/Volumes/T7 Shield/rag/pgn/1new/modern_skipped.csv" \
+      --foreign "/Volumes/T7 Shield/rag/pgn/1new/modern_foreign.csv" \
+      --skipped-dir "/Volumes/T7 Shield/rag/pgn/1new/skipped_pgns" \
+      --foreign-dir "/Volumes/T7 Shield/rag/pgn/1new/foreign_pgns" \
+      --log-every 200
+  ```
+  Add `--keep-foreign` if you intentionally want to keep non-English PGNs in the combined output.
+
+### Filter PGNs by EVS (High/Medium Buckets)
+- Use `scripts/filter_pgn_by_evs.py` to keep only medium/high-quality games (EVS ≥ 45 by default).
+- Two modes:
+  1. `--mode single` (default): write all EVS ≥ medium threshold to a single file.
+  2. `--mode split`: send EVS ≥ high threshold to one file and medium-range EVS to another.
+- Example (split mode on a 10 GB PGN dump):
+  ```bash
+python scripts/filter_pgn_by_evs.py \
+    --input "/Volumes/T7 Shield/Deets/3unknown/master_unknown.pgn" \
+    --mode split \
+    --medium-output "/Volumes/T7 Shield/rag/pgn/1new/purged_mediums.pgn" \
+    --high-output "/Volumes/T7 Shield/rag/pgn/1new/purged_highs.pgn" \
+      --medium-threshold 45 --high-threshold 70 \
+      --log-every 5000
+  ```
+  This streams the PGN game-by-game, reuses the analyzer’s EVS scoring, and discards low-value games.
+
+### Pick the Top X% of a PGN
+- Use `scripts/sample_top_evs.py` to extract, for example, the strongest 10% of `purged_mediums.pgn`:
+  ```bash
+  python scripts/sample_top_evs.py \
+      --input "/Volumes/T7 Shield/rag/pgn/1new/purged_mediums.pgn" \
+      --output "/Volumes/T7 Shield/rag/pgn/1new/purged_mediums_top_10.pgn" \
+      --percent 10
+  ```
+- This pass reuses the EVS scorer, ranks every game by EVS, and writes only the top N-percent subset.
+
+### Split an Entire Directory into Medium/High Buckets
+- Use `scripts/filter_directory_by_evs.py` to walk a folder (recursively) and stream all medium/high EVS games into two master PGNs:
+  ```bash
+  python scripts/filter_directory_by_evs.py \
+      --root "/Users/leon/Downloads/3unknown" \
+      --medium-output "/Volumes/T7 Shield/rag/pgn/1new/medium_value.pgn" \
+      --high-output "/Volumes/T7 Shield/rag/pgn/1new/high_value.pgn" \
+      --medium-threshold 45 --high-threshold 70 \
+      --log-every 2000
+  ```
+- This is ideal for “unknown” dumps when you want to keep everything that scores medium/high without merging files manually.
+
 ### PGN Diagram Roadmap
 1. **Metadata-first ingestion:** `analyze_pgn_games.py` preserves every PGN header (Event/Site/Date/Openings/ECO) plus course hierarchy (`course_name`, `chapter`, `section`) and annotation density. These fields act as the lookup keys for openings (e.g., Italian Game) and structural themes (IQP, prophylaxis).
 2. **Candidate selection:** During chunking we also persist per-game stats (EVS, comment density, has_variations). A follow-up job will parse each chunk, flag moves with high annotation density, comment keywords (e.g., “prophylaxis”, “IQP”), or large eval swings to identify diagram-worthy plies.
