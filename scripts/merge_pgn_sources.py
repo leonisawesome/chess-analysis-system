@@ -11,6 +11,7 @@ The script always:
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 from datetime import datetime
 from pathlib import Path
@@ -90,10 +91,25 @@ def prompt_source_root() -> Path:
         print("Invalid choice. Please enter 1, 2, or 3.")
 
 
-def main() -> int:
-    source_root = prompt_source_root()
+def resolve_output_name(custom_name: str | None) -> Path:
+    if custom_name:
+        return DEST_DIR / custom_name
     today = datetime.now().strftime(DATE_FORMAT)
-    destination = DEST_DIR / f"{today}_new.pgn"
+    return DEST_DIR / f"{today}_new.pgn"
+
+
+def main() -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Merge unique PGNs into a single file.")
+    parser.add_argument(
+        "--output-name",
+        help="Override default output filename (e.g., chessable_merge.pgn).",
+    )
+    args = parser.parse_args()
+
+    source_root = prompt_source_root()
+    destination = resolve_output_name(args.output_name)
 
     print("=" * 72)
     print("ZLISTO PGN MERGER")
