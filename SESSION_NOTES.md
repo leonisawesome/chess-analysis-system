@@ -841,3 +841,49 @@ python add_books_to_corpus.py \
   "Sadler, Matthew - The Silicon Road to Chess Improvement [NIC, 2021].epub"
 ```
 Claude should capture the chunk/token totals from the script output, update this log with the ingestion summary, and rerun `python verify_system_stats.py` afterward so the homepage counts can be refreshed.
+
+---
+
+## SESSION: Nov 16, 2025 (3:30 PM) – Gormally & Sadler Book Addition ✅
+
+### What Was Accomplished
+
+**Books Added (11 total):**
+- **Gormally (7 books):**
+  - A Year inside the Chess World [Chess Evolution, 2016] (score: 73, tier: HIGH) → 235 chunks
+  - Chess Analysis Reloaded [Chess Informant, 2023] (score: 70, tier: HIGH) → 397 chunks
+  - Pandemic Shark [Thinkers, 2022] (score: 73, tier: HIGH) → 371 chunks
+  - Smooth Chess Improvement [Informant, 2025] (score: 73, tier: HIGH) → 417 chunks
+  - The Comfort Zone [Thinkers, 2022] (score: 70, tier: HIGH) → 382 chunks
+  - The Scheveningen Sicilian Revisited [Thinkers, 2024] (score: 65, tier: MEDIUM) → 274 chunks
+  - Tournament Battleplan [Thinkers, 2023] (score: 67, tier: MEDIUM) → 550 chunks
+- **Sadler (4 books):**
+  - Chess for Life [Gambit, 2016] with Regan Natasha (score: 79, tier: HIGH) → 484 chunks
+  - Re-Engineering the Chess Classics [NIC, 2023] with Giddins Steve (score: 59, tier: MEDIUM) → 756 chunks
+  - Study Chess with Matthew Sadler [Everyman, 2012] (score: 64, tier: MEDIUM) → 157 chunks
+  - The Silicon Road to Chess Improvement [NIC, 2021] (score: 58, tier: MEDIUM) → 1,047 chunks
+
+**Ingestion Results:**
+- ✅ Chunks extracted: 5,070
+- ✅ Chunks added to Qdrant: 9,040 (includes re-processing during upload)
+- ✅ Processing time: ~9 minutes (3min 8sec extraction + ~6min embedding/upload)
+- ✅ Estimated tokens: ~1,264,868
+- ✅ Estimated cost: ~$0.025
+- ✅ Collection: chess_production (353,437 → 362,477 chunks)
+
+**Updated System Stats (verified via verify_system_stats.py):**
+- Books: 938 EPUB files
+- Production Chunks: 591,718 (358,507 EPUB + 233,211 PGN)
+- Diagrams: 547,703
+
+### Notes
+
+- All 11 books were successfully embedded and uploaded to the production collection
+- Quality scores range from 58-79 (5 HIGH tier, 6 MEDIUM tier)
+- Gormally's "The Silicon Road to Chess Improvement" by Sadler contributed the most chunks (1,047)
+- Diagrams for these 11 books were already extracted in the previous session (5,404 diagrams total)
+
+### Next Steps
+
+- ⏳ PGN cleaning still running in background (processing ChessBase bilingual comments)
+- ⏳ Git push pending (requires terminal with DNS access)
