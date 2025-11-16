@@ -213,11 +213,27 @@ except OSError:
 print("Loading EPUB diagram metadata...")
 try:
     diagram_index.load('diagram_metadata_full.json', min_size_bytes=2000)
-    print(f"✓ Diagram service ready")
+    print("✓ Diagram service ready (EPUB)")
 except FileNotFoundError:
     print("⚠️  diagram_metadata_full.json not found - static diagrams disabled")
 except Exception as e:
     print(f"⚠️  Error loading diagram metadata: {e}")
+
+PGN_DIAGRAM_METADATA = os.getenv("PGN_DIAGRAM_METADATA", "diagram_metadata_pgn.json")
+PGN_DIAGRAM_METADATA = os.path.abspath(PGN_DIAGRAM_METADATA)
+if os.path.exists(PGN_DIAGRAM_METADATA):
+    try:
+        print(f"Loading PGN diagram metadata from {PGN_DIAGRAM_METADATA}...")
+        diagram_index.load(
+            PGN_DIAGRAM_METADATA,
+            min_size_bytes=512,
+            allow_small_source_types={"pgn"},
+        )
+        print("✓ PGN diagram metadata merged")
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        print(f"⚠️  Failed to load PGN diagram metadata: {exc}")
+else:
+    print(f"ℹ️  PGN diagram metadata not found ({PGN_DIAGRAM_METADATA}) - skipping appendix load")
 
 # ============================================================================
 # MULTI-STAGE SYNTHESIS PIPELINE

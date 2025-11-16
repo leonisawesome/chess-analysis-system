@@ -11,14 +11,14 @@ Previous assistant sessions (3-4 times now) made the same critical mistakes:
 
 ## Your First Action
 
-**RUN THIS COMMAND FIRST:**
+**When you need fresh counts (e.g., before editing stats in docs or after touching data), run:**
 ```bash
 cd /Users/leon/Downloads/python/chess-analysis-system
 source .venv/bin/activate
 python verify_system_stats.py
 ```
 
-**USE THOSE NUMBERS.** Not the README. Not old docs. Those numbers.
+Use those numbers for documentation and ingestion validation. For code-only work you can skip the command, but do not update stats in README/SESSION_NOTES without rerunning it.
 
 ## Critical Rules
 
@@ -36,7 +36,7 @@ os.remove(file)  # DON'T DO THIS TO ._* FILES!
 
 ### 2. Before Any Commit
 
-**Run these checks:**
+**Run these checks (skip the stats script only if nothing touched data/stats):**
 ```bash
 # 1. Verify actual state
 python verify_system_stats.py
@@ -58,19 +58,23 @@ Update in this order (always):
 2. **SESSION_NOTES.md** - What you did today
 3. **BACKLOG.md** - Item status if relevant
 
+### 4. Documentation Location
+
+All working docs, scratch notes, and deliverables belong inside `/Users/leon/Downloads/python/chess-analysis-system`. If you need a new note, create it inside the repo (for example under `docs/` or the project root). Do **not** leave Markdown/text files directly under `/Users/leon/`.
+
 ## Current System State (Verified Nov 10, 2025 - 3:30 PM)
 
-Run `verify_system_stats.py` to get latest. Last verified (Nov 12, 2025):
+Run `verify_system_stats.py` to get latest. Last verified (Nov 13, 2025):
 - **Books:** 937 EPUB
-- **Production Chunks:** ~359k (run script for exact value)
-- **Diagrams:** 536,243
-- **PGN Status:** Collection temporarily offline while we rebuild
+- **Production Chunks:** 592,306 (359,095 EPUB + 233,211 PGN)
+- **Diagrams:** 550,068
+- **PGN Status:** `chess_pgn_repertoire` is live; current focus is validating diagram tooling against a cleaned PGN export
 
 ## Common Tasks
 
 **Adding new books:** Run `scripts/analyze_staged_books.sh` against whatever the user staged (processes `/Volumes/T7 Shield/rag/books/epub/1new/` and updates `epub_analysis.db`), share the SQLite score report for approval, then follow the [full ingestion process in README](README.md#book-ingestion-process) (assistant handles renaming/moving approved titles)
 
-**Adding new PGNs:** Run `python pgn_quality_analyzer.py "/Volumes/T7 Shield/rag/pgn/1new" --db pgn_analysis.db` to score every staged PGN, share the EVS summary for approval, then chunk + ingest only the approved files (`analyze_pgn_games.py` → `add_pgn_to_corpus.py`).
+**Adding new PGNs:** Run `python pgn_quality_analyzer.py "/Volumes/T7 Shield/rag/databases/pgn/1new" --db pgn_analysis.db` to score every staged PGN, share the EVS summary for approval, then chunk + ingest only the approved files (`analyze_pgn_games.py` → `add_pgn_to_corpus.py`).
 
 **Fixing bugs:**
 1. Read the issue
@@ -80,11 +84,16 @@ Run `verify_system_stats.py` to get latest. Last verified (Nov 12, 2025):
 5. Update docs
 6. Commit
 
-**Updating stats:**
+**Updating stats (only when numbers change):**
 1. Run `python verify_system_stats.py`
 2. Copy the output
 3. Update README/SESSION_NOTES
 4. Commit
+
+## Current Focus
+
+- EPUB inline diagrams are fixed (markers now sync with available assets).
+- Build/testing tooling for PGN-derived diagrams is in progress. The existing prototype struggles with extremely large PGN files, so wait for the cleaned/split corpus and rerun the tool once it lands. Capture findings in SESSION_NOTES along with any adjustments needed for the pipeline.
 
 ## Files You'll Edit Most
 

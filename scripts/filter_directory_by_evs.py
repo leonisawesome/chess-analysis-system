@@ -6,8 +6,8 @@ and stream medium/high-quality games into two master PGNs.
 Example:
     python scripts/filter_directory_by_evs.py \
         --root "/Users/leon/Downloads/3unknown" \
-        --medium-output "/Volumes/T7 Shield/rag/pgn/1new/medium_value.pgn" \
-        --high-output "/Volumes/T7 Shield/rag/pgn/1new/high_value.pgn" \
+        --medium-output "/Volumes/T7 Shield/rag/databases/pgn/1new/medium_value.pgn" \
+        --high-output "/Volumes/T7 Shield/rag/databases/pgn/1new/high_value.pgn" \
         --medium-threshold 45 --high-threshold 70 \
         --log-every 2000
 """

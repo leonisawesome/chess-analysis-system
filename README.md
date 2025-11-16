@@ -9,7 +9,7 @@
 **This repo has 3-4 recurring issues across sessions. Start with the guide above.**
 
 **Quick version:**
-1. Run `python verify_system_stats.py` → Use those numbers, not docs
+1. Run `python verify_system_stats.py` whenever you need fresh counts for docs or after touching data (not required for every coding session)
 2. NEVER delete macOS `._*` files → Filter them out: `if not f.name.startswith('._')`
 3. Test before claiming "fixed" → Previous assistants didn't actually fix things
 
@@ -30,6 +30,7 @@
 ## 🎯 Current Status (November 10, 2025)
 
 ### Recently Completed
+- ✅ **ITEM-033:** Inline diagram rendering fix (marker/diagram sync + frontend cleanup)
 - ✅ **ITEM-032:** Phase 6.1a debugging - Fixed 4 diagram issues (GPT placeholders, featured diagrams, 0/10 filter, code caching)
 - ✅ **ITEM-031:** Added 2 books (Dvoretsky, Markos) + fixed 2 critical bugs
 - ✅ **ITEM-030:** Duplicate book cleanup
@@ -37,11 +38,7 @@
 - ✅ **ITEM-028:** RRF multi-collection merge (EPUB + PGN)
 
 ### Active Priority
-🎯 **ITEM-033:** Fixing inline diagram rendering (HTML displaying as plain text, markers not replaced)
-- Branch: fix/inline-diagram-rendering
-- Partner AI consultation complete (Gemini, ChatGPT, Grok consensus on root cause)
-- Backend now enforces a 1:1 match between `featured_diagrams` and `[FEATURED_DIAGRAM_X]` markers; frontend strips any leftovers to prevent literal markers.
-- Next focus: browser verification + styling polish once inline replacement is fully validated.
+🎯 **PGN Diagram QA Tooling:** Build/validate tooling that scores diagrams extracted from PGN chunks. The initial prototype highlighted issues when pointed at a single massive PGN (tens of thousands of games), so we’re temporarily blocked on a cleaned/split corpus. Once that file is ready, rerun the tool, confirm diagram quality, and wire the verified output into the synthesis pipeline.
 
 ### PGN Refresh (November 13, 2025) ✅ COMPLETE
 - ✅ `chess_publishing_2021_master.pgn` analyzed: **64,251 games → 234,251 chunks** written to `data/chess_publishing_2021_chunks.json` (598 MB).
@@ -148,12 +145,12 @@ python verify_system_stats.py
   pip install langdetect  # one-time dependency
   python scripts/combine_pgn_corpus.py \
       --root "/Volumes/chess/1Modern Chess" \
-      --output "/Volumes/T7 Shield/rag/pgn/1new/modern.pgn" \
-      --duplicates "/Volumes/T7 Shield/rag/pgn/1new/modern_duplicates.csv" \
-      --skipped "/Volumes/T7 Shield/rag/pgn/1new/modern_skipped.csv" \
-      --foreign "/Volumes/T7 Shield/rag/pgn/1new/modern_foreign.csv" \
-      --skipped-dir "/Volumes/T7 Shield/rag/pgn/1new/skipped_pgns" \
-      --foreign-dir "/Volumes/T7 Shield/rag/pgn/1new/foreign_pgns" \
+      --output "/Volumes/T7 Shield/rag/databases/pgn/1new/modern.pgn" \
+      --duplicates "/Volumes/T7 Shield/rag/databases/pgn/1new/modern_duplicates.csv" \
+      --skipped "/Volumes/T7 Shield/rag/databases/pgn/1new/modern_skipped.csv" \
+      --foreign "/Volumes/T7 Shield/rag/databases/pgn/1new/modern_foreign.csv" \
+      --skipped-dir "/Volumes/T7 Shield/rag/databases/pgn/1new/skipped_pgns" \
+      --foreign-dir "/Volumes/T7 Shield/rag/databases/pgn/1new/foreign_pgns" \
       --log-every 200
   ```
   Add `--keep-foreign` if you intentionally want to keep non-English PGNs in the combined output.
@@ -168,8 +165,8 @@ python verify_system_stats.py
 python scripts/filter_pgn_by_evs.py \
     --input "/Volumes/T7 Shield/Deets/3unknown/master_unknown.pgn" \
     --mode split \
-    --medium-output "/Volumes/T7 Shield/rag/pgn/1new/purged_mediums.pgn" \
-    --high-output "/Volumes/T7 Shield/rag/pgn/1new/purged_highs.pgn" \
+    --medium-output "/Volumes/T7 Shield/rag/databases/pgn/1new/purged_mediums.pgn" \
+    --high-output "/Volumes/T7 Shield/rag/databases/pgn/1new/purged_highs.pgn" \
       --medium-threshold 45 --high-threshold 70 \
       --log-every 5000
   ```
@@ -179,8 +176,8 @@ python scripts/filter_pgn_by_evs.py \
 - Use `scripts/sample_top_evs.py` to extract, for example, the strongest 10% of `purged_mediums.pgn`:
   ```bash
   python scripts/sample_top_evs.py \
-      --input "/Volumes/T7 Shield/rag/pgn/1new/purged_mediums.pgn" \
-      --output "/Volumes/T7 Shield/rag/pgn/1new/purged_mediums_top_10.pgn" \
+      --input "/Volumes/T7 Shield/rag/databases/pgn/1new/purged_mediums.pgn" \
+      --output "/Volumes/T7 Shield/rag/databases/pgn/1new/purged_mediums_top_10.pgn" \
       --percent 10
   ```
 - This pass reuses the EVS scorer, ranks every game by EVS, and writes only the top N-percent subset.
@@ -190,8 +187,8 @@ python scripts/filter_pgn_by_evs.py \
   ```bash
   python scripts/filter_directory_by_evs.py \
       --root "/Users/leon/Downloads/3unknown" \
-      --medium-output "/Volumes/T7 Shield/rag/pgn/1new/medium_value.pgn" \
-      --high-output "/Volumes/T7 Shield/rag/pgn/1new/high_value.pgn" \
+      --medium-output "/Volumes/T7 Shield/rag/databases/pgn/1new/medium_value.pgn" \
+      --high-output "/Volumes/T7 Shield/rag/databases/pgn/1new/high_value.pgn" \
       --medium-threshold 45 --high-threshold 70 \
       --log-every 2000
   ```
@@ -203,6 +200,44 @@ python scripts/filter_pgn_by_evs.py \
 3. **Concept tagging:** Opening questions map via ECO/opening headers; concept questions map via a lightweight classifier that scans comments + move text for canonical lexicon entries (pins, IQP, blockade, prophylaxis, etc.) and links them to existing `canonical_positions` IDs when possible.
 4. **Diagram generation:** For each tagged move we snapshot the FEN, feed it to `diagram_generator.py`, and store PNG/SVG plus metadata `{game_id, source_file, move_number, concept_tags}` in a new `pgn_diagrams` catalog. Each record also references the originating chunk so deletions stay clean.
 5. **Serving flow:** When answering queries the backend will look up both EPUB and PGN diagram pools. Opening queries match via `opening`/`eco`; concept queries match via shared lexicon tags. Featured diagrams then mix EPUB illustrations (strategic art) with PGN-derived boards (concrete move sequences) using the same `[FEATURED_DIAGRAM_X]` marker pipeline.
+
+### Generate PGN Diagrams (Static SVGs)
+`scripts/generate_pgn_diagrams.py` turns annotated PGN files into SVG boards + metadata that the Flask app can serve alongside EPUB artwork.
+
+```bash
+python scripts/generate_pgn_diagrams.py \
+    --input "/Volumes/T7 Shield/rag/databases/pgn/1new/high_value.pgn" \
+    --image-dir "/Volumes/T7 Shield/rag/databases/pgn/images" \
+    --metadata-output "diagram_metadata_pgn.json" \
+    --limit-per-game 4
+```
+
+- Streams giant PGNs safely, reuses the EVS scoring from `pgn_quality_analyzer.py`, inspects comments/NAGs for instructional keywords (prophylaxis, IQP, exchange sac, etc.), and snapshots the FEN when a tag fires or the comment is detailed enough.
+- SVGs live under `/Volumes/T7 Shield/rag/databases/pgn/images/pgn_<hash>/pgn_<hash>_<game>_<ply>.svg`; metadata entries carry `source_type="pgn"`, the originating PGN path, EVS bucket, opening/ECO tags, and a caption built from the comment.
+- Drop the metadata JSON into the repo root (or point `PGN_DIAGRAM_METADATA=/absolute/path/to/file.json`) and `app.py` will automatically load it after the EPUB catalog via `diagram_index.load(..., allow_small_source_types={'pgn'})`.
+- `diagram_service` normalizes both catalogs into the same in-memory index, so `/query_merged` can now mix EPUB PNG/JPGs and PGN SVGs inside the featured diagram carousel.
+- Set `--shard-size` (default 25k) to emit incremental metadata shards under `<metadata-output>_shards/diagram_metadata_pgn_shard_XXXX.json`. This keeps partial progress if a run stalls; once the full script finishes it still writes the aggregated `diagram_metadata_pgn.json`.
+- Override shard location with `--shard-dir /path/to/shards` if you prefer to store them on a faster disk. Set `--shard-size 0` to disable shard output entirely.
+- **Staging convention:** Place any new PGN you want processed (including the in-progress large corpus) under `/Volumes/T7 Shield/rag/databases/pgn/1new/`. That directory is where we run EVS scoring, chunking, and the PGN diagram generator. Keeping everything there makes it easy to hand files off to Claude Code for long-running ingestion jobs.
+- **Language cleanup:** Run `scripts/clean_pgn_language.py` to strip duplicated German prose from ChessBase Magazine annotations before handing PGNs to the pipeline.
+
+> **Operational workflow:** Codex handles short, code-focused tasks and documentation updates. Whenever a command will run for minutes/hours or needs heartbeat logging (e.g., `scripts/generate_pgn_diagrams.py`, large `analyze_pgn_games.py` jobs, or `add_pgn_to_corpus.py` ingestion), launch it via Claude Code so you get live status updates. Document the results back in `SESSION_NOTES.md` once the job finishes.
+
+### Daily PGN Merge
+- Use `scripts/merge_pgn_sources.py` to crawl either `/Users/leon/Downloads/ZListo`, `/Volumes/chess/zTemp`, or any custom directory, deduplicate by MD5, and emit a dated master PGN in `/Volumes/T7 Shield/rag/databases/pgn/1new`.
+  ```bash
+  python scripts/merge_pgn_sources.py
+  ```
+- The script prompts for the source directory (enter `3` to type any absolute path), ignores `._*` ghost files, strips trailing whitespace, and writes to `<MM-DD-YY>_new.pgn` (e.g., `11-15-25_new.pgn`). Run it whenever you stage new PGNs for Claude Code to ingest.
+
+### Remove German comments from PGNs
+- ChessBase Magazine games often repeat every annotation in German. Clean those duplicates before chunking so the RAG output stays English-only:
+  ```bash
+  python scripts/clean_pgn_language.py \
+      --source "/path/to/chessbase_raw.pgn" \
+      --output "/path/to/chessbase_english.pgn"
+  ```
+- The script scans every `{ ... }` comment, keeps English sentences (plus ChessBase metadata tokens), and drops the German translation + `[%tqu ... "De", ...]` payloads. Stats are printed after the run so you know how many comments and sentences were modified.
 
 ### Remove A Book (EPUB + Metadata)
 Use the helper script whenever possible:

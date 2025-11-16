@@ -8,6 +8,17 @@ source .venv/bin/activate
 python verify_system_stats.py  # Always run first!
 ```
 
+## Environment & Dependencies
+
+- **Python runtime:** All scripts target Python 3.9 (see `requirements.txt` comment and tested virtualenv). `setup.py` advertises `python_requires=">=3.8"`, but the production stack, embeddings, and spaCy model have only been validated under 3.9.x. Keep `pyenv` handy if you need to install/compile that version, but updating Homebrew’s `python@3.11`/`python@3.13` formulas will not affect this repo unless you explicitly switch the virtualenv interpreter.
+- **Python packages:** `pip install -r requirements.txt` provides the minimal Flask/Qdrant/OpenAI stack (flask 3.0, qdrant-client 1.15.1, python-chess 1.999, spaCy 3.7, openai≥1.50, httpx≥0.27, requests 2.31). `setup.py` adds heavy NLP extras (`sentence-transformers`, `torch`, `transformers`, etc.) for the CLI package entry point. Make sure the virtualenv is active before upgrading brew-level tools so that `pip` continues targeting `.venv`.
+- **Services:** `docker`/`docker-compose` are required because Qdrant runs via `docker compose up -d` (see `docker-compose.yml` and `assistant_notes.md`). Upgrading the Homebrew `docker` and `docker-completion` packages is safe and recommended so long as Docker Desktop keeps running.
+- **Databases:** SQLite ships with Python and powers `epub_analysis.db`, `chessable_analysis.db`, etc. The Homebrew `sqlite` formula only provides command-line utilities; updating it won’t touch Python’s built-in module. `postgresql@16`, `tesseract`, `poppler`, and `libnghttp2` are installed globally but unused by this project.
+- **System crypto/certs:** `ca-certificates`, `gettext`, `harfbuzz`, `icu4c@77`, and `nspr` are transitive dependencies of other tools (curl, git, GUI apps). Refreshing them is safe and does not impact the Python virtualenv.
+- **Apps:** GUI casks like `claude-code` are unrelated to this repo.
+
+In short, none of the currently outdated Homebrew packages block or interfere with `chess-analysis-system`. Upgrading them keeps the OS toolchain patched without changing the Python environment this project actually runs on.
+
 ---
 
 ## Common Tasks
@@ -60,12 +71,12 @@ Document any findings in `assistant_notes.md` (or the relevant ITEM doc) before 
 
 ```bash
 # 1. Score staged PGNs (writes per-file summaries into pgn_analysis.db)
-python pgn_quality_analyzer.py "/Volumes/T7 Shield/rag/pgn/1new" --db pgn_analysis.db --json pgn_scores.json
+python pgn_quality_analyzer.py "/Volumes/T7 Shield/rag/databases/pgn/1new" --db pgn_analysis.db --json pgn_scores.json
 
 # 2. Share the EVS report for approval (only approved files move on)
 
 # 3. Chunk + ingest the approved PGNs
-python analyze_pgn_games.py "/Volumes/T7 Shield/rag/pgn/approved" --output approved_pgn_chunks.json
+python analyze_pgn_games.py "/Volumes/T7 Shield/rag/databases/pgn/approved" --output approved_pgn_chunks.json
 python add_pgn_to_corpus.py approved_pgn_chunks.json --collection chess_pgn
 ```
 

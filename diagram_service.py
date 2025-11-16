@@ -214,28 +214,51 @@ class DiagramIndex:
                 return candidate
         return path
 
-    def load(self, metadata_path: str, min_size_bytes: int = 12000) -> 'DiagramIndex':
+    def load(
+        self,
+        metadata_path: str,
+        min_size_bytes: int = 12000,
+        allow_small_source_types: Optional[Set[str]] = None,
+    ) -> 'DiagramIndex':
         """
         Load diagram metadata from JSON file.
 
         Args:
             metadata_path: Path to diagram_metadata_full.json
             min_size_bytes: Minimum file size to include (filters icons/ribbons)
+            allow_small_source_types: Source labels that bypass size filtering
 
         Returns:
             self (for chaining)
         """
+        allow_small_source_types = allow_small_source_types or set()
         logger.info(f"Loading diagram metadata from {metadata_path}...")
 
         with open(metadata_path, 'r') as f:
             data = json.load(f)
 
-        self.total_diagrams = data['stats']['total_diagrams']
+        if isinstance(data, dict):
+            stats_block = data.get('stats', {})
+            diagrams = data.get('diagrams', [])
+        elif isinstance(data, list):
+            stats_block = {}
+            diagrams = data
+        else:
+            raise ValueError(f"Unsupported metadata structure in {metadata_path}")
+
+        file_total = (
+            stats_block.get('total_diagrams')
+            or stats_block.get('diagrams_emitted')
+            or len(diagrams)
+        )
+        self.total_diagrams += file_total
         registered_books: Set[str] = set()
 
-        for diagram in data['diagrams']:
+        for diagram in diagrams:
             # Quality filter: Skip small images (likely icons/ribbons)
-            if diagram.get('size_bytes', 0) < min_size_bytes:
+            source_type = diagram.get('source_type', 'epub')
+            effective_min_size = 0 if source_type in allow_small_source_types else min_size_bytes
+            if diagram.get('size_bytes', 0) < effective_min_size:
                 self.filtered_count += 1
                 continue
 

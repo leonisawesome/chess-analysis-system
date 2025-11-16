@@ -1,8 +1,14 @@
 # Chess Analysis System - Session Notes
 
+## Session 2025-11-14 – PGN Diagram Extraction Kickoff
+- **New tooling:** Added `scripts/generate_pgn_diagrams.py` to stream giant PGNs, reuse EVS scoring, tag diagram-worthy comments/NAGs, and emit SVG boards + metadata (`diagram_metadata_pgn.json`). SVGs land under `/Volumes/T7 Shield/rag/databases/pgn/images/pgn_<hash>/...`.
+- **Backend wiring:** `diagram_service.DiagramIndex.load` now accepts `allow_small_source_types` so PGN SVGs bypass the 2 KB filter, and `app.py` auto-loads `diagram_metadata_pgn.json` (or any path supplied via `PGN_DIAGRAM_METADATA`) after the EPUB catalog.
+- **Docs updated:** README now documents the PGN diagram pipeline, CLI usage, storage paths, shard output (`<metadata>_shards/diagram_metadata_pgn_shard_XXXX.json`), and how Flask mixes EPUB + PGN diagrams. This entry keeps the session log current for today’s work.
+- **Next operation:** Run `python scripts/generate_pgn_diagrams.py --input <approved PGN> --image-dir "/Volumes/T7 Shield/rag/databases/pgn/images" --metadata-output "diagram_metadata_pgn.json" --shard-size 25000` before reloading Flask so the new diagrams appear in `/query_merged`. Shards keep partial progress if a run stalls; delete `/Volumes/T7 Shield/rag/databases/pgn/images/pgn_<hash>` before restarting to avoid duplicates.
+
 ## Session 2025-11-12 (Addendum)
 - **Corpus locations:** Final EPUBs now live under `/Volumes/T7 Shield/rag/books/epub` with diagrams in `/Volumes/T7 Shield/rag/books/images`. Any ingestion/removal script should point there (updated repo-wide).
-- **PGN staging:** New PGN batches go to `/Volumes/T7 Shield/rag/pgn/1new` before scoring/approval. The Chess Publishing 2021 bundle was merged into `chess_publishing_2021_master.pgn` in that folder.
+- **PGN staging:** New PGN batches go to `/Volumes/T7 Shield/rag/databases/pgn/1new` before scoring/approval. The Chess Publishing 2021 bundle was merged into `chess_publishing_2021_master.pgn` in that folder.
 - **Network note:** This sandbox blocked outbound SSH, so pushes had to happen from the host machine. If you see `Could not resolve hostname github.com`, push locally or restart with network access enabled.
 
 ## CURRENT STATUS: ✅ ITEM-031 COMPLETE - 2 BOOKS INGESTED + BUGS DOCUMENTED
@@ -621,7 +627,7 @@ Browser tests still showed `[FEATURED_DIAGRAM_X]` text because GPT output someti
 ## SESSION: Nov 13, 2025 – PGN Refresh + Answer Length Control
 
 ### PGN Analyzer & Chunking
-- Ran `pgn_quality_analyzer.py "/Volumes/T7 Shield/rag/pgn/1new" --db pgn_analysis.db --json pgn_scores.json` with new streaming parser & logging. **64,247 games scored**, 6 malformed entries skipped with event/site/date + snippets logged for manual review.
+- Ran `pgn_quality_analyzer.py "/Volumes/T7 Shield/rag/databases/pgn/1new" --db pgn_analysis.db --json pgn_scores.json` with new streaming parser & logging. **64,247 games scored**, 6 malformed entries skipped with event/site/date + snippets logged for manual review.
 - Reworked `analyze_pgn_games.py` to stream `[Event …]` blocks, log parser/stringify failures with headers, and use a sane chunk threshold (1,200-token cap, ~18 moves per overflow chunk). Output: `data/chess_publishing_2021_chunks.json` (598 MB) containing **234,251 chunks** from **64,251 games**; only games #8944 and #9284 were skipped.
 - Qdrant ingestion not executed yet because `OPENAI_API_KEY` is unset in this environment. Once the key is available, run `python add_pgn_to_corpus.py data/chess_publishing_2021_chunks.json --collection chess_pgn_repertoire --batch-size 80` to embed/upload, then re-enable `ENABLE_PGN_COLLECTION`.
 
@@ -712,9 +718,9 @@ Browser tests still showed `[FEATURED_DIAGRAM_X]` text because GPT output someti
 - **📦 Output file size:** 1.8 GB (19.4 million lines)
 
 **Output Files:**
-1. `/Volumes/T7 Shield/rag/pgn/1new/chessable_master.pgn` - 1.8 GB master corpus
-2. `/Volumes/T7 Shield/rag/pgn/1new/chessable_duplicates.csv` - 12 duplicate entries
-3. `/Volumes/T7 Shield/rag/pgn/1new/chessable_skipped.csv` - 17 skipped entries
+1. `/Volumes/T7 Shield/rag/databases/pgn/1new/chessable_master.pgn` - 1.8 GB master corpus
+2. `/Volumes/T7 Shield/rag/databases/pgn/1new/chessable_duplicates.csv` - 12 duplicate entries
+3. `/Volumes/T7 Shield/rag/databases/pgn/1new/chessable_skipped.csv` - 17 skipped entries
 
 ### Duplicate Files Analysis
 
@@ -762,3 +768,25 @@ Browser tests still showed `[FEATURED_DIAGRAM_X]` text because GPT output someti
        --output chessable_chunks.json
    ```
 3. **Ingestion:** After chunking, ingest with `add_pgn_to_corpus.py`
+
+---
+
+## SESSION: Nov 15, 2025 – PGN Diagram Tooling Alignment
+
+- Clarified that EPUB inline diagram rendering is considered fixed; marker enforcement plus frontend cleanup are already live in `app.py` and `templates/index.html`.
+- Updated documentation (README + AGENT_START_HERE) so we only rerun `python verify_system_stats.py` when working with data/stats, not at the start of every coding session.
+- Current focus is the PGN diagram quality tooling: the prototype exposed issues on a massive multi-game PGN, so we’re waiting on a cleaner/split file before rerunning the diagnostics. Once the new file is ready, reprocess it, capture the diagram QA output, and wire the validated diagrams into the synthesis pipeline.
+
+### Utility: PGN Source Merger
+- Added `scripts/merge_pgn_sources.py` which walks either `/Users/leon/Downloads/ZListo` or `/Volumes/chess/zTemp`, hashes each `.pgn`, and writes a deduplicated master file named `<MM-DD-YY>_new.pgn` into `/Volumes/T7 Shield/rag/databases/pgn/1new`.
+- This covers the daily workflow where Claude Code ingests new PGNs: run the merger first, then hand the resulting dated master file to the long-running ingestion job.
+
+### Tooling: ChessBase language filter
+- Built `scripts/clean_pgn_language.py` to strip duplicated German annotations from ChessBase Magazine PGNs. It walks every `{...}` comment, keeps English sentences (plus `[%%cal]`, `[%%tqu]` tokens), removes the German duplicates, and trims the `"De"` sections inside the interactive quiz metadata blocks.
+- Example usage:
+  ```bash
+  python scripts/clean_pgn_language.py \
+      --source "/Users/leon/Downloads/New Folder With Items/chessbase.pgn" \
+      --output "/Users/leon/Downloads/New Folder With Items/chessbase_english.pgn"
+  ```
+- Processing the sample CBM dump updated ~7.8k of 11.7k comments and removed ~7.3k German sentences; the cleaned PGN now lives next to the input under `.../chessbase_english.pgn`.

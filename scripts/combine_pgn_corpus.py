@@ -13,12 +13,12 @@ Features:
 Example:
 python scripts/combine_pgn_corpus.py \\
     --root "/Volumes/chess/1Modern Chess" \\
-    --output "/Volumes/T7 Shield/rag/pgn/1new/modern.pgn" \\
-    --duplicates "/Volumes/T7 Shield/rag/pgn/1new/modern_duplicates.csv" \\
-    --skipped "/Volumes/T7 Shield/rag/pgn/1new/modern_skipped.csv" \\
-    --foreign "/Volumes/T7 Shield/rag/pgn/1new/modern_foreign.csv" \\
-    --skipped-dir "/Volumes/T7 Shield/rag/pgn/1new/skipped_pgns" \\
-    --foreign-dir "/Volumes/T7 Shield/rag/pgn/1new/foreign_pgns"
+    --output "/Volumes/T7 Shield/rag/databases/pgn/1new/modern.pgn" \\
+    --duplicates "/Volumes/T7 Shield/rag/databases/pgn/1new/modern_duplicates.csv" \\
+    --skipped "/Volumes/T7 Shield/rag/databases/pgn/1new/modern_skipped.csv" \\
+    --foreign "/Volumes/T7 Shield/rag/databases/pgn/1new/modern_foreign.csv" \\
+    --skipped-dir "/Volumes/T7 Shield/rag/databases/pgn/1new/skipped_pgns" \\
+    --foreign-dir "/Volumes/T7 Shield/rag/databases/pgn/1new/foreign_pgns"
 """
 
 from __future__ import annotations
