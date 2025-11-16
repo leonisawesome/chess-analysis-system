@@ -238,6 +238,7 @@ python scripts/generate_pgn_diagrams.py \
       --output "/path/to/chessbase_english.pgn"
   ```
 - The script scans every `{ ... }` comment, keeps English sentences (plus ChessBase metadata tokens), and drops the German translation + `[%tqu ... "De", ...]` payloads. Stats are printed after the run so you know how many comments and sentences were modified.
+- Long jobs log progress every 100 games so you can track status while Claude runs the cleaner on massive PGNs.
 
 ### Remove A Book (EPUB + Metadata)
 Use the helper script whenever possible:

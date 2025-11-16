@@ -15,13 +15,15 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import io
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Tuple
 
+import chess.pgn
 from langdetect import DetectorFactory, LangDetectException, detect
-import logging
 
 try:
     from spacy.lang.de.stop_words import STOP_WORDS as SPACY_STOPWORDS
@@ -34,7 +36,6 @@ logger = logging.getLogger(__name__)
 
 SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?:])\s+")
 TOKEN_RE = re.compile(r"\[%.*?\]")
-COMMENT_RE = re.compile(r"\{([^{}]*)\}")
 WORD_RE = re.compile(r"[A-Za-zÄÖÜäöüß]+")
 GERMAN_CHARS = set("äöüßÄÖÜß")
 
@@ -339,6 +340,7 @@ GERMAN_HARD_MARKERS = {
 
 @dataclass
 class CommentStats:
+    total_games: int = 0
     total_comments: int = 0
     modified_comments: int = 0
     sentences_dropped: int = 0
@@ -493,30 +495,56 @@ def clean_metadata_token(token: str) -> str:
     if ',"De",' in token:
         token = token.split(',"De",', 1)[0] + "]"
     return token
-def clean_pgn_text(text: str, stats: CommentStats) -> str:
-    logger.info("Beginning comment cleanup pass...")
-    def repl(match: re.Match[str]) -> str:
-        original = match.group(1)
-        stats.total_comments += 1
-        cleaned, dropped = clean_comment(original)
-        if dropped:
-            stats.sentences_dropped += dropped
-        changed = cleaned != original.strip()
-        if changed:
-            stats.modified_comments += 1
-        if stats.total_comments % 1000 == 0:
-            logger.info(
-                "Processed %s comments (%s modified so far)",
-                stats.total_comments,
-                stats.modified_comments,
-            )
-        payload = cleaned if cleaned else ""
-        payload = payload.strip()
-        if not payload:
-            return ""
-        return "{ " + payload + " }"
 
-    return COMMENT_RE.sub(repl, text)
+
+def process_games(source: Path, destination: Path, stats: CommentStats) -> None:
+    with source.open("rb") as raw:
+        prefix = raw.read(3)
+        if prefix != b"\xef\xbb\xbf":
+            raw.seek(0)
+        text_stream = io.TextIOWrapper(raw, encoding="utf-8", errors="ignore")
+        try:
+            with destination.open("w", encoding="utf-8") as handle:
+                while True:
+                    game = chess.pgn.read_game(text_stream)
+                    if game is None:
+                        break
+                    stats.total_games += 1
+                    process_game_comments(game, stats)
+                    exporter = chess.pgn.StringExporter(
+                        headers=True, variations=True, comments=True
+                    )
+                    handle.write(game.accept(exporter))
+                    handle.write("\n\n")
+                    if stats.total_games % 100 == 0:
+                        logger.info(
+                            "Processed %s games (%s comments cleaned, %s sentences removed)",
+                            stats.total_games,
+                            stats.modified_comments,
+                            stats.sentences_dropped,
+                        )
+        finally:
+            text_stream.detach()
+
+
+def walk_nodes(game: chess.pgn.Game) -> Iterable[chess.pgn.GameNode]:
+    stack = [game]
+    while stack:
+        node = stack.pop()
+        yield node
+        stack.extend(node.variations)
+
+
+def process_game_comments(game: chess.pgn.Game, stats: CommentStats) -> None:
+    for node in walk_nodes(game):
+        if not node.comment:
+            continue
+        stats.total_comments += 1
+        cleaned, dropped = clean_comment(node.comment)
+        if cleaned != node.comment:
+            node.comment = cleaned
+            stats.modified_comments += 1
+        stats.sentences_dropped += dropped
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -547,22 +575,18 @@ def main() -> int:
     output = args.output or source.with_name(f"{source.stem}_english{source.suffix}")
 
     stats = CommentStats()
-    logger.info("Cleaning PGN language: source=%s destination=%s", source, output)
-    data = source.read_bytes()
-    if data.startswith(b"\xef\xbb\xbf"):
-        data = data[3:]
-    text = data.decode("utf-8", errors="ignore")
-    cleaned_text = clean_pgn_text(text, stats)
-    output.write_text(cleaned_text, encoding="utf-8")
-    if stats.total_comments == 0:
-        logger.warning("No PGN comments found inside %s", source)
     logger.info(
-        "Cleaned PGN written to %s (%s/%s comments updated, %s German sentences removed).",
-        output,
-        stats.modified_comments,
-        stats.total_comments,
-        stats.sentences_dropped,
+        "Cleaning PGN language (streaming): source=%s destination=%s", source, output
     )
+    process_games(source, output, stats)
+    if stats.total_games == 0:
+        logger.warning("No games found inside %s", source)
+    summary = (
+        f"{stats.modified_comments}/{stats.total_comments} comments updated, "
+        f"{stats.sentences_dropped} German sentences removed, "
+        f"{stats.total_games} games written."
+    )
+    logger.info("Cleaned PGN written to %s (%s)", output, summary)
     return 0
 
 
