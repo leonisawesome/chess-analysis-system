@@ -45,6 +45,22 @@ scripts/analyze_staged_books.sh
 # → Share the SQLite report so the user can accept/reject each book
 
 # 2. After approval, rename + move approved files into the main corpus (assistant automates this step)
+- Run a fast drift check before moving anything:
+  ```bash
+  python - <<'PY'
+  import sqlite3
+  from pathlib import Path
+  EPUB_DIR = Path('/Volumes/T7 Shield/rag/books/epub')
+  cur = sqlite3.connect('epub_analysis.db').execute('SELECT filename FROM epub_analysis')
+  db_names = {row[0] for row in cur}
+  fs_names = {p.name for p in EPUB_DIR.glob('*.epub')}
+  missing = sorted(db_names - fs_names)
+  print(len(missing), "missing entries")
+  if missing:
+      print("\n".join(missing))
+  PY
+  ```
+  Anything listed should be removed via `scripts/remove_books.py` (which now tolerates macOS `._*` files) before continuing so SQLite/Qdrant stay in sync.
 
 # 3. Add to Qdrant
 export OPENAI_API_KEY='sk-proj-...'
@@ -52,10 +68,49 @@ export QDRANT_MODE=docker
 python add_books_to_corpus.py book.epub
 
 # 4. Extract diagrams (append metadata for the new book; only rebuild the full file if you reprocessed the entire corpus)
-python extract_epub_diagrams.py --book-id book_<hash> --append
+python - <<'PY'
+from pathlib import Path, defaultdict
+from dataclasses import asdict
+import json
+from extract_epub_diagrams import DiagramExtractor
+BOOKS = [
+    "New Book 1.epub",
+]
+EPUB_DIR = Path("/Volumes/T7 Shield/rag/books/epub")
+IMAGES_DIR = Path("/Volumes/T7 Shield/rag/books/images")
+METADATA = Path("diagram_metadata_full.json")
+metadata = json.loads(METADATA.read_text())
+existing_ids = {entry["book_id"] for entry in metadata["stats"]["books"]}
+for name in BOOKS:
+    extractor = DiagramExtractor(EPUB_DIR / name, IMAGES_DIR)
+    if extractor.book_id in existing_ids:
+        continue
+    metadata["diagrams"].extend(asdict(d) for d in extractor.extract())
+    existing_ids.add(extractor.book_id)
+stats = metadata["stats"]
+stats["books"] = []
+stats["total_diagrams"] = len(metadata["diagrams"])
+METADATA.write_text(json.dumps(metadata, indent=2))
+PY
+
+The snippet above mirrors the incremental extraction flow we used this session: only the new EPUBs are processed, and `diagram_metadata_full.json` is rewritten afterward so the stats stay correct without running the 950‑book batch job.
 
 # 5. Verify stats and update hardcoded homepage counts
 python verify_system_stats.py
+
+### Launching ingestion (Claude Code instructions)
+
+Claude handles the long-running chunking/embedding jobs. Provide the approved filenames and have Claude run:
+```bash
+cd /Users/leon/Downloads/python/chess-analysis-system
+source .venv/bin/activate
+export OPENAI_API_KEY='sk-proj-REDACTED'
+docker compose up -d  # make sure Qdrant is live
+python add_books_to_corpus.py \
+  "Book A.epub" \
+  "Book B.epub"
+```
+Claude should record the token/chunk counts and update `SESSION_NOTES.md` once the ingest finishes. If the API key or Docker isn’t available in Claude’s shell, fall back to the user terminal instead.
 ```
 
 ### Troubleshooting Missing Diagrams

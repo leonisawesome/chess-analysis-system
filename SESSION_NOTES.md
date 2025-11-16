@@ -790,3 +790,54 @@ Browser tests still showed `[FEATURED_DIAGRAM_X]` text because GPT output someti
       --output "/Users/leon/Downloads/New Folder With Items/chessbase_english.pgn"
   ```
 - Processing the sample CBM dump updated ~7.8k of 11.7k comments and removed ~7.3k German sentences; the cleaned PGN now lives next to the input under `.../chessbase_english.pgn`.
+
+---
+
+## SESSION: Nov 16, 2025 – EPUB Dedup + Diagram Refresh
+
+- Reconciled `epub_analysis.db` with `/Volumes/T7 Shield/rag/books/epub` after manual deletions. Removed the following titles everywhere (EPUB, `/rag/books/images/book_*`, SQLite, Qdrant, and `diagram_metadata_full.json`):
+  ```
+  Lakdawala Cyrus - 1...b6 Move by Move [Everyman 2014] (2).epub
+  Reinfeld Fred - How to be a Winner at Chess. 21st Century Ed. [Russell 2013] (2).epub
+  Sadler, Matthew - Game Changer [NIC, 2019] with Regan Natasha.epub
+  dvoretsky_2020_endgame_manual_6th_edition_russell.epub
+  karolyi_2025_boris_spasskys_best_games_vol2_quality_chess.epub
+  tibor_2021_the_road_to_reykjavik_quality_chess.epub
+  unknown_author_0000_insanity_passion_and_addiction_gormally.epub
+  unknown_author_1945_korchnoi_year_by_year_vol_i_renette_and_karolyi.epub
+  unknown_author_1969_korchnoi_year_by_year_volume_ii.epub
+  unknown_author_1972_fischer_–_spassky_match_of_the_century_revisited_by_tibor_karolyi.epub
+  unknown_author_1981_korchnoi_year_by_year_volume_iii.epub
+  Bonin, Jay - Active Pieces. Practical Advice [Mongoose, 2016].epub
+  ```
+  `diagram_metadata_full.json` now contains 547,703 diagrams across 938 books after removing 7,769 stale entries and recomputing the stats block.
+
+- Extracted diagrams for the 11 approved newcomers (7x Gormally + 4x Sadler) without re-running the full batch. Counts added:
+  - Gormally (A Year inside the Chess World / Chess Analysis Reloaded / Pandemic Shark / Smooth Chess Improvement / The Comfort Zone / The Scheveningen Sicilian Revisited / Tournament Battleplan): 123, 408, 332, 344, 370, 325, 604 diagrams respectively
+  - Sadler (Chess for Life / Re-Engineering the Chess Classics / Study Chess with Matthew Sadler / The Silicon Road to Chess Improvement): 726, 737, 257, 1,178 diagrams respectively
+  `diagram_metadata_full.json` was rewritten after appending these 5,404 entries so `stats.total_diagrams` stays accurate.
+
+- `/Volumes/T7 Shield/rag/books/epub/1new` is now empty and every EPUB listed in `epub_analysis.db` exists on disk (the diff script returns zero missing items).
+
+### Pending ingestion (Claude instructions)
+
+Once `OPENAI_API_KEY` is available in Claude’s shell (and Docker/Qdrant are running), run:
+```bash
+cd /Users/leon/Downloads/python/chess-analysis-system
+source .venv/bin/activate
+export OPENAI_API_KEY='sk-proj-REDACTED'
+docker compose up -d  # ensure Qdrant is healthy
+python add_books_to_corpus.py \
+  "Gormally, Daniel - A Year inside the Chess World [Chess Evolution, 2016].epub" \
+  "Gormally, Daniel - Chess Analysis Reloaded [Chess Informant, 2023].epub" \
+  "Gormally, Daniel - Pandemic Shark [Thinkers, 2022].epub" \
+  "Gormally, Daniel - Smooth Сhess Improvement [Informant, 2025].epub" \
+  "Gormally, Daniel - The Comfort Zone [Thinkers, 2022].epub" \
+  "Gormally, Daniel - The Scheveningen Sicilian Revisited [Thinkers, 2024].epub" \
+  "Gormally, Daniel - Tournament Battleplan [Thinkers, 2023].epub" \
+  "Sadler, Matthew - Chess for Life [Gambit, 2016] with Regan Natasha.epub" \
+  "Sadler, Matthew - Re-Engineering the Chess Classics [NIC, 2023] with Giddins Steve.epub" \
+  "Sadler, Matthew - Study Chess with Matthew Sadler [Everyman, 2012].epub" \
+  "Sadler, Matthew - The Silicon Road to Chess Improvement [NIC, 2021].epub"
+```
+Claude should capture the chunk/token totals from the script output, update this log with the ingestion summary, and rerun `python verify_system_stats.py` afterward so the homepage counts can be refreshed.
