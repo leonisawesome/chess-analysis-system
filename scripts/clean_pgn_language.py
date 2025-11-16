@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Tuple
 
 from langdetect import DetectorFactory, LangDetectException, detect
+import logging
 
 try:
     from spacy.lang.de.stop_words import STOP_WORDS as SPACY_STOPWORDS
@@ -28,6 +29,8 @@ except Exception:
     SPACY_STOPWORDS = set()
 
 DetectorFactory.seed = 0
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
 
 SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?:])\s+")
 TOKEN_RE = re.compile(r"\[%.*?\]")
@@ -491,6 +494,7 @@ def clean_metadata_token(token: str) -> str:
         token = token.split(',"De",', 1)[0] + "]"
     return token
 def clean_pgn_text(text: str, stats: CommentStats) -> str:
+    logger.info("Beginning comment cleanup pass...")
     def repl(match: re.Match[str]) -> str:
         original = match.group(1)
         stats.total_comments += 1
@@ -500,6 +504,12 @@ def clean_pgn_text(text: str, stats: CommentStats) -> str:
         changed = cleaned != original.strip()
         if changed:
             stats.modified_comments += 1
+        if stats.total_comments % 1000 == 0:
+            logger.info(
+                "Processed %s comments (%s modified so far)",
+                stats.total_comments,
+                stats.modified_comments,
+            )
         payload = cleaned if cleaned else ""
         payload = payload.strip()
         if not payload:
@@ -537,16 +547,21 @@ def main() -> int:
     output = args.output or source.with_name(f"{source.stem}_english{source.suffix}")
 
     stats = CommentStats()
+    logger.info("Cleaning PGN language: source=%s destination=%s", source, output)
     data = source.read_bytes()
     if data.startswith(b"\xef\xbb\xbf"):
         data = data[3:]
     text = data.decode("utf-8", errors="ignore")
     cleaned_text = clean_pgn_text(text, stats)
     output.write_text(cleaned_text, encoding="utf-8")
-    print(
-        f"Cleaned PGN written to {output} "
-        f"({stats.modified_comments}/{stats.total_comments} comments updated, "
-        f"{stats.sentences_dropped} German sentences removed)."
+    if stats.total_comments == 0:
+        logger.warning("No PGN comments found inside %s", source)
+    logger.info(
+        "Cleaned PGN written to %s (%s/%s comments updated, %s German sentences removed).",
+        output,
+        stats.modified_comments,
+        stats.total_comments,
+        stats.sentences_dropped,
     )
     return 0
 

@@ -8,6 +8,17 @@ source .venv/bin/activate
 python verify_system_stats.py  # Always run first!
 ```
 
+## Mandatory Logging for New Scripts
+
+Silent tooling keeps biting us. Every script, CLI, or long-running job you add **must** log:
+
+- A startup banner (inputs, destination paths, key flags)
+- Periodic heartbeat/progress messages (e.g., “Processed 1,000/10,000 PGNs”)
+- A final summary with totals, dedupe counts, and output locations
+- Clear error messages if something aborts
+
+If you’re touching an existing quiet script, add this logging as part of the fix before merging. The only exception is truly trivial one-off utilities that finish in under a second—everything else needs human-readable output so we know what happened when a job stalls on Claude Code or a remote terminal.
+
 ## Environment & Dependencies
 
 - **Python runtime:** All scripts target Python 3.9 (see `requirements.txt` comment and tested virtualenv). `setup.py` advertises `python_requires=">=3.8"`, but the production stack, embeddings, and spaCy model have only been validated under 3.9.x. Keep `pyenv` handy if you need to install/compile that version, but updating Homebrew’s `python@3.11`/`python@3.13` formulas will not affect this repo unless you explicitly switch the virtualenv interpreter.

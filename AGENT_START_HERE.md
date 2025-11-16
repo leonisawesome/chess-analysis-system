@@ -62,6 +62,16 @@ Update in this order (always):
 
 All working docs, scratch notes, and deliverables belong inside `/Users/leon/Downloads/python/chess-analysis-system`. If you need a new note, create it inside the repo (for example under `docs/` or the project root). Do **not** leave Markdown/text files directly under `/Users/leon/`.
 
+### 5. Logging & Output Are Mandatory
+
+Every script or long-running command you add **must** emit human-readable progress logs (start banner, periodic status, completion/summary, and clear error messages). Silent scripts cost us hours of guesswork the last few times. If a job might run longer than a minute, add at least:
+
+- A startup banner including the source/target paths and important flags  
+- Heartbeat/progress messages (every N files/items)  
+- A final summary with totals, unique counts, and the output path
+
+Never merge a new script or major change without this logging in place. If you’re enhancing an existing quiet script, add the logging as part of the fix.
+
 ## Current System State (Verified Nov 10, 2025 - 3:30 PM)
 
 Run `verify_system_stats.py` to get latest. Last verified (Nov 13, 2025):
