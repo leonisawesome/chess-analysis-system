@@ -21,6 +21,13 @@ DEFAULT_QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 
 _metadata_index: Optional[Dict[str, str]] = None
 
+
+def _rmtree_ignore_missing(func, path, exc_info):
+    _, exc, _ = exc_info
+    if isinstance(exc, FileNotFoundError):
+        return
+    raise exc
+
 def load_metadata_index() -> Dict[str, str]:
     global _metadata_index
     if _metadata_index is not None:
@@ -67,7 +74,7 @@ def remove_image_dir(filename: str, dry_run: bool) -> None:
     if dry_run:
         print(f"   🧪 DRY RUN: would delete image folder {image_dir}")
         return
-    shutil.rmtree(image_dir)
+    shutil.rmtree(image_dir, onerror=_rmtree_ignore_missing)
     print(f"   ✅ Deleted image folder: {image_dir}")
 
 def remove_sqlite_row(filename: str, dry_run: bool) -> None:
