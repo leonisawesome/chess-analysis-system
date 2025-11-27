@@ -14,7 +14,7 @@ import chess.pgn
 import chess.svg
 import spacy
 from io import StringIO
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file, abort
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from query_system_a import query_system_a, COLLECTION_NAME, QDRANT_PATH, embed_query, semantic_search, gpt5_rerank, TOP_K, TOP_N
@@ -36,6 +36,7 @@ from query_router import get_query_info
 
 # Phase 6.1a: Static EPUB diagram integration
 from diagram_service import diagram_index, normalize_caption
+from dynamic_diagram_service import create_dynamic_diagram, get_dynamic_diagram_path
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
@@ -45,6 +46,13 @@ LENGTH_MODE_CHOICES = set(LENGTH_PRESETS.keys())
 
 FEATURED_MARKER_PATTERN = re.compile(r'\[FEATURED_DIAGRAM_\d+\]')
 SECTION_HEADING_PATTERN = re.compile(r'(##\s+[^\n]+\n)')
+
+def _flag_enabled(value: str) -> bool:
+    return value.strip().lower() not in {"0", "false", "no", "off"}
+
+ENABLE_DYNAMIC_DIAGRAMS = _flag_enabled(os.getenv("ENABLE_DYNAMIC_DIAGRAMS", "true"))
+MAX_DYNAMIC_DIAGRAMS_TOTAL = int(os.getenv("DYNAMIC_DIAGRAMS_TOTAL", "6"))
+MAX_DYNAMIC_DIAGRAMS_PER_RESULT = int(os.getenv("DYNAMIC_DIAGRAMS_PER_RESULT", "1"))
 
 
 def enforce_featured_diagram_markers(answer: str, diagram_count: int) -> str:
@@ -172,6 +180,66 @@ def estimate_diagram_slots(answer: str, base_limit: int = 8) -> int:
     estimated = max(6, min(base_limit, len(paragraphs)))
     return estimated
 
+
+def attach_dynamic_diagrams(results: List[Dict], max_total: int, per_result: int) -> int:
+    """
+    Attach dynamic diagrams (generated from FEN) to results lacking static images.
+
+    Returns:
+        Number of diagrams created.
+    """
+    added = 0
+
+    for result in results[:10]:
+        if added >= max_total:
+            break
+
+        existing_diagrams = result.get('epub_diagrams') or []
+        if existing_diagrams:
+            continue
+
+        positions = result.get('positions') or []
+        if not positions:
+            continue
+
+        fallback_caption = (
+            result.get('chapter_title')
+            or result.get('book_title')
+            or result.get('book_name')
+            or "Dynamic chess diagram"
+        )
+
+        diagrams_for_result = 0
+        for pos in positions:
+            if diagrams_for_result >= per_result or added >= max_total:
+                break
+
+            fen = pos.get('fen')
+            if not fen:
+                continue
+
+            try:
+                raw_caption = pos.get('caption') or fallback_caption
+                caption = normalize_caption(raw_caption)
+                payload = create_dynamic_diagram(
+                    fen=fen,
+                    caption=caption,
+                    book_title=result.get('book_title') or result.get('book_name')
+                )
+
+                if pos.get('lichess_url'):
+                    payload['lichess_url'] = pos['lichess_url']
+
+                result.setdefault('epub_diagrams', []).append(payload)
+                diagrams_for_result += 1
+                added += 1
+
+            except Exception as exc:
+                print(f"⚠️  Dynamic diagram generation failed ({result.get('book_name')}): {exc}")
+                continue
+
+    return added
+
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
@@ -290,6 +358,24 @@ def serve_diagram(diagram_id):
         return response
     except Exception as e:
         app.logger.error(f"Error serving diagram {diagram_id}: {e}")
+        abort(500)
+
+
+@app.route('/dynamic_diagrams/<diagram_id>')
+def serve_dynamic_diagram(diagram_id):
+    """
+    Serve cached dynamic diagrams generated from FEN strings.
+    """
+    file_path = get_dynamic_diagram_path(diagram_id)
+    if not file_path:
+        abort(404)
+
+    try:
+        response = send_file(str(file_path), conditional=True, mimetype='image/svg+xml')
+        response.headers['Cache-Control'] = 'public, max-age=86400'
+        return response
+    except Exception as exc:
+        app.logger.error(f"Error serving dynamic diagram {diagram_id}: {exc}")
         abort(500)
 
 @app.route('/test_pgn')
@@ -746,6 +832,21 @@ def query_merged():
         diagram_attach_time = time.time() - diagram_attach_start
         total_diagrams = sum(len(r.get('epub_diagrams', [])) for r in final_results[:10])
         print(f"📷 Attached {total_diagrams} diagrams across {len([r for r in final_results[:10] if r.get('epub_diagrams')])} results: {diagram_attach_time:.2f}s")
+
+        dynamic_diagram_count = 0
+        if ENABLE_DYNAMIC_DIAGRAMS:
+            dynamic_start = time.time()
+            dynamic_diagram_count = attach_dynamic_diagrams(
+                final_results,
+                max_total=MAX_DYNAMIC_DIAGRAMS_TOTAL,
+                per_result=MAX_DYNAMIC_DIAGRAMS_PER_RESULT
+            )
+            dynamic_time = time.time() - dynamic_start
+            print(f"🎨 Dynamic diagrams added: {dynamic_diagram_count} ({dynamic_time:.2f}s)")
+        else:
+            print("🎨 Dynamic diagrams disabled via ENABLE_DYNAMIC_DIAGRAMS flag")
+
+        total_diagrams = sum(len(r.get('epub_diagrams', [])) for r in final_results[:10])
 
         # Fallback: if no diagrams attached (e.g., PGN-heavy results), source them directly by query
         fallback_epub_diagrams = []

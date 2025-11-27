@@ -887,3 +887,139 @@ Claude should capture the chunk/token totals from the script output, update this
 
 - ⏳ PGN cleaning still running in background (processing ChessBase bilingual comments)
 - ⏳ Git push pending (requires terminal with DNS access)
+
+---
+
+## SESSION: Nov 20, 2025 (4:35 AM) – Markos & Navara Additions ✅
+
+### What Was Accomplished
+
+- **Scored staged EPUBs:** Ran `scripts/analyze_staged_books.sh` against `/Volumes/T7 Shield/rag/books/epub/1new/` (4 titles), then surfaced the analyzer scores (Markos/Navara: 60‑72 EVS) for approval.
+- **Moved + reconciled metadata:** Relocated the approved EPUBs out of staging, updated their `full_path` entries in `epub_analysis.db` (analyze script still pointed to `/1new/`), and rechecked for drift (`db_names` vs filesystem).
+- **Ingestion:** `python add_books_to_corpus.py ...` added all four titles after restarting Qdrant and exporting the provided API key. Extraction initially failed because the DB still referenced the staging directory; once corrected the run produced 1,458 chunks:
+  - *Markos, Jan – The Secret Ingredient* → 238 chunks
+  - *Markos, Jan – Under the Surface (2018)* → 301 chunks
+  - *Markos, Jan – Under the Surface, 2nd Ed (2025)* → 365 chunks
+  - *Navara, David – Lessons on Uncompromising Play* → 554 chunks
+- **Diagram extraction:** Used `DiagramExtractor` for the four EPUBs and appended metadata to `diagram_metadata_full.json` (333 + 406 + 501 + 557 = 1,797 diagrams, plus 44.9 MB of assets under `/Volumes/T7 Shield/rag/books/images/book_*/`).
+- **System verification:** `python verify_system_stats.py` now reports 942 books, 359,965 EPUB chunks (593,176 total with PGN), and 549,500 diagrams.
+
+### Notes
+
+- Required elevated shell sessions to talk to Docker (`http://localhost:6333` rejected non‑privileged sockets), so `add_books_to_corpus.py`/`verify_system_stats.py` were rerun once the Compose stack was restarted healthy.
+- Analyzer DB entries still pointed at staging after the move, which caused extraction failures; updating `full_path` in SQLite resolved it.
+- Diagram metadata/stat totals were recomputed after the new entries were appended to keep `by_format`, `total_size_bytes`, and `books_processed` accurate.
+
+---
+
+## SESSION: Nov 20, 2025 (4:50 AM) – Naroditsky Ingestion ✅
+
+### What Was Accomplished
+
+- **Score + approval:** Added `Naroditsky, Daniel - Mastering Complex Endgames [NIC, 2012].epub` to staging, reran `scripts/analyze_staged_books.sh`, and recorded its analyzer score (**64 EVS, MEDIUM tier**) for review.
+- **Move + metadata fix:** Relocated the EPUB (and `._` ghost file) into `/Volumes/T7 Shield/rag/books/epub/` and updated its `full_path` in `epub_analysis.db` so extraction wouldn’t point at `/1new/`.
+- **Ingestion:** `python add_books_to_corpus.py "Naroditsky, Daniel - Mastering Complex Endgames [NIC, 2012].epub"` (run with the provided API key + Docker) extracted 401 chunks, generated embeddings, and appended 401 net chunks to `chess_production` (Qdrant count: 359,965 → 360,366). Script output reported 502 added due to ID gaps; `verify_system_stats.py` shows the actual collection total.
+- **Diagram extraction:** Captured 386 diagrams via `DiagramExtractor` and appended them to `diagram_metadata_full.json` (new book entry `book_63195bd81740`, +38 MB assets under `/Volumes/T7 Shield/rag/books/images/`).
+- **Stats refresh:** `python verify_system_stats.py` now reports 943 books, 360,366 EPUB chunks (593,577 total with PGN), and 549,886 diagrams; README, AGENT_START_HERE, templates, and this log were updated accordingly.
+
+### Notes
+
+- Like earlier, Qdrant required elevated shell access (`curl` to `localhost:6333` failed without it); the ingestion + stats commands were run with the same elevated session for consistency.
+- Diagram metadata updates included the `by_format` counts and `total_size_bytes`; no other files were touched.
+
+---
+
+## SESSION: Nov 20, 2025 (6:10 AM) – Dynamic Diagram Fallback ✅
+
+### What Was Accomplished
+
+- **Dynamic renderer:** Added `dynamic_diagram_service.py` (FEN → SVG cache under `static/dynamic_diagrams/`) so we can generate diagrams on demand when static EPUB assets are missing. The manifest tracks created timestamps, hits, and file paths for later cleanup.
+- **Serving endpoint:** Introduced `/dynamic_diagrams/<id>` (cached SVG with proper headers) so the frontend can load generated boards exactly like static assets.
+- **Pipeline integration:** `app.py` now re-enables dynamic diagrams via `ENABLE_DYNAMIC_DIAGRAMS` with guards for total/per-result counts. After static attachment we call `attach_dynamic_diagrams(...)`, which grabs FENs from `extract_chess_positions`, renders the board, and appends the payload to `result['epub_diagrams']` so featured markers work automatically.
+- **Docs & toggles:** README and AGENT_START now document the feature plus the new environment variables (`ENABLE_DYNAMIC_DIAGRAMS`, `DYNAMIC_DIAGRAMS_TOTAL`, `DYNAMIC_DIAGRAMS_PER_RESULT`) so future assistants can tune/disable the fallback if needed.
+
+### Notes
+
+- Dynamic diagrams are cached SVGs (not interactive) but inherit captions/book labels, so the UI renders them inline without extra work.
+- Logs clearly show how many dynamic diagrams were generated along with timing, making it obvious if parsing fails or the cache misbehaves.
+- The feature is independent of the PGN diagram backlog; it solely relies on the existing `extract_chess_positions` output from EPUB + PGN chunks.
+
+---
+
+## SESSION: Nov 23, 2025 (12:25 PM) – Timman's Studies Ingestion ✅
+
+### What Was Accomplished
+
+- **Scoring:** `scripts/analyze_staged_books.sh` (staging held only `Timman's Studies - Jan Timman.epub`) → EVS 69, MEDIUM tier.
+- **Move + metadata:** Moved the EPUB plus its `._` companion into `/Volumes/T7 Shield/rag/books/epub/` and updated `epub_analysis.db.full_path`.
+- **Ingestion:** `python add_books_to_corpus.py "Timman's Studies - Jan Timman.epub"` (run via the elevated shell) extracted 294 chunks and pushed `chess_production` from 360,366 → 360,660 points.
+- **Diagrams:** Pulled 712 diagrams for the new title and appended them to `diagram_metadata_full.json` (stats recomputed; assets saved to `/Volumes/T7 Shield/rag/books/images/book_0401c016a267/`).
+- **Stats refresh:** `python verify_system_stats.py` → 944 books, 360,660 EPUB chunks (593,871 total), 550,598 diagrams. README/AGENT_START/templates updated accordingly.
+
+### Notes
+
+- Qdrant connections still require the elevated environment, so both the ingestion script and stats verifier were run with escalated permissions.
+- Diagram metadata counters (`total_books`, `total_diagrams`, `total_size_bytes`, `by_format`) were updated immediately after extraction to keep the UI accurate.
+
+---
+
+## SESSION: Nov 24, 2025 (06:44 AM) – Winning Chess Middlegames Vol 1 Ingestion ✅
+
+### What Was Accomplished
+
+- **Move + metadata fix:** Moved `Winning chess middlegames Vol 1 (Revised Edition) - Ivan Sokolov.epub` from `/Volumes/T7 Shield/rag/books/epub/1new/` into `/Volumes/T7 Shield/rag/books/epub/` and updated `epub_analysis.db.full_path` so ingestion uses the new location.
+- **Ingestion:** `python add_books_to_corpus.py "…Ivan Sokolov.epub"` (elevated for Qdrant access) extracted 459 chunks and pushed `chess_production` from 360,660 → 361,119 points.
+- **Diagrams:** Extracted 880 diagrams to `/Volumes/T7 Shield/rag/books/images/book_89fd7c644551/` and appended entries to `diagram_metadata_full.json` (stats recomputed).
+- **Stats refresh:** `python verify_system_stats.py` → 945 books, 594,330 production chunks (361,119 EPUB + 233,211 PGN), 551,478 diagrams. README header + System Stats updated.
+
+### Notes
+
+- Qdrant still requires elevated shell access; both ingestion and stats verification ran with escalated permissions. If future runs fail to extract chunks, confirm `epub_analysis.full_path` points at the corpus path (not the staging directory) after moving files.
+
+---
+
+## SESSION: Nov 25, 2025 (03:17 AM) – Understanding Before Moving Part 3.2 Ingestion ✅
+
+### What Was Accomplished
+
+- **Move + metadata fix:** Moved `Understanding Before Moving Part 3.2.epub` from staging into `/Volumes/T7 Shield/rag/books/epub/` and updated `epub_analysis.db.full_path` to the corpus path.
+- **Ingestion:** `python add_books_to_corpus.py "Understanding Before Moving Part 3.2.epub"` (elevated for Qdrant access) extracted 396 chunks and increased `chess_production` from 361,119 → 361,515 points.
+- **Diagrams:** Extracted 758 diagrams to `/Volumes/T7 Shield/rag/books/images/book_c9ab5a48aba5/` and appended to `diagram_metadata_full.json` (stats recomputed).
+- **Stats refresh:** `python verify_system_stats.py` → 946 books, 594,726 production chunks (361,515 EPUB + 233,211 PGN), 552,236 diagrams. README header + System Stats updated.
+
+### Notes
+
+- Qdrant access still needs the elevated shell; ingestion, diagram extraction, and stats verification were run with escalated permissions.
+
+---
+
+## SESSION: Nov 25, 2025 (12:27 PM) – Drill Your Chess Strategy! 2 Ingestion ✅
+
+### What Was Accomplished
+
+- **Approval follow-up:** After clarifying the earlier misunderstanding, proceeded with full ingest as requested.
+- **Move + metadata fix:** Moved `Drill Your Chess Strategy! 2 - Miloje Ratkovic, Milovan Ratkovic and Petar Ratkovic.epub` into `/Volumes/T7 Shield/rag/books/epub/` and updated `epub_analysis.db.full_path`.
+- **Ingestion:** `python add_books_to_corpus.py "Drill Your Chess Strategy! 2 - Miloje Ratkovic, Milovan Ratkovic and Petar Ratkovic.epub"` (elevated for Qdrant) added 224 chunks, raising `chess_production` 361,515 → 361,739.
+- **Diagrams:** Extracted 736 diagrams to `/Volumes/T7 Shield/rag/books/images/book_94244c1f5fd8/` and appended to `diagram_metadata_full.json` (stats recomputed).
+- **Stats refresh + UI copy:** `python verify_system_stats.py` → 947 books, 594,950 production chunks (361,739 EPUB + 233,211 PGN), 552,972 diagrams. README header/System Stats and `templates/index.html` subtitle updated.
+
+### Notes
+
+- All ingestion/diagram/stat steps ran with escalated permissions due to Qdrant access and writes on the external volume.
+
+---
+
+## SESSION: Nov 26, 2025 (01:42 PM) – Pavlidis Sicilian Taimanov Ingestion ✅
+
+### What Was Accomplished
+
+- **Approval + move:** Approved and moved `Pavlidis, Antonios - Grandmaster Repertoire. The Sicilian Taimanov [Quality Chess, 2019].epub` from staging into `/Volumes/T7 Shield/rag/books/epub/`; updated `epub_analysis.db.full_path`.
+- **Ingestion:** `python add_books_to_corpus.py "...Taimanov....epub"` (elevated for Qdrant) extracted 560 chunks and added 920 points (net `chess_production` 361,739 → 362,659).
+- **Diagrams:** Extracted 1,377 diagrams to `/Volumes/T7 Shield/rag/books/images/book_2368a7d20a7f/` and appended to `diagram_metadata_full.json` (stats recomputed).
+- **Stats refresh + UI copy:** `python verify_system_stats.py` → 948 books, 595,510 production chunks (362,299 EPUB + 233,211 PGN), 554,349 diagrams. README header/System Stats and `templates/index.html` subtitle updated.
+
+### Notes
+
+- All steps ran with escalated permissions for Qdrant access and writes on the external volume.
+
+---

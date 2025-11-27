@@ -74,10 +74,10 @@ Never merge a new script or major change without this logging in place. If youâ€
 
 ## Current System State (Verified Nov 10, 2025 - 3:30 PM)
 
-Run `verify_system_stats.py` to get latest. Last verified (Nov 13, 2025):
-- **Books:** 937 EPUB
-- **Production Chunks:** 592,306 (359,095 EPUB + 233,211 PGN)
-- **Diagrams:** 550,068
+Run `verify_system_stats.py` to get latest. Last verified (Nov 23, 2025):
+- **Books:** 944 EPUB
+- **Production Chunks:** 593,871 (360,660 EPUB + 233,211 PGN)
+- **Diagrams:** 550,598
 - **PGN Status:** `chess_pgn_repertoire` is live; current focus is validating diagram tooling against a cleaned PGN export
 
 ## Common Tasks
@@ -104,6 +104,7 @@ Run `verify_system_stats.py` to get latest. Last verified (Nov 13, 2025):
 
 - EPUB inline diagrams are fixed (markers now sync with available assets).
 - Build/testing tooling for PGN-derived diagrams is in progress. The existing prototype struggles with extremely large PGN files, so wait for the cleaned/split corpus and rerun the tool once it lands. Capture findings in SESSION_NOTES along with any adjustments needed for the pipeline.
+- Dynamic diagram fallback (FEN â†’ SVG) is enabled by default so that sources without static art can still show boards. Set `ENABLE_DYNAMIC_DIAGRAMS=false` in the environment to disable if needed, and keep an eye on `static/dynamic_diagrams/manifest.json` for cache churn.
 
 ## Files You'll Edit Most
 

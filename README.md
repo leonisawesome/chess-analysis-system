@@ -1,6 +1,6 @@
 # Chess Knowledge RAG System
 
-**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and ~592k chunks from 937 chess books (550,068 extracted diagrams). Includes 233,211 PGN game chunks from 64,251 games (run `python verify_system_stats.py` for latest counts).**
+**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and ~596k chunks from 948 chess books (554,349 extracted diagrams). Includes 233,211 PGN game chunks from 64,251 games (run `python verify_system_stats.py` for latest counts).**
 
 ---
 
@@ -40,6 +40,10 @@
 ### Active Priority
 🎯 **PGN Diagram QA Tooling:** Build/validate tooling that scores diagrams extracted from PGN chunks. The initial prototype highlighted issues when pointed at a single massive PGN (tens of thousands of games), so we’re temporarily blocked on a cleaned/split corpus. Once that file is ready, rerun the tool, confirm diagram quality, and wire the verified output into the synthesis pipeline.
 
+### Diagram Updates
+- ✅ Static EPUB coverage remains primary (542K+ diagrams tracked in `diagram_metadata_full.json`)
+- ✅ **Dynamic fallback re-enabled (Nov 20, 2025):** When a top RAG result doesn’t have a matching static asset, we now extract the FEN from the chunk and render an SVG on the fly (`/dynamic_diagrams/<id>`). Toggle via `ENABLE_DYNAMIC_DIAGRAMS` (default `true`); cache stored under `static/dynamic_diagrams/`.
+
 ### PGN Refresh (November 13, 2025) ✅ COMPLETE
 - ✅ `chess_publishing_2021_master.pgn` analyzed: **64,251 games → 234,251 chunks** written to `data/chess_publishing_2021_chunks.json` (598 MB).
 - ⚠️ 2 malformed games were skipped (IDs #8944 and #9284); see `pgn_quality_analyzer` logs for exact headers/snippets.
@@ -47,15 +51,15 @@
 - 💰 **Cost:** $3.21 (160.6M tokens) | **Time:** 162.8 minutes (2.7 hours)
 - 🔌 Ready for production: Set `ENABLE_PGN_COLLECTION = True` in `app.py` to enable PGN queries.
 
-### System Stats (Verified Nov 13, 2025 - 9:08 AM)
+### System Stats (Verified Nov 26, 2025 - 01:42 PM)
 
 **Run `python verify_system_stats.py` to get latest numbers!**
 
-- **Books:** 937 EPUB
+- **Books:** 948 EPUB
 - **PGN Games:** 64,251 games (from Chess Publishing 2021 master corpus)
-- **Chunks:** 592,306 total production (359,095 EPUB + 233,211 PGN)
-- **Diagrams:** 550,068 extracted from EPUBs
-- **Collections:** chess_production (359,095 points), chess_pgn_repertoire (233,211 points)
+- **Chunks:** 595,510 total production (362,299 EPUB + 233,211 PGN)
+- **Diagrams:** 554,349 extracted from EPUBs
+- **Collections:** chess_production (360,660 points), chess_pgn_repertoire (233,211 points)
 
 ### Architecture
 - **Model:** GPT-5 (gpt-chatgpt-4o-latest-20250514)
@@ -108,6 +112,16 @@ open http://localhost:5001
 ```bash
 python verify_system_stats.py
 ```
+
+### Dynamic Diagrams (FEN Rendering Fallback)
+- Default-on fallback automatically renders SVG boards for results without static EPUB diagrams.
+- Configure via environment variables:
+  ```bash
+  export ENABLE_DYNAMIC_DIAGRAMS=true        # disable with false/0/no/off
+  export DYNAMIC_DIAGRAMS_TOTAL=6            # max diagrams created per response
+  export DYNAMIC_DIAGRAMS_PER_RESULT=1       # max per individual source
+  ```
+- Generated assets live under `static/dynamic_diagrams/` with metadata in `static/dynamic_diagrams/manifest.json`.
 
 ### Add New Books
 - Run the canonical analyzer wrapper (processes **everything** in `/Volumes/T7 Shield/rag/books/epub/1new/` and writes to `epub_analysis.db`):

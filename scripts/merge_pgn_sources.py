@@ -35,10 +35,15 @@ def iter_pgn_files(root: Path) -> Iterable[Path]:
 
 def md5_file(path: Path, chunk_size: int = 8192) -> str:
     hasher = hashlib.md5()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(chunk_size), b""):
-            hasher.update(chunk)
-    return hasher.hexdigest()
+    try:
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(chunk_size), b""):
+                hasher.update(chunk)
+        return hasher.hexdigest()
+    except (FileNotFoundError, OSError) as e:
+        print(f"Warning: Skipping file (cannot open): {path}")
+        print(f"  Error: {e}")
+        return ""
 
 
 def write_master_file(source_root: Path, destination: Path) -> Dict[str, int]:
@@ -51,10 +56,16 @@ def write_master_file(source_root: Path, destination: Path) -> Dict[str, int]:
         for file_path in iter_pgn_files(source_root):
             stats["total_files"] += 1
             digest = md5_file(file_path)
+            if not digest:
+                continue
             if digest in seen_hashes:
                 continue
 
-            text = file_path.read_text(encoding="utf-8", errors="ignore").strip()
+            try:
+                text = file_path.read_text(encoding="utf-8", errors="ignore").strip()
+            except (FileNotFoundError, OSError) as e:
+                print(f"Warning: Skipping file (cannot read): {file_path}")
+                continue
             if not text:
                 continue
 
@@ -106,9 +117,22 @@ def main() -> int:
         "--output-name",
         help="Override default output filename (e.g., chessable_merge.pgn).",
     )
+    parser.add_argument(
+        "--source-root",
+        help="Source directory containing PGN files (skips interactive prompt).",
+    )
     args = parser.parse_args()
 
-    source_root = prompt_source_root()
+    if args.source_root:
+        source_root = Path(args.source_root).expanduser()
+        if not source_root.exists():
+            print(f"Error: Source directory not found: {source_root}")
+            return 1
+        if not source_root.is_dir():
+            print(f"Error: Not a directory: {source_root}")
+            return 1
+    else:
+        source_root = prompt_source_root()
     destination = resolve_output_name(args.output_name)
 
     print("=" * 72)
