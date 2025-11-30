@@ -1069,6 +1069,7 @@ Claude should capture the chunk/token totals from the script output, update this
   - Deleted: `victor_2017_bologan_s_king_s_indian_a_modern_repertoire_for_black_new_in_chess.epub`, `antonios_2019_the_sicilian_taimanov_quality_chess.epub`, `markos_2018_under_the_surface_2nd_edition_quality_chess.epub`, `unknown_author_2021_jan_markos_david_navarathe_secret_ingredient_quality_chess.epub`, `rogers_0000_oops_i_resigned_one_more_time.epub`.
   - Kept: the properly named editions already ingested (Bologan KID, Pavlidis Taimanov, Under the Surface 2nd Ed, Secret Ingredient, Oops! I Resigned One More Time!).
 - `scripts/remove_books.py` cleaned files, images, and SQLite; Qdrant deletes completed for 4/5. The remaining Qdrant delete for the Bologan KID slug was re-issued manually (operation_id=3730) and completed.
+- Stats after cleanup: `python verify_system_stats.py` → 950 books, 596,150 production chunks (362,939 EPUB + 233,211 PGN), 554,644 diagrams. README/System Stats/UI updated.
 
 ### Notes
 
