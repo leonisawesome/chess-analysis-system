@@ -1076,3 +1076,23 @@ Claude should capture the chunk/token totals from the script output, update this
 - Added an ingestion guardrail to AGENT_START_HERE: dedup staged files before running the analyzer (`python scripts/find_current_duplicates.py`; delete duplicates with `scripts/remove_books.py`).
 
 ---
+
+## SESSION: Nov 30, 2025 (11:11 AM) – Swiercz Quad Ingestion ✅
+
+### What Was Accomplished
+
+- **Dedup check:** Ran `find_current_duplicates.py` (no dupes in staging/corpus).
+- **Move + metadata:** Moved four Swiercz titles from staging to corpus and updated `epub_analysis.db.full_path`:
+  - A Complete Opening Repertoire for Black-1: Nimzo Indian (2021) – EVS 60 MEDIUM
+  - A Complete Opening Repertoire for Black-2: Ragozin & Catalan (2023) – EVS 73 HIGH
+  - The Modernized Ruy Lopez-1 (2020) – EVS 58 MEDIUM
+  - The Modernized Ruy Lopez-2 (2020) – EVS 63 MEDIUM
+- **Ingestion:** `python add_books_to_corpus.py <all four>` (elevated for Qdrant) added 7,910 chunks, raising `chess_production` 362,939 → 370,849.
+- **Diagrams:** Extracted 4,762 diagrams total (1,044 + 1,334 + 1,538 + 846) to their `book_*` folders and appended to `diagram_metadata_full.json` (stats recomputed).
+- **Stats refresh + UI copy:** `python verify_system_stats.py` → 954 books, 600,205 production chunks (366,994 EPUB + 233,211 PGN), 559,406 diagrams. README header/System Stats and `templates/index.html` subtitle updated.
+
+### Notes
+
+- All steps ran with escalated permissions for Qdrant access and writes on the external volume.
+
+---
