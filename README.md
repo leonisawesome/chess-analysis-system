@@ -1,6 +1,6 @@
 # Chess Knowledge RAG System
 
-**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and ~596k chunks from 948 chess books (554,349 extracted diagrams). Includes 233,211 PGN game chunks from 64,251 games (run `python verify_system_stats.py` for latest counts).**
+**A retrieval-augmented generation system for chess opening knowledge, powered by GPT-5 and ~598k chunks from 955 chess books (557,760 extracted diagrams). Includes 233,211 PGN game chunks from 64,251 games (run `python verify_system_stats.py` for latest counts).**
 
 ---
 
@@ -51,14 +51,14 @@
 - 💰 **Cost:** $3.21 (160.6M tokens) | **Time:** 162.8 minutes (2.7 hours)
 - 🔌 Ready for production: Set `ENABLE_PGN_COLLECTION = True` in `app.py` to enable PGN queries.
 
-### System Stats (Verified Nov 26, 2025 - 01:42 PM)
+### System Stats (Verified Nov 29, 2025 - 08:59 PM)
 
 **Run `python verify_system_stats.py` to get latest numbers!**
 
-- **Books:** 948 EPUB
+- **Books:** 955 EPUB
 - **PGN Games:** 64,251 games (from Chess Publishing 2021 master corpus)
-- **Chunks:** 595,510 total production (362,299 EPUB + 233,211 PGN)
-- **Diagrams:** 554,349 extracted from EPUBs
+- **Chunks:** 598,430 total production (365,219 EPUB + 233,211 PGN)
+- **Diagrams:** 557,760 extracted from EPUBs
 - **Collections:** chess_production (360,660 points), chess_pgn_repertoire (233,211 points)
 
 ### Architecture

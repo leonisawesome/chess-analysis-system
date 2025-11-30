@@ -1023,3 +1023,55 @@ Claude should capture the chunk/token totals from the script output, update this
 - All steps ran with escalated permissions for Qdrant access and writes on the external volume.
 
 ---
+
+## SESSION: Nov 29, 2025 (10:19 AM) – Four-Book Ingestion (Hedgehog + Rogers series) ✅
+
+### What Was Accomplished
+
+- **Move + metadata:** Moved four approved EPUBs from staging to corpus and updated `epub_analysis.db.full_path`:
+  - Iván-Gál, Hanna - Beating the Hedgehog System [NIC, 2023] with Hazai Laszlo (EVS 65, MEDIUM)
+  - Rogers, Ian - Oops! I Resigned Again [Russell, 2021] (EVS 76, HIGH)
+  - Rogers, Ian - Oops! I Resigned One More Time! [Russell, 2023] (EVS 69, MEDIUM)
+  - Rogers, Ian - The World's Most Boring Chess Book. The Isolated d-Pawn in the Endgame [Russell, 2025] with Hazai László (EVS 60, MEDIUM)
+- **Ingestion:** `python add_books_to_corpus.py <all four>` (elevated for Qdrant) added 896 chunks, raising `chess_production` 362,299 → 363,195.
+- **Diagrams:** Extracted 1,013 diagrams total (252 + 106 + 111 + 544) and appended to `diagram_metadata_full.json` (stats recomputed).
+- **Stats refresh + UI copy:** `python verify_system_stats.py` → 952 books, 596,406 production chunks (363,195 EPUB + 233,211 PGN), 555,362 diagrams. README header/System Stats and `templates/index.html` subtitle updated.
+
+### Notes
+
+- All steps ran with escalated permissions due to Qdrant access and writes on the external volume.
+
+---
+
+## SESSION: Nov 29, 2025 (08:59 PM) – Bologan Trio Ingestion ✅
+
+### What Was Accomplished
+
+- **Move + metadata:** Moved three Bologan titles from staging into corpus and updated `epub_analysis.db.full_path`:
+  - Bologan’s Caro-Kann (2018) – EVS 75 HIGH
+  - Bologan’s King’s Indian (2017) – EVS 57 MEDIUM
+  - The Rossolimo for Club Players (2022) – EVS 67 MEDIUM
+- **Ingestion:** `python add_books_to_corpus.py <all three>` (elevated for Qdrant) added 3,548 chunks, raising `chess_production` 363,195 → 366,743.
+- **Diagrams:** Extracted 2,398 diagrams total (1,167 + 794 + 437) to their respective `book_*` folders and appended to `diagram_metadata_full.json` (stats recomputed).
+- **Stats refresh + UI copy:** `python verify_system_stats.py` → 955 books, 598,430 production chunks (365,219 EPUB + 233,211 PGN), 557,760 diagrams. README header/System Stats and `templates/index.html` subtitle updated.
+
+### Notes
+
+- All steps ran with escalated permissions for Qdrant access and writes on the external volume.
+
+---
+
+## SESSION: Nov 30, 2025 (09:00 AM) – Duplicate Cleanup (slug vs. official titles) ✅
+
+### What Was Accomplished
+
+- Removed slug duplicates in favor of the official titled copies:
+  - Deleted: `victor_2017_bologan_s_king_s_indian_a_modern_repertoire_for_black_new_in_chess.epub`, `antonios_2019_the_sicilian_taimanov_quality_chess.epub`, `markos_2018_under_the_surface_2nd_edition_quality_chess.epub`, `unknown_author_2021_jan_markos_david_navarathe_secret_ingredient_quality_chess.epub`, `rogers_0000_oops_i_resigned_one_more_time.epub`.
+  - Kept: the properly named editions already ingested (Bologan KID, Pavlidis Taimanov, Under the Surface 2nd Ed, Secret Ingredient, Oops! I Resigned One More Time!).
+- `scripts/remove_books.py` cleaned files, images, and SQLite; Qdrant deletes completed for 4/5. The remaining Qdrant delete for the Bologan KID slug was re-issued manually (operation_id=3730) and completed.
+
+### Notes
+
+- Added an ingestion guardrail to AGENT_START_HERE: dedup staged files before running the analyzer (`python scripts/find_current_duplicates.py`; delete duplicates with `scripts/remove_books.py`).
+
+---
