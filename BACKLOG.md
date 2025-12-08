@@ -198,6 +198,16 @@ System: [Searches PGN collection with context]
 **Reality:** Cool idea but very complex
 - Requires position matching at every move
 - Critical moment detection (where to annotate?)
+
+### PGN Cleanup + Round-Trip Backport (CBH2 ↔ PGN)
+**Goal:** Standardize a cleaning pipeline we can run before RAG ingest and then backport to the ChessBase master DB.
+
+**Planned order (keep deterministic):**
+- Dedupe first (conservative full-text hash; skip ChessBase dedupe). Emit CSV of skipped games for backport.
+- Drop games with zero natural-language comments/annotations (pure move text or symbol-only). Keep words.
+- Language filter: keep (a) English, (b) Spanish, (c) mixed English+German. Drop pure German, French, Portuguese, or any other languages. Prefer offline embedded LID over simple heuristics; no network calls.
+- Validate with `pgn-extract -r -l` to catch structural issues (missing quotes/brackets, result mismatches) before CBH2 import.
+- Deliver: cleaned PGN + CSV of removals (reason + identifiers). Then convert to CBH2 and re-validate importer.
 - May not have corpus coverage for your specific position
 - **Time:** 21-30 days | **Risk:** VERY HIGH
 
@@ -248,6 +258,7 @@ System: [Searches PGN collection with context]
 - 📦 **PGN Corpus Expansion:** Scale from 1,778 → 1M games
 - 🗣 **Conversational Follow-ups / Depth Control:** Add session-aware follow-up queries ("tell me more") and a UI depth selector (Concise/Standard/Deep) once the corpus is refreshed.
 - 🔄 **Phase 5.2 Resume:** Re-validate RRF after PGN corpus expansion
+- 📝 **Engine annotation emulation:** Learn Fritz 15-style commentary from paired PGNs (Fritz15 vs modern/Hiarcs/CB) and generate upgraded short forcing lines + clear plan/why comments with modern Stockfish; keep threat/mate cues.
 
 ---
 

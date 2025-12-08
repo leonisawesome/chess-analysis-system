@@ -63,6 +63,14 @@
 
 ---
 
+### Mini checklist for future me (EPUB staging)
+- Staging: `/Volumes/T7 Shield/rag/books/epub/1new`; corpus: `/Volumes/T7 Shield/rag/books/epub/`.
+- Dedup: SHA-256 against corpus (skip `._*`); if dup, delete staged copy only.
+- Score: `scripts/analyze_staged_books.sh` (results in `epub_analysis.db`, filter by `full_path LIKE '/Volumes/T7 Shield/rag/books/epub/1new/%'`).
+- Ingest: move staged → corpus; leave AppleDouble metadata untouched.
+- Refresh stats: `python verify_system_stats.py`; update README header/System Stats, `templates/index.html` subtitle, and log the session in SESSION_NOTES.
+- If UI shows stats elsewhere, bump those strings too.
+
 ## AFTER REBOOT: WHAT TO DO
 
 ### 1. Restart Flask Server
@@ -1021,6 +1029,54 @@ Claude should capture the chunk/token totals from the script output, update this
 ### Notes
 
 - All steps ran with escalated permissions for Qdrant access and writes on the external volume.
+
+---
+
+## SESSION: Dec 4, 2025 (07:00 PM) – McDonald & Collins batch ✅
+
+### What Was Accomplished
+
+- **Dedup check:** 18/18 staged EPUBs unique (no removals) from `/Volumes/T7 Shield/rag/books/epub/1new`.
+- **Scoring:** Ran `scripts/analyze_staged_books.sh` (results in `epub_analysis.db`): top scores Strasman (79), McDonald Attack! (78), Collins Karpov Move by Move (80); full staged set scores: 80,79,78,74,74,73,73,71,70,69×5,65×3,61.
+- **Ingestion:** Moved all 18 staged books into `/Volumes/T7 Shield/rag/books/epub/` (AppleDouble untouched); staging now empty.
+- **Stats refresh:** `python verify_system_stats.py` → Books 972; Production chunks 600,205 (366,994 EPUB + 233,211 PGN); Diagrams 559,406.
+- **Docs/UI:** Updated counts in `README.md` (header + System Stats) and `templates/index.html` subtitle.
+
+### Notes
+
+- Steps ran with escalated permissions for external volume writes.
+- Ready for next drop in `/1new`.
+
+---
+
+## SESSION: Dec 4, 2025 (09:20 PM) – Grooten single ✅
+
+### What Was Accomplished
+
+- Dedup check: 1 staged EPUB unique (`/Volumes/T7 Shield/rag/books/epub/1new/Understanding Before Moving Part 3.3  - Herman Grooten.epub`).
+- Scored via `scripts/analyze_staged_books.sh`: EVS 58 (Medium).
+- Ingested: moved staged file into corpus `/Volumes/T7 Shield/rag/books/epub/` (AppleDouble untouched).
+- Stats refresh: `python verify_system_stats.py` → Books 973; Production chunks 600,205 (366,994 EPUB + 233,211 PGN); Diagrams 559,406.
+- Updated README header/System Stats counts to 973; UI subtitle unchanged (already at latest totals).
+
+### Notes
+
+- Staging now empty again.
+
+---
+
+## SESSION: Dec 4, 2025 (late) – Mueller/Juhasz batch ✅
+
+### What Was Accomplished
+
+- Deduped staged set: removed two dupes (ChessCafe Puzzle Book-4; Winning with the Slow Italian) and dropped the sub-50 Bobby Fischer Career & Complete Games. Remaining 16 kept for ingest.
+- Ingested remaining staged EPUBs into corpus; staging cleared.
+- Stats refresh after ingestion and Docker up: `python verify_system_stats.py` → Books 988; Production chunks 600,205 (366,994 EPUB + 233,211 PGN); Diagrams 559,406.
+- Updated counts in README header/System Stats and `templates/index.html` subtitle to 988.
+
+### Notes
+
+- Staging empty; dedupe rule preserved (skip AppleDouble).
 
 ---
 
