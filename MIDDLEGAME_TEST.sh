@@ -16,7 +16,12 @@ echo "==========================================================================
 echo ""
 
 # Set API key
-export OPENAI_API_KEY='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'
+if [ -f .env ]; then
+    set -a
+    source .env
+    set +a
+fi
+: "${OPENAI_API_KEY:?Set OPENAI_API_KEY (or create .env)}"
 
 # Step 1: Start Flask server
 echo "Step 1: Starting Flask server..."

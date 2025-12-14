@@ -124,14 +124,21 @@ python verify_system_stats.py
 - Generated assets live under `static/dynamic_diagrams/` with metadata in `static/dynamic_diagrams/manifest.json`.
 
 ### Add New Books
-- Run the canonical analyzer wrapper (processes **everything** in `/Volumes/T7 Shield/rag/books/epub/1new/` and writes to `epub_analysis.db`):
-  ```bash
-  scripts/analyze_staged_books.sh
-  ```
-- Review `epub_analysis.db` (e.g. `sqlite3 epub_analysis.db "SELECT filename, score FROM epub_analysis ORDER BY score DESC;"`) and send the score report so the user can approve/reject each title.
-- After approval, rename/move the approved files into `/Volumes/T7 Shield/rag/books/epub/` (assistant automates this step)
-- Continue with ingestion/diagram extraction per [DEVELOPMENT.md#adding-a-new-book](DEVELOPMENT.md#adding-a-new-book)
-- After running `python verify_system_stats.py`, update the hardcoded stats in `templates/index.html` (subtitle + loading message) so the landing page reflects the new counts.
+**EPUB-only workflow (we do not ingest PDFs).**
+
+1. Stage EPUBs in `/Volumes/T7 Shield/rag/books/epub/1new/` (keep macOS `._*` files; we filter them out).
+2. Verify none of the staged files duplicate an existing corpus title/edition.
+3. Score staged EPUBs (writes rows to `epub_analysis.db`):
+   ```bash
+   scripts/analyze_staged_books.sh
+   ```
+4. Review scores in SQLite and get approve/reject per title.
+5. Move approved EPUBs into `/Volumes/T7 Shield/rag/books/epub/` and ensure `epub_analysis.full_path` points to the corpus path (not `/1new/`).
+6. Ingest approved EPUBs into Qdrant: `python add_books_to_corpus.py "Book.epub"`.
+7. Extract diagrams for new books and append to `diagram_metadata_full.json`.
+8. Run `python verify_system_stats.py`, then update `templates/index.html` homepage counts.
+
+Full details: `docs/EPUB_INGEST.md`.
 
 ### Add PGN Games
 1. Score staged PGNs before anything touches Qdrant:

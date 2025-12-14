@@ -55,11 +55,11 @@ print(f"[CANARY] Using system prompt: {system_prompt[:100]}...")
 # Kill old server
 lsof -ti:5001 | xargs kill -9
 
-# Start with explicit reload
-export FLASK_ENV=development
-export OPENAI_API_KEY="sk-proj-8f8Lby..."
-python app.py  # Or: flask run --reload -p 5001
-```
+	# Start with explicit reload
+	export FLASK_ENV=development
+	export OPENAI_API_KEY="sk-proj-YOUR_API_KEY_HERE"
+	python app.py  # Or: flask run --reload -p 5001
+	```
 
 #### Step 1.4: Verify Canaries in Logs
 **Must see:**

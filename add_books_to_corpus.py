@@ -49,6 +49,49 @@ import tiktoken
 
 
 # ============================================================================
+# LOCAL ENV LOADING (avoid pasting secrets into commands)
+# ============================================================================
+
+def _load_openai_key_from_dotenv(dotenv_path: str = ".env") -> None:
+    """
+    If OPENAI_API_KEY is not already set, attempt to load it from a local
+    `.env` file in the current working directory.
+
+    Format:
+        OPENAI_API_KEY=sk-proj-...
+
+    Notes:
+        - This function does not print the key value.
+        - `.env` should be git-ignored.
+    """
+    if os.getenv("OPENAI_API_KEY"):
+        return
+
+    path = Path(dotenv_path)
+    if not path.exists() or not path.is_file():
+        return
+
+    try:
+        for raw_line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[len("export "):].strip()
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key == "OPENAI_API_KEY" and value:
+                os.environ["OPENAI_API_KEY"] = value
+                return
+    except Exception:
+        # Best-effort; fall back to normal env var checks below.
+        return
+
+
+# ============================================================================
 # CONFIGURATION (Must match production corpus settings)
 # ============================================================================
 
@@ -425,6 +468,9 @@ Note: OPENAI_API_KEY environment variable must be set
     print("INCREMENTAL BOOK ADDITION TO CHESS RAG CORPUS")
     print("=" * 80)
 
+    # Best-effort local env loading (lets users store secrets in .env, not shell history)
+    _load_openai_key_from_dotenv()
+
     # Check API key
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
@@ -541,6 +587,14 @@ Note: OPENAI_API_KEY environment variable must be set
     print(f"\n5️⃣  Generating embeddings...")
     embedded_chunks = embed_chunks_batch(openai_client, all_chunks)
     print(f"   ✅ Generated {len(embedded_chunks):,} embeddings")
+
+    if not embedded_chunks:
+        print("\n❌ No embeddings were generated; aborting without modifying Qdrant.")
+        print("   - Verify OPENAI_API_KEY is valid and has access to the embedding model.")
+        return
+
+    if len(embedded_chunks) != len(all_chunks):
+        print(f"\n⚠️  Embedded {len(embedded_chunks):,}/{len(all_chunks):,} chunks; proceeding will ingest only embedded chunks.")
 
     # Add to Qdrant
     print(f"\n6️⃣  Adding to Qdrant collection...")
