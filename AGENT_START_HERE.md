@@ -22,7 +22,7 @@ Use those numbers for documentation and ingestion validation. For code-only work
 
 ## Critical Rules
 
-### 1. macOS `._*` Files - NEVER DELETE THEM
+### 1. macOS Hidden Files - NEVER DELETE THEM
 
 ```python
 # ✅ CORRECT - Filter them out
@@ -32,7 +32,15 @@ files = [f for f in dir.glob("*.epub") if not f.name.startswith('._')]
 os.remove(file)  # DON'T DO THIS TO ._* FILES!
 ```
 
-**Why:** macOS creates these on external drives for extended attributes. Mac needs them. User had to rebuild them after previous assistants deleted them.
+**Why:** On macOS (especially external drives), Finder creates metadata files like:
+- `._*` (AppleDouble/resource fork sidecars)
+- `.DS_Store` (Finder view settings)
+
+Do **not** delete them as part of “cleanup” jobs. Instead:
+- Ignore them in git and scripts.
+- Filter them out during ingestion/scans.
+
+Previous assistants deleted AppleDouble files and it caused real corruption/repair work.
 
 ### 2. Before Any Commit
 

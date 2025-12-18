@@ -123,7 +123,7 @@ def find_non_english_spanish_pgns(
     pgn_files = []
     root_path = Path(root_dir)
     for file_path in root_path.rglob("*.pgn"):
-        if file_path.is_file():
+        if file_path.is_file() and not file_path.name.startswith("._"):
             pgn_files.append(str(file_path))
 
     pgn_files = sorted(pgn_files)

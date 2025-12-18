@@ -48,7 +48,7 @@ def iter_pgn_files(root: Path) -> Iterable[Path]:
     if not root.exists():
         raise FileNotFoundError(f"Root directory not found: {root}")
     for path in root.rglob("*.pgn"):
-        if path.is_file():
+        if path.is_file() and not path.name.startswith("._"):
             yield path
 
 

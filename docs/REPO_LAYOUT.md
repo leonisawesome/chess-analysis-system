@@ -23,7 +23,12 @@ Canonical operational scripts are grouped by domain:
 
 The previous paths under `scripts/` (for example `python scripts/merge_pgn_sources.py`) are preserved as thin wrappers that forward to the canonical subfolder scripts.
 
+## macOS hidden files
+
+Do not delete macOS filesystem metadata (especially on external drives). In particular:
+- `._*` AppleDouble sidecars must be preserved (filter out; never delete).
+- `.DS_Store` files should be ignored, not mass-deleted.
+
 ## `chess_rag_system/`
 
 Library code and heavier tooling that may have additional dependencies (e.g. the Postgres-backed game deduper).
-

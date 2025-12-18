@@ -53,7 +53,9 @@ def score_directory(
     analyzer = PGNQualityAnalyzer(Path(":memory:"))
     stats = {"total": 0, "kept_medium": 0, "kept_high": 0, "skipped": 0}
 
-    pgn_files = sorted(p for p in root.rglob("*.pgn") if p.is_file())
+    pgn_files = sorted(
+        p for p in root.rglob("*.pgn") if p.is_file() and not p.name.startswith("._")
+    )
     for file_idx, file_path in enumerate(pgn_files, start=1):
         print(f"[info] Processing ({file_idx}/{len(pgn_files)}): {file_path}")
         for raw_game in iter_raw_games(file_path):
