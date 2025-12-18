@@ -130,7 +130,7 @@ python verify_system_stats.py
 2. Verify none of the staged files duplicate an existing corpus title/edition.
 3. Score staged EPUBs (writes rows to `epub_analysis.db`):
    ```bash
-   scripts/analyze_staged_books.sh
+   scripts/books/analyze_staged_books.sh
    ```
 4. Review scores in SQLite and get approve/reject per title.
 5. Move approved EPUBs into `/Volumes/T7 Shield/rag/books/epub/` and ensure `epub_analysis.full_path` points to the corpus path (not `/1new/`).
@@ -155,7 +155,9 @@ Full details: `docs/EPUB_INGEST.md`.
    Keep the EVS score in each chunk’s metadata so we can query/delete low-quality games later.
 
 ### Combine Raw PGN Drops
-- Use `scripts/combine_pgn_corpus.py` to deduplicate massive PGN folders before analysis/ingest. This tool:
+> Note: scripts are now organized under `scripts/pgn/`, `scripts/books/`, etc. The old `scripts/<name>.py` paths still work as wrappers.
+
+- Use `scripts/pgn/combine_pgn_corpus.py` to deduplicate massive PGN folders before analysis/ingest. This tool:
   - Walks the tree recursively and filters macOS ghost files (`._*`)
   - Eliminates duplicates via MD5 hash
   - Skips non-English/Spanish annotations **by default** (logged + copied to a `--foreign-dir`)
@@ -164,7 +166,7 @@ Full details: `docs/EPUB_INGEST.md`.
 - Example (Modern Chess corpus):
   ```bash
   pip install langdetect  # one-time dependency
-  python scripts/combine_pgn_corpus.py \
+  python scripts/pgn/combine_pgn_corpus.py \
       --root "/Volumes/chess/1Modern Chess" \
       --output "/Volumes/T7 Shield/rag/databases/pgn/1new/modern.pgn" \
       --duplicates "/Volumes/T7 Shield/rag/databases/pgn/1new/modern_duplicates.csv" \
@@ -177,13 +179,13 @@ Full details: `docs/EPUB_INGEST.md`.
   Add `--keep-foreign` if you intentionally want to keep non-English PGNs in the combined output.
 
 ### Filter PGNs by EVS (High/Medium Buckets)
-- Use `scripts/filter_pgn_by_evs.py` to keep only medium/high-quality games (EVS ≥ 45 by default).
+- Use `scripts/pgn/filter_pgn_by_evs.py` to keep only medium/high-quality games (EVS ≥ 45 by default).
 - Two modes:
   1. `--mode single` (default): write all EVS ≥ medium threshold to a single file.
   2. `--mode split`: send EVS ≥ high threshold to one file and medium-range EVS to another.
 - Example (split mode on a 10 GB PGN dump):
   ```bash
-python scripts/filter_pgn_by_evs.py \
+python scripts/pgn/filter_pgn_by_evs.py \
     --input "/Volumes/T7 Shield/Deets/3unknown/master_unknown.pgn" \
     --mode split \
     --medium-output "/Volumes/T7 Shield/rag/databases/pgn/1new/purged_mediums.pgn" \
@@ -194,9 +196,9 @@ python scripts/filter_pgn_by_evs.py \
   This streams the PGN game-by-game, reuses the analyzer’s EVS scoring, and discards low-value games.
 
 ### Pick the Top X% of a PGN
-- Use `scripts/sample_top_evs.py` to extract, for example, the strongest 10% of `purged_mediums.pgn`:
+- Use `scripts/pgn/sample_top_evs.py` to extract, for example, the strongest 10% of `purged_mediums.pgn`:
   ```bash
-  python scripts/sample_top_evs.py \
+  python scripts/pgn/sample_top_evs.py \
       --input "/Volumes/T7 Shield/rag/databases/pgn/1new/purged_mediums.pgn" \
       --output "/Volumes/T7 Shield/rag/databases/pgn/1new/purged_mediums_top_10.pgn" \
       --percent 10
@@ -204,9 +206,9 @@ python scripts/filter_pgn_by_evs.py \
 - This pass reuses the EVS scorer, ranks every game by EVS, and writes only the top N-percent subset.
 
 ### Split an Entire Directory into Medium/High Buckets
-- Use `scripts/filter_directory_by_evs.py` to walk a folder (recursively) and stream all medium/high EVS games into two master PGNs:
+- Use `scripts/pgn/filter_directory_by_evs.py` to walk a folder (recursively) and stream all medium/high EVS games into two master PGNs:
   ```bash
-  python scripts/filter_directory_by_evs.py \
+  python scripts/pgn/filter_directory_by_evs.py \
       --root "/Users/leon/Downloads/3unknown" \
       --medium-output "/Volumes/T7 Shield/rag/databases/pgn/1new/medium_value.pgn" \
       --high-output "/Volumes/T7 Shield/rag/databases/pgn/1new/high_value.pgn" \
@@ -240,21 +242,21 @@ python scripts/generate_pgn_diagrams.py \
 - Set `--shard-size` (default 25k) to emit incremental metadata shards under `<metadata-output>_shards/diagram_metadata_pgn_shard_XXXX.json`. This keeps partial progress if a run stalls; once the full script finishes it still writes the aggregated `diagram_metadata_pgn.json`.
 - Override shard location with `--shard-dir /path/to/shards` if you prefer to store them on a faster disk. Set `--shard-size 0` to disable shard output entirely.
 - **Staging convention:** Place any new PGN you want processed (including the in-progress large corpus) under `/Volumes/T7 Shield/rag/databases/pgn/1new/`. That directory is where we run EVS scoring, chunking, and the PGN diagram generator. Keeping everything there makes it easy to hand files off to Claude Code for long-running ingestion jobs.
-- **Language cleanup:** Run `scripts/clean_pgn_language.py` to strip duplicated German prose from ChessBase Magazine annotations before handing PGNs to the pipeline.
+- **Language cleanup:** Run `scripts/pgn/clean_pgn_language.py` to strip duplicated German prose from ChessBase Magazine annotations before handing PGNs to the pipeline.
 
 > **Operational workflow:** Codex handles short, code-focused tasks and documentation updates. Whenever a command will run for minutes/hours or needs heartbeat logging (e.g., `scripts/generate_pgn_diagrams.py`, large `analyze_pgn_games.py` jobs, or `add_pgn_to_corpus.py` ingestion), launch it via Claude Code so you get live status updates. Document the results back in `SESSION_NOTES.md` once the job finishes.
 
 ### Daily PGN Merge
-- Use `scripts/merge_pgn_sources.py` to crawl either `/Users/leon/Downloads/ZListo`, `/Volumes/chess/zTemp`, or any custom directory, deduplicate by MD5, and emit a dated master PGN in `/Volumes/T7 Shield/rag/databases/pgn/1new`.
+- Use `scripts/pgn/merge_pgn_sources.py` to crawl either `/Users/leon/Downloads/ZListo`, `/Volumes/chess/zTemp`, or any custom directory, deduplicate by MD5, and emit a dated master PGN in `/Volumes/T7 Shield/rag/databases/pgn/1new`.
   ```bash
-  python scripts/merge_pgn_sources.py
+  python scripts/pgn/merge_pgn_sources.py
   ```
 - The script prompts for the source directory (enter `3` to type any absolute path), ignores `._*` ghost files, strips trailing whitespace, and writes to `<MM-DD-YY>_new.pgn` (e.g., `11-15-25_new.pgn`). Run it whenever you stage new PGNs for Claude Code to ingest.
 
 ### Remove German comments from PGNs
 - ChessBase Magazine games often repeat every annotation in German. Clean those duplicates before chunking so the RAG output stays English-only:
   ```bash
-  python scripts/clean_pgn_language.py \
+  python scripts/pgn/clean_pgn_language.py \
       --source "/path/to/chessbase_raw.pgn" \
       --output "/path/to/chessbase_english.pgn"
   ```
@@ -264,7 +266,7 @@ python scripts/generate_pgn_diagrams.py \
 ### Remove A Book (EPUB + Metadata)
 Use the helper script whenever possible:
 ```bash
-python scripts/remove_books.py <filename>.epub
+python scripts/books/remove_books.py <filename>.epub
 ```
 - Deletes the EPUB from `/Volumes/T7 Shield/rag/books/epub/`
 - Removes the associated image folder under `/Volumes/T7 Shield/rag/books/images/`

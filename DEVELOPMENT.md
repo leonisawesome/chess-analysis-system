@@ -41,7 +41,7 @@ See [AGENT_START_HERE.md](AGENT_START_HERE.md#adding-books) for full process.
 **Quick version:**
 ```bash
 # 1. Analyze everything the user staged (writes scores + tiers into epub_analysis.db)
-scripts/analyze_staged_books.sh
+scripts/books/analyze_staged_books.sh
 # → Share the SQLite report so the user can accept/reject each book
 
 # 2. After approval, rename + move approved files into the main corpus (assistant automates this step)
@@ -60,7 +60,7 @@ scripts/analyze_staged_books.sh
       print("\n".join(missing))
   PY
   ```
-  Anything listed should be removed via `scripts/remove_books.py` (which now tolerates macOS `._*` files) before continuing so SQLite/Qdrant stay in sync.
+  Anything listed should be removed via `scripts/books/remove_books.py` (which now tolerates macOS `._*` files) before continuing so SQLite/Qdrant stay in sync.
 
 # 3. Add to Qdrant
 export OPENAI_API_KEY='sk-proj-...'
@@ -119,7 +119,7 @@ When a query returns prose without inline boards, capture evidence before tweaki
 
 1. Dump the ranked static diagrams for the problematic prompts:
    ```bash
-   ./scripts/dump_diagram_candidates.py "Italian Game plans" "Italian Game tactics" \
+   ./scripts/diag/dump_diagram_candidates.py "Italian Game plans" "Italian Game tactics" \
      --output diagnostics/diagram_debug_italian.json \
      --markdown diagnostics/diagram_samples_italian.md
    ```
@@ -381,10 +381,10 @@ python3 -m py_compile file.py
 
 ```bash
 # Recommended: automatic cleanup (filesystem + SQLite + Qdrant)
-python scripts/remove_books.py <filename>.epub
+python scripts/books/remove_books.py <filename>.epub
 
 # Preview the actions first
-python scripts/remove_books.py --dry-run <filename>.epub
+python scripts/books/remove_books.py --dry-run <filename>.epub
 ```
 
 Manual fallback if the script can’t run:

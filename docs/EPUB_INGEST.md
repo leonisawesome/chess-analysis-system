@@ -10,12 +10,12 @@ This repo’s “book” pipeline is **EPUB-only**. PDFs are not used/ingested h
 ## 2) Dedupe gate (before scoring)
 
 - Confirm staged titles are not duplicates of existing corpus books (same title/edition under a different filename).
-- If a staged EPUB is a duplicate you want to remove, use `python scripts/remove_books.py "<filename>.epub"` (never manually delete `. _*`).
+- If a staged EPUB is a duplicate you want to remove, use `python scripts/books/remove_books.py "<filename>.epub"` (never manually delete `. _*`).
 
 ## 3) Score staged EPUBs (SQLite)
 
 - Run the analyzer wrapper:
-  - `scripts/analyze_staged_books.sh`
+  - `scripts/books/analyze_staged_books.sh`
 - Results are written to `epub_analysis.db` (table: `epub_analysis`), with `score`, `tier`, `word_count`, and any `error`.
 
 ## 4) Approve / reject
@@ -42,4 +42,3 @@ This repo’s “book” pipeline is **EPUB-only**. PDFs are not used/ingested h
 
 - Run: `python verify_system_stats.py`
 - Update homepage counts in `templates/index.html`.
-
