@@ -44,8 +44,51 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
 
 # Import shared utilities
-from epub_to_analyzer import extract_epub_text
+from epub_to_analyzer import extract_epub_text, extract_epub_sections
 import tiktoken
+
+
+# ============================================================================
+# LOCAL ENV LOADING (avoid pasting secrets into commands)
+# ============================================================================
+
+def _load_openai_key_from_dotenv(dotenv_path: str = ".env") -> None:
+    """
+    If OPENAI_API_KEY is not already set, attempt to load it from a local
+    `.env` file in the current working directory.
+
+    Format:
+        OPENAI_API_KEY=sk-proj-...
+
+    Notes:
+        - This function does not print the key value.
+        - `.env` should be git-ignored.
+    """
+    if os.getenv("OPENAI_API_KEY"):
+        return
+
+    path = Path(dotenv_path)
+    if not path.exists() or not path.is_file():
+        return
+
+    try:
+        for raw_line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[len("export "):].strip()
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key == "OPENAI_API_KEY" and value:
+                os.environ["OPENAI_API_KEY"] = value
+                return
+    except Exception:
+        # Best-effort; fall back to normal env var checks below.
+        return
 
 
 # ============================================================================
@@ -59,7 +102,7 @@ DB_PATH = "epub_analysis.db"
 QDRANT_MODE = os.getenv('QDRANT_MODE', 'docker')  # 'docker' or 'local'
 QDRANT_URL = os.getenv('QDRANT_URL', 'http://localhost:6333')
 QDRANT_PATH = "./qdrant_production_db"
-EPUB_DIR = "/Volumes/T7 Shield/epub"
+EPUB_DIR = "/Volumes/T7 Shield/rag/books/epub"  # Fixed Nov 10, 2025 - was missing /books/
 
 # Chunking parameters (MUST match build_production_corpus.py)
 CHUNK_SIZE = 512  # tokens per chunk
@@ -208,33 +251,41 @@ def extract_chunks_from_book(book_path: str, book_metadata: Dict) -> List[Dict]:
         List of chunk dicts with text, metadata
     """
     try:
-        text, error = extract_epub_text(book_path)
+        sections, error = extract_epub_sections(book_path)
 
-        if error or not text or not text.strip():
-            return []
-
-        chunks = chunk_text_by_tokens(
-            text,
-            chunk_size=CHUNK_SIZE,
-            overlap=CHUNK_OVERLAP
-        )
-
-        if not chunks:
+        if error or not sections:
             return []
 
         all_chunks = []
-        for chunk_idx, chunk_text in enumerate(chunks):
-            chunk_data = {
-                'text': chunk_text,
-                'book_name': book_metadata['filename'],
-                'book_path': book_metadata['full_path'],
-                'book_tier': book_metadata['tier'],
-                'book_score': book_metadata['score'],
-                'chapter_title': book_metadata['filename'],
-                'chapter_index': 0,
-                'chunk_index': chunk_idx
-            }
-            all_chunks.append(chunk_data)
+        chunk_idx = 0
+
+        for section_index, section in enumerate(sections):
+            section_chunks = chunk_text_by_tokens(
+                section['text'],
+                chunk_size=CHUNK_SIZE,
+                overlap=CHUNK_OVERLAP
+            )
+
+            if not section_chunks:
+                continue
+
+            for chunk_in_section, chunk_text in enumerate(section_chunks):
+                chunk_data = {
+                    'text': chunk_text,
+                    'book_name': book_metadata['filename'],
+                    'book_path': book_metadata['full_path'],
+                    'book_tier': book_metadata['tier'],
+                    'book_score': book_metadata['score'],
+                    'chapter_title': section.get('chapter_title') or book_metadata['filename'],
+                    'chapter_index': section_index,
+                    'section_path': section.get('section_path', section.get('chapter_title')),
+                    'section_index': section_index,
+                    'chunk_in_section': chunk_in_section,
+                    'html_document': section.get('html_document'),
+                    'chunk_index': chunk_idx
+                }
+                all_chunks.append(chunk_data)
+                chunk_idx += 1
 
         return all_chunks
 
@@ -352,6 +403,10 @@ def add_chunks_to_qdrant(qdrant_client: QdrantClient, chunks: List[Dict], start_
                 'book_score': chunk['book_score'],
                 'chapter_title': chunk['chapter_title'],
                 'chapter_index': chunk['chapter_index'],
+                'section_path': chunk.get('section_path'),
+                'section_index': chunk.get('section_index'),
+                'chunk_in_section': chunk.get('chunk_in_section'),
+                'html_document': chunk.get('html_document'),
                 'chunk_index': chunk['chunk_index']
             }
         )
@@ -412,6 +467,9 @@ Note: OPENAI_API_KEY environment variable must be set
     print("=" * 80)
     print("INCREMENTAL BOOK ADDITION TO CHESS RAG CORPUS")
     print("=" * 80)
+
+    # Best-effort local env loading (lets users store secrets in .env, not shell history)
+    _load_openai_key_from_dotenv()
 
     # Check API key
     api_key = os.getenv('OPENAI_API_KEY')
@@ -529,6 +587,14 @@ Note: OPENAI_API_KEY environment variable must be set
     print(f"\n5️⃣  Generating embeddings...")
     embedded_chunks = embed_chunks_batch(openai_client, all_chunks)
     print(f"   ✅ Generated {len(embedded_chunks):,} embeddings")
+
+    if not embedded_chunks:
+        print("\n❌ No embeddings were generated; aborting without modifying Qdrant.")
+        print("   - Verify OPENAI_API_KEY is valid and has access to the embedding model.")
+        return
+
+    if len(embedded_chunks) != len(all_chunks):
+        print(f"\n⚠️  Embedded {len(embedded_chunks):,}/{len(all_chunks):,} chunks; proceeding will ingest only embedded chunks.")
 
     # Add to Qdrant
     print(f"\n6️⃣  Adding to Qdrant collection...")

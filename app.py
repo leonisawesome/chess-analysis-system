@@ -8,12 +8,13 @@ import os
 import re
 import time
 import json
+from typing import Dict, List
 import chess
 import chess.pgn
 import chess.svg
 import spacy
 from io import StringIO
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file, abort
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from query_system_a import query_system_a, COLLECTION_NAME, QDRANT_PATH, embed_query, semantic_search, gpt5_rerank, TOP_K, TOP_N
@@ -22,20 +23,222 @@ import fen_validator
 import query_classifier
 
 from chess_positions import detect_fen, parse_moves_to_fen, extract_chess_positions, filter_relevant_positions, create_lichess_url
-from diagram_processor import extract_moves_from_description, extract_diagram_markers, replace_markers_with_ids, wrap_bare_fens
-from opening_validator import extract_contamination_details, generate_section_with_retry, validate_stage2_diagrams, validate_and_fix_diagrams
-from synthesis_pipeline import stage1_generate_outline, stage2_expand_sections, stage3_final_assembly, synthesize_answer
+from synthesis_pipeline import synthesize_answer, LENGTH_PRESETS
 from rag_engine import execute_rag_query, format_rag_results, prepare_synthesis_context, collect_answer_positions, debug_position_extraction, search_multi_collection_async
-from tactical_query_detector import is_tactical_query, inject_canonical_diagrams, strip_diagram_markers
-# from backend_html_renderer import apply_backend_html_rendering  # FIXME: Module doesn't exist
 
 # Phase 5.1: RRF multi-collection merge
 import asyncio
 from rrf_merger import merge_collections
+import uuid
+
+print("\n*** [CANARY] app.py VERSION: 6.1a-2025-11-10 LOADED ***\n")
 from query_router import get_query_info
+
+# Phase 6.1a: Static EPUB diagram integration
+from diagram_service import diagram_index, normalize_caption
+from dynamic_diagram_service import create_dynamic_diagram, get_dynamic_diagram_path
 
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
+ENABLE_PGN_COLLECTION = True  # PGN corpus rebuild complete (233,211 chunks ingested Nov 13, 2025)
+DEFAULT_LENGTH_MODE = "balanced"
+LENGTH_MODE_CHOICES = set(LENGTH_PRESETS.keys())
+
+FEATURED_MARKER_PATTERN = re.compile(r'\[FEATURED_DIAGRAM_\d+\]')
+SECTION_HEADING_PATTERN = re.compile(r'(##\s+[^\n]+\n)')
+
+def _flag_enabled(value: str) -> bool:
+    return value.strip().lower() not in {"0", "false", "no", "off"}
+
+ENABLE_DYNAMIC_DIAGRAMS = _flag_enabled(os.getenv("ENABLE_DYNAMIC_DIAGRAMS", "true"))
+MAX_DYNAMIC_DIAGRAMS_TOTAL = int(os.getenv("DYNAMIC_DIAGRAMS_TOTAL", "6"))
+MAX_DYNAMIC_DIAGRAMS_PER_RESULT = int(os.getenv("DYNAMIC_DIAGRAMS_PER_RESULT", "1"))
+
+
+def enforce_featured_diagram_markers(answer: str, diagram_count: int) -> str:
+    """
+    Ensure the synthesized answer has exactly `diagram_count` [FEATURED_DIAGRAM_X] markers.
+
+    Strategy:
+    1. Strip any existing markers (LLM may emit 0 or 20 of them arbitrarily)
+    2. Reinsert markers after headings and long sections so that the count
+       matches the number of diagrams we actually collected.
+    3. If no diagrams available, remove stale markers entirely so the UI
+       doesn't show literal [FEATURED_DIAGRAM_N] text.
+    """
+    if not answer:
+        return answer
+
+    # Remove any markers the model generated (keeps text clean)
+    cleaned = FEATURED_MARKER_PATTERN.sub('', answer)
+
+    if diagram_count <= 0:
+        if cleaned != answer:
+            print("🧹 Removed stale inline diagram markers (0 diagrams available)")
+        return cleaned
+
+    segments = SECTION_HEADING_PATTERN.split(cleaned)
+    result_segments = []
+    marker_index = 1
+    inserted_markers = 0
+
+    def next_marker(wrap: bool = True) -> str:
+        nonlocal marker_index, inserted_markers
+        marker = f'[FEATURED_DIAGRAM_{marker_index}]'
+        marker_index += 1
+        inserted_markers += 1
+        return f'\n{marker}\n\n' if wrap else marker
+
+    for segment in segments:
+        if not segment:
+            continue
+
+        if SECTION_HEADING_PATTERN.match(segment):
+            result_segments.append(segment)
+            if inserted_markers < diagram_count:
+                result_segments.append(next_marker())
+            continue
+
+        body = segment
+        if inserted_markers < diagram_count and len(body.strip()) >= 200:
+            paragraphs = body.split('\n\n')
+            insert_at = max(1, len(paragraphs) // 2)
+            paragraphs.insert(insert_at, next_marker(wrap=False))
+            body = '\n\n'.join(paragraphs)
+
+        result_segments.append(body)
+
+    while inserted_markers < diagram_count:
+        result_segments.append(next_marker())
+
+    print(f"📍 Inline diagram markers inserted: {inserted_markers}/{diagram_count}")
+    return ''.join(result_segments)
+
+
+def format_diagram_caption(diagram: Dict) -> str:
+    """Generate a clean caption for a static EPUB diagram."""
+    raw = (diagram.get('caption')
+           or diagram.get('diagram_caption')
+           or diagram.get('context_before')
+           or diagram.get('context_after')
+           or 'Chess diagram')
+    return normalize_caption(raw, max_len=220)
+
+
+def build_featured_diagrams(results: List[Dict], fallback_diagrams: List[Dict], limit: int = 6) -> List[Dict]:
+    """
+    Build a featured diagram list prioritizing top results, then using fallback pools.
+    Ensures we always return up to `limit` unique diagrams so the UI can render a
+    consistent number of inline boards.
+    """
+
+    def add_from(diagrams: List[Dict], cap: int | None = None) -> bool:
+        nonlocal featured
+        if not diagrams:
+            return False
+        selection = diagrams if cap is None else diagrams[:cap]
+        for diagram in selection:
+            diagram_id = diagram.get('id') or diagram.get('diagram_id')
+            if diagram_id and diagram_id in seen:
+                continue
+            featured.append(diagram)
+            if diagram_id:
+                seen.add(diagram_id)
+            if len(featured) >= limit:
+                return True
+        return False
+
+    if limit <= 0:
+        return []
+
+    featured: List[Dict] = []
+    seen = set()
+
+    # Pass 1: top 3 results (max 2 diagrams each to avoid dominance)
+    for result in results[:3]:
+        if add_from(result.get('epub_diagrams', []), cap=2):
+            return featured
+
+    # Pass 2: remaining top results (positions 4-5) any diagrams available
+    for result in results[3:5]:
+        if add_from(result.get('epub_diagrams', [])):
+            return featured
+
+    # Pass 3: use fallback pool to pad out the carousel
+    add_from(fallback_diagrams or [])
+    return featured[:limit]
+
+
+def estimate_diagram_slots(answer: str, base_limit: int = 8) -> int:
+    """
+    Estimate how many inline diagrams we should target based on the size of
+    the synthesized answer. Long paragraphs (>=120 chars) count as slots.
+    """
+    if not answer:
+        return base_limit
+    paragraphs = [p for p in answer.split('\n\n') if len(p.strip()) >= 120]
+    estimated = max(6, min(base_limit, len(paragraphs)))
+    return estimated
+
+
+def attach_dynamic_diagrams(results: List[Dict], max_total: int, per_result: int) -> int:
+    """
+    Attach dynamic diagrams (generated from FEN) to results lacking static images.
+
+    Returns:
+        Number of diagrams created.
+    """
+    added = 0
+
+    for result in results[:10]:
+        if added >= max_total:
+            break
+
+        existing_diagrams = result.get('epub_diagrams') or []
+        if existing_diagrams:
+            continue
+
+        positions = result.get('positions') or []
+        if not positions:
+            continue
+
+        fallback_caption = (
+            result.get('chapter_title')
+            or result.get('book_title')
+            or result.get('book_name')
+            or "Dynamic chess diagram"
+        )
+
+        diagrams_for_result = 0
+        for pos in positions:
+            if diagrams_for_result >= per_result or added >= max_total:
+                break
+
+            fen = pos.get('fen')
+            if not fen:
+                continue
+
+            try:
+                raw_caption = pos.get('caption') or fallback_caption
+                caption = normalize_caption(raw_caption)
+                payload = create_dynamic_diagram(
+                    fen=fen,
+                    caption=caption,
+                    book_title=result.get('book_title') or result.get('book_name')
+                )
+
+                if pos.get('lichess_url'):
+                    payload['lichess_url'] = pos['lichess_url']
+
+                result.setdefault('epub_diagrams', []).append(payload)
+                diagrams_for_result += 1
+                added += 1
+
+            except Exception as exc:
+                print(f"⚠️  Dynamic diagram generation failed ({result.get('book_name')}): {exc}")
+                continue
+
+    return added
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -71,31 +274,34 @@ except OSError:
     print("⚠️  spaCy model not found. Run: python -m spacy download en_core_web_sm")
     NLP = None
 
-# Load canonical FENs for middlegame concepts
-print("Loading canonical FENs...")
-CANONICAL_FENS = {}
-try:
-    with open('canonical_fens.json', 'r') as f:
-        CANONICAL_FENS = json.load(f)
-    print(f"✓ Loaded {len(CANONICAL_FENS)} canonical FEN concepts")
-except FileNotFoundError:
-    print("⚠️  canonical_fens.json not found - middlegame queries will use RAG only")
+# Dynamic diagram generation REMOVED (Phase 6.1b abandoned)
+# Using static EPUB diagrams only (Phase 6.1a)
 
-# Load canonical positions library for tactical query bypass
-print("Loading canonical positions library...")
-CANONICAL_POSITIONS = {}
+# Phase 6.1a: Load static EPUB diagram metadata
+print("Loading EPUB diagram metadata...")
 try:
-    with open('canonical_positions.json', 'r') as f:
-        CANONICAL_POSITIONS = json.load(f)
-    total_positions = sum(len(positions) for positions in CANONICAL_POSITIONS.values())
-    print(f"✓ Loaded {total_positions} canonical positions across {len(CANONICAL_POSITIONS)} categories")
+    diagram_index.load('diagram_metadata_full.json', min_size_bytes=2000)
+    print("✓ Diagram service ready (EPUB)")
 except FileNotFoundError:
-    print("⚠️  canonical_positions.json not found - tactical query bypass disabled")
+    print("⚠️  diagram_metadata_full.json not found - static diagrams disabled")
+except Exception as e:
+    print(f"⚠️  Error loading diagram metadata: {e}")
 
-# Initialize canonical positions prompt for synthesis
-print("Initializing canonical positions prompt...")
-from synthesis_pipeline import initialize_canonical_prompt
-initialize_canonical_prompt()
+PGN_DIAGRAM_METADATA = os.getenv("PGN_DIAGRAM_METADATA", "diagram_metadata_pgn.json")
+PGN_DIAGRAM_METADATA = os.path.abspath(PGN_DIAGRAM_METADATA)
+if os.path.exists(PGN_DIAGRAM_METADATA):
+    try:
+        print(f"Loading PGN diagram metadata from {PGN_DIAGRAM_METADATA}...")
+        diagram_index.load(
+            PGN_DIAGRAM_METADATA,
+            min_size_bytes=512,
+            allow_small_source_types={"pgn"},
+        )
+        print("✓ PGN diagram metadata merged")
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        print(f"⚠️  Failed to load PGN diagram metadata: {exc}")
+else:
+    print(f"ℹ️  PGN diagram metadata not found ({PGN_DIAGRAM_METADATA}) - skipping appendix load")
 
 # ============================================================================
 # MULTI-STAGE SYNTHESIS PIPELINE
@@ -107,6 +313,70 @@ import json
 def index():
     """Main page."""
     return render_template('index.html')
+
+
+# ============================================================================
+# PHASE 6.1a: STATIC EPUB DIAGRAM SERVING
+# ============================================================================
+
+@app.route('/diagrams/<diagram_id>')
+def serve_diagram(diagram_id):
+    """
+    Serve a static EPUB diagram by ID.
+
+    Security: Uses metadata whitelist validation (no user-controlled paths).
+
+    Args:
+        diagram_id: Diagram identifier (e.g., "book_a857fac20ce3_0042")
+
+    Returns:
+        Image file with caching headers or 404/410
+    """
+    from flask import send_file, abort, Response
+
+    # Validate against whitelist
+    if not diagram_index.is_valid_diagram_id(diagram_id):
+        app.logger.warning(f"Invalid diagram ID requested: {diagram_id}")
+        abort(404)
+
+    # Get trusted file path from metadata
+    diagram_info = diagram_index.get_diagram_by_id(diagram_id)
+    if not diagram_info:
+        abort(404)
+
+    file_path = diagram_info['file_path']
+
+    # Check if file exists
+    if not os.path.exists(file_path):
+        app.logger.error(f"Diagram file missing: {file_path}")
+        return Response("Diagram file unavailable (drive may be unmounted)", status=410)
+
+    # Serve with caching headers
+    try:
+        response = send_file(file_path, conditional=True)  # Adds ETag/Last-Modified
+        response.headers['Cache-Control'] = 'public, max-age=86400'  # 24 hours
+        return response
+    except Exception as e:
+        app.logger.error(f"Error serving diagram {diagram_id}: {e}")
+        abort(500)
+
+
+@app.route('/dynamic_diagrams/<diagram_id>')
+def serve_dynamic_diagram(diagram_id):
+    """
+    Serve cached dynamic diagrams generated from FEN strings.
+    """
+    file_path = get_dynamic_diagram_path(diagram_id)
+    if not file_path:
+        abort(404)
+
+    try:
+        response = send_file(str(file_path), conditional=True, mimetype='image/svg+xml')
+        response.headers['Cache-Control'] = 'public, max-age=86400'
+        return response
+    except Exception as exc:
+        app.logger.error(f"Error serving dynamic diagram {diagram_id}: {exc}")
+        abort(500)
 
 @app.route('/test_pgn')
 def test_pgn_page():
@@ -133,8 +403,12 @@ def query():
         start = time.time()
 
         # Step 1: Parse request
-        data = request.get_json()
+        data = request.get_json() or {}
         query_text = data.get('query', '').strip()
+        requested_length_mode = data.get('length_mode', DEFAULT_LENGTH_MODE)
+        length_mode = requested_length_mode if requested_length_mode in LENGTH_MODE_CHOICES else DEFAULT_LENGTH_MODE
+        length_config = LENGTH_PRESETS.get(length_mode, LENGTH_PRESETS[DEFAULT_LENGTH_MODE])
+        print(f"📝 Length preference: {length_mode}")
         t1 = time.time()
         print(f"⏱  Request parsing: {t1-start:.2f}s")
 
@@ -158,104 +432,6 @@ def query():
             print(f"📋 Detected opening: {opening_name}")
         if expected_signature:
             print(f"✓ Expected signature: {expected_signature}")
-
-        # 🚨 EMERGENCY FIX: Detect tactical queries and bypass GPT diagram generation
-        # DISABLED: Static tactical bypass (ITEM-024.8)
-        if False and CANONICAL_POSITIONS and is_tactical_query(query_text):
-            print("=" * 80)
-            print("🚨 TACTICAL QUERY DETECTED - Option D Emergency Fix Active")
-            print("=" * 80)
-            print(f"Query: {query_text}")
-            print("Bypassing GPT-5 diagram generation, injecting canonical positions...")
-
-            # Still run RAG to get textual context from books
-            ranked_results, rag_timing = execute_rag_query(
-                OPENAI_CLIENT,
-                QDRANT_CLIENT,
-                query_text,
-                COLLECTION_NAME,
-                top_k=TOP_K,
-                top_n=TOP_N,
-                embed_func=embed_query,
-                search_func=semantic_search,
-                rerank_func=gpt5_rerank
-            )
-
-            results = format_rag_results(ranked_results, query_text, extract_positions=True)
-            context_chunks = prepare_synthesis_context(results, None, top_n=8)
-            context = "\n\n".join(context_chunks)
-
-            # Let GPT-5 generate text explanation ONLY (no diagrams)
-            print("Requesting text-only explanation from GPT-5...")
-            response = OPENAI_CLIENT.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": "system", "content": "You are a chess expert. Explain tactical concepts clearly and concisely. DO NOT include any [DIAGRAM] markers or FEN strings in your response."},
-                    {"role": "user", "content": f"Question: {query_text}\n\nContext from chess literature:\n{context[:4000]}\n\nProvide a detailed explanation of this tactical concept. Focus on how it works, when to use it, and key patterns to recognize. Do NOT include diagram markers."}
-                ],
-                max_completion_tokens=2000
-            )
-
-            synthesized_answer = response.choices[0].message.content
-
-            # Strip any diagram markers GPT-5 might have generated anyway
-            synthesized_answer = strip_diagram_markers(synthesized_answer)
-
-            # Inject canonical diagrams programmatically
-            diagram_positions = inject_canonical_diagrams(query_text, CANONICAL_POSITIONS)
-
-            # Generate SVG for injected diagrams
-            from diagram_processor import generate_svg_from_fen
-            for diagram in diagram_positions:
-                if 'fen' in diagram and not diagram.get('svg'):
-                    diagram['svg'] = generate_svg_from_fen(diagram['fen'])
-
-            # === CRITICAL FIX: Re-insert markers for frontend rendering ===
-            # Frontend expects [DIAGRAM_ID:uuid] markers in answer text
-            # This re-establishes the contract between backend and frontend
-            print(f"🔧 Re-inserting {len(diagram_positions)} diagram markers into answer text...")
-
-            # Append markers at end of text with captions
-            marker_text = "\n\n"
-            for i, diagram in enumerate(diagram_positions):
-                marker_text += f"[DIAGRAM_ID:{diagram['id']}]\n"
-                if 'caption' in diagram:
-                    marker_text += f"{diagram['caption']}\n\n"
-
-            synthesized_answer += marker_text
-            print("✅ Markers re-inserted - frontend will now render diagrams")
-
-            total = time.time() - start
-            print(f"✅ EMERGENCY FIX COMPLETE: Injected {len(diagram_positions)} canonical diagrams")
-            print(f"🎯 TOTAL: {total:.2f}s")
-            print("=" * 80)
-
-            # Collect positions from top sources
-            synthesized_positions = collect_answer_positions(results, max_positions=2)
-
-            # Build response
-            response = {
-                'success': True,
-                'query': query_text,
-                'answer': synthesized_answer,
-                'positions': synthesized_positions,
-                'diagram_positions': diagram_positions,  # Canonical diagrams
-                'sources': results[:5],
-                'results': results,
-                'timing': {
-                    **rag_timing,
-                    'synthesis': round(total, 2),
-                    'total': round(total, 2)
-                },
-                'emergency_fix_applied': True  # Flag for debugging
-            }
-
-            # ITEM-024.6: Backend HTML pre-rendering (Option B - Nuclear Fix)
-            # ITEM-024.7: Reverted to JavaScript rendering (Path B - Clean Architecture)
-            # response = apply_backend_html_rendering(response)
-
-            # Return response with canonical diagrams + embedded SVG HTML
-            return jsonify(response)
 
         # Step 2-4: Execute RAG pipeline (embed → search → rerank)
         ranked_results, rag_timing = execute_rag_query(
@@ -293,29 +469,17 @@ def query():
             "\n\n".join(context_chunks),  # Join context properly
             opening_name=opening_name,
             expected_signature=expected_signature,
-            validate_stage2_diagrams_func=validate_stage2_diagrams,
-            generate_section_with_retry_func=generate_section_with_retry,
-            canonical_fen=canonical_fen
+            validate_stage2_diagrams_func=None,  # Dynamic diagram validation removed
+            generate_section_with_retry_func=None,  # Dynamic diagram validation removed
+            canonical_fen=canonical_fen,
+            length_mode=DEFAULT_LENGTH_MODE
         )
 
         rag_timing['synthesis'] = round(time.time() - synthesis_start, 2)
         print(f"⏱  3-stage synthesis complete: {rag_timing['synthesis']}s")
 
-        # Step 6.4: POST-PROCESSING - Wrap any bare FEN strings
-        print(f"\n🔧 Post-processing: Wrapping bare FEN strings...")
-        synthesized_answer = wrap_bare_fens(synthesized_answer)
-        print(f"✅ Bare FEN post-processing complete")
-
-        # Step 6.5: Extract and parse diagram markers from synthesized text
-        print(f"\n⏱  Extracting diagram markers...")
-        diagram_start = time.time()
-
-        diagram_positions = extract_diagram_markers(synthesized_answer)
-        synthesized_answer = replace_markers_with_ids(synthesized_answer, diagram_positions)
-
-        rag_timing['diagrams'] = round(time.time() - diagram_start, 2)
-        print(f"⏱  Diagram extraction complete: {rag_timing['diagrams']}s")
-        print(f"📋 Extracted {len(diagram_positions)} diagram positions from synthesis")
+        # Dynamic diagram generation removed - using static EPUB diagrams only
+        diagram_positions = []
 
         total = time.time() - start
         print(f"🎯 TOTAL: {total:.2f}s")
@@ -351,6 +515,8 @@ def query():
         # Collect positions from top sources for answer section
         synthesized_positions = collect_answer_positions(results, max_positions=2)
         print(f"📋 Collected {len(synthesized_positions)} positions for answer section")
+
+        synthesized_answer = enforce_featured_diagram_markers(synthesized_answer, 0)
 
         # Prepare response
         response_data = {
@@ -414,6 +580,10 @@ def query_merged():
         # Step 1: Parse request
         data = request.get_json()
         query_text = data.get('query', '').strip()
+        requested_length_mode = data.get('length_mode', DEFAULT_LENGTH_MODE)
+        length_mode = requested_length_mode if requested_length_mode in LENGTH_MODE_CHOICES else DEFAULT_LENGTH_MODE
+        length_config = LENGTH_PRESETS.get(length_mode, LENGTH_PRESETS[DEFAULT_LENGTH_MODE])
+        print(f"📝 Length preference: {length_mode}")
         t1 = time.time()
         print(f"⏱  Request parsing: {t1-start:.2f}s")
 
@@ -439,24 +609,36 @@ def query_merged():
 
         # Define collections with balanced retrieval (50+50)
         collections = {
-            'chess_production': 50,         # EPUB books
-            'chess_pgn_repertoire': 50      # PGN games
+            'chess_production': 50  # EPUB books
         }
+        if ENABLE_PGN_COLLECTION:
+            collections['chess_pgn_repertoire'] = 50  # PGN games
 
-        # Run parallel searches using asyncio
-        epub_results, pgn_results = asyncio.run(
-            search_multi_collection_async(
+        if ENABLE_PGN_COLLECTION:
+            epub_results, pgn_results = asyncio.run(
+                search_multi_collection_async(
+                    QDRANT_CLIENT,
+                    query_vector,
+                    collections,
+                    search_func=semantic_search
+                )
+            )
+        else:
+            epub_results = semantic_search(
                 QDRANT_CLIENT,
                 query_vector,
-                collections,
-                search_func=semantic_search
+                top_k=collections['chess_production'],
+                collection_name='chess_production'
             )
-        )
+            pgn_results = []
 
         search_time = time.time() - search_start
         print(f"   Parallel search: {search_time:.2f}s")
         print(f"   EPUB candidates: {len(epub_results)}")
-        print(f"   PGN candidates: {len(pgn_results)}")
+        if ENABLE_PGN_COLLECTION:
+            print(f"   PGN candidates: {len(pgn_results)}")
+        else:
+            print("   PGN collection disabled (skipping)")
 
         # Step 5: Rerank each collection independently with GPT-5
         print(f"⏱  Reranking collections...")
@@ -465,8 +647,10 @@ def query_merged():
         # Rerank EPUB results
         ranked_epub = gpt5_rerank(OPENAI_CLIENT, query_text, epub_results, top_k=50)
 
-        # Rerank PGN results
-        ranked_pgn = gpt5_rerank(OPENAI_CLIENT, query_text, pgn_results, top_k=50)
+        # Rerank PGN results (if enabled)
+        ranked_pgn = []
+        if ENABLE_PGN_COLLECTION and pgn_results:
+            ranked_pgn = gpt5_rerank(OPENAI_CLIENT, query_text, pgn_results, top_k=50)
 
         rerank_time = time.time() - rerank_start
         print(f"   Reranking: {rerank_time:.2f}s")
@@ -486,14 +670,15 @@ def query_merged():
             })
 
         pgn_formatted = []
-        for i, (candidate, score) in enumerate(ranked_pgn):
-            payload = candidate.payload
-            pgn_formatted.append({
-                'id': f"pgn_{payload.get('source_file', '')}_{i}",
-                'score': score,
-                'collection': 'chess_pgn_repertoire',
-                'payload': payload
-            })
+        if ENABLE_PGN_COLLECTION:
+            for i, (candidate, score) in enumerate(ranked_pgn):
+                payload = candidate.payload
+                pgn_formatted.append({
+                    'id': f"pgn_{payload.get('source_file', '')}_{i}",
+                    'score': score,
+                    'collection': 'chess_pgn_repertoire',
+                    'payload': payload
+                })
 
         # Step 7: Apply RRF merge with collection weights
         print(f"⏱  Applying RRF merge (k=60)...")
@@ -535,6 +720,7 @@ def query_merged():
             formatted = {
                 'score': round(result['max_similarity'], 1),  # Use GPT-5 reranking score (0-10 scale)
                 'book_name': book_name,
+                'book_title': payload.get('book_title', book_name),
                 'book': book_name,
                 'chapter_title': chapter,
                 'chapter': chapter,
@@ -544,9 +730,13 @@ def query_merged():
                 'collection': result['collection'],
                 'rrf_score': result['rrf_score'],
                 'best_rank': result['best_rank'],
-                'fusion_sources': result['fusion_sources']
+                'fusion_sources': result['fusion_sources'],
+                'max_similarity': result['max_similarity']  # Keep for filtering
             }
-            final_results.append(formatted)
+            # Note: epub_diagrams added later at line 536 (after formatting)
+            # Filter out results with 0 relevance (completely irrelevant)
+            if result['max_similarity'] > 0:
+                final_results.append(formatted)
 
         # Step 10: Prepare synthesis context with mixed-media support
         print(f"⏱  Preparing synthesis context...")
@@ -562,28 +752,17 @@ def query_merged():
             "\n\n".join(context_chunks),
             opening_name=None,
             expected_signature=None,
-            validate_stage2_diagrams_func=validate_stage2_diagrams,
-            generate_section_with_retry_func=generate_section_with_retry,
-            canonical_fen=None
+            validate_stage2_diagrams_func=None,  # Dynamic diagram validation removed
+            generate_section_with_retry_func=None,  # Dynamic diagram validation removed
+            canonical_fen=None,
+            length_mode=length_mode
         )
 
         synthesis_time = time.time() - synthesis_start
         print(f"⏱  3-stage synthesis complete: {synthesis_time:.2f}s")
 
-        # Step 12: Post-processing
-        print(f"🔧 Post-processing: Wrapping bare FEN strings...")
-        synthesized_answer = wrap_bare_fens(synthesized_answer)
-
-        # Step 13: Extract diagram markers
-        print(f"⏱  Extracting diagram markers...")
-        diagram_start = time.time()
-
-        diagram_positions = extract_diagram_markers(synthesized_answer)
-        synthesized_answer = replace_markers_with_ids(synthesized_answer, diagram_positions)
-
-        diagram_time = time.time() - diagram_start
-        print(f"⏱  Diagram extraction complete: {diagram_time:.2f}s")
-        print(f"📋 Extracted {len(diagram_positions)} diagram positions")
+        # Dynamic diagram generation removed - using static EPUB diagrams only
+        diagram_positions = []
 
         # Step 14: Collect positions from top sources
         synthesized_positions = collect_answer_positions(final_results, max_positions=2)
@@ -592,6 +771,147 @@ def query_merged():
         print(f"🎯 TOTAL: {total:.2f}s")
         print("=" * 80)
 
+        # Phase 6.1a: Attach static EPUB diagrams to results
+        print(f"📷 Attaching static EPUB diagrams...")
+        diagram_attach_start = time.time()
+
+        for idx, result in enumerate(final_results[:10]):  # Top 10 results only
+            book_name = (result.get('book_name') or '').strip()
+            book_title = (result.get('book_title') or '').strip()
+
+            lookup_candidates = []
+            if book_name:
+                lookup_candidates.append(book_name)
+                if not book_name.endswith(('.epub', '.mobi', '.pgn')):
+                    lookup_candidates.extend([
+                        f"{book_name}.epub",
+                        f"{book_name}.mobi"
+                    ])
+            if book_title:
+                lookup_candidates.extend([book_title, book_title.lower()])
+                title_slug = re.sub(r'[^a-z0-9]+', '_', book_title.lower()).strip('_')
+                if title_slug:
+                    lookup_candidates.append(title_slug)
+
+            book_id = None
+            for candidate in lookup_candidates:
+                if not candidate:
+                    continue
+                book_id = diagram_index.get_book_id_from_name(candidate)
+                if book_id:
+                    break
+
+            if book_id:
+                all_diagrams = diagram_index.get_diagrams_for_book(book_id)
+                if all_diagrams:
+                    ranked_diagrams = diagram_index.rank_diagrams_for_chunk(
+                        all_diagrams,
+                        result,
+                        query=query_text,
+                        max_k=5
+                    )
+
+                    result['epub_diagrams'] = [
+                        {
+                            'id': d['diagram_id'],
+                            'url': f"/diagrams/{d['diagram_id']}",
+                            'caption': format_diagram_caption(d),
+                            'book_title': d.get('book_title', 'Unknown'),
+                            'position': d.get('position_in_document', 0)
+                        }
+                        for d in ranked_diagrams
+                    ]
+                else:
+                    result['epub_diagrams'] = []
+            else:
+                result['epub_diagrams'] = []
+
+            if not result['epub_diagrams']:
+                print(f"[DIAGRAM] No static diagrams found for result {idx}: {book_name or book_title}")
+
+        diagram_attach_time = time.time() - diagram_attach_start
+        total_diagrams = sum(len(r.get('epub_diagrams', [])) for r in final_results[:10])
+        print(f"📷 Attached {total_diagrams} diagrams across {len([r for r in final_results[:10] if r.get('epub_diagrams')])} results: {diagram_attach_time:.2f}s")
+
+        dynamic_diagram_count = 0
+        if ENABLE_DYNAMIC_DIAGRAMS:
+            dynamic_start = time.time()
+            dynamic_diagram_count = attach_dynamic_diagrams(
+                final_results,
+                max_total=MAX_DYNAMIC_DIAGRAMS_TOTAL,
+                per_result=MAX_DYNAMIC_DIAGRAMS_PER_RESULT
+            )
+            dynamic_time = time.time() - dynamic_start
+            print(f"🎨 Dynamic diagrams added: {dynamic_diagram_count} ({dynamic_time:.2f}s)")
+        else:
+            print("🎨 Dynamic diagrams disabled via ENABLE_DYNAMIC_DIAGRAMS flag")
+
+        total_diagrams = sum(len(r.get('epub_diagrams', [])) for r in final_results[:10])
+
+        # Fallback: if no diagrams attached (e.g., PGN-heavy results), source them directly by query
+        fallback_epub_diagrams = []
+        missing_results = [r for r in final_results[:5] if not r.get('epub_diagrams')]
+        if total_diagrams == 0 or missing_results:
+            # Always pull a healthy fallback pool so the synthesized answer can
+            # show multiple diagrams even when top results already have some.
+            needed = max(8, (len(missing_results) * 2) or 8)
+            fallback_books = diagram_index.search_books_by_query(query_text, max_matches=needed)
+            if fallback_books:
+                print(f"📷 Fallback diagram search triggered for books: {fallback_books}")
+            for book_id in fallback_books:
+                diagrams = diagram_index.get_diagrams_for_book(book_id)
+                if not diagrams:
+                    continue
+                pseudo_chunk = {
+                    'text': query_text,
+                    'book_title': diagram_index.get_book_title(book_id) or query_text,
+                    'chapter_title': query_text,
+                    'section_path': '',
+                    'chunk_index': 0
+                }
+                ranked = diagram_index.rank_diagrams_for_chunk(
+                    diagrams,
+                    pseudo_chunk,
+                    query=query_text,
+                    max_k=3
+                )
+                for d in ranked:
+                    fallback_epub_diagrams.append({
+                        'id': d['diagram_id'],
+                        'url': f"/diagrams/{d['diagram_id']}",
+                        'caption': format_diagram_caption(d),
+                        'book_title': d.get('book_title', 'Unknown'),
+                        'position': d.get('position_in_document', 0)
+                    })
+
+            if fallback_epub_diagrams:
+                print(f"📷 Added {len(fallback_epub_diagrams)} fallback diagrams based on query keywords")
+
+        # Per-result backfill: ensure each top result has at least 1 diagram if available
+        fallback_queue = list(fallback_epub_diagrams)
+        for result in final_results[:5]:
+            if result.get('epub_diagrams') or not fallback_queue:
+                continue
+            result['epub_diagrams'] = [fallback_queue.pop(0)]
+
+        # Collect featured diagrams from top 3 EPUB sources for prominent display
+        target_diagram_slots = estimate_diagram_slots(
+            synthesized_answer,
+            base_limit=length_config.get('diagram_target', 8)
+        )
+        featured_diagrams = build_featured_diagrams(
+            final_results,
+            fallback_epub_diagrams,
+            limit=target_diagram_slots
+        )
+        print(f"📷 Featured diagrams for display: {len(featured_diagrams)} / target {target_diagram_slots} (fallback pool size: {len(fallback_epub_diagrams)})")
+
+        # Normalize inline markers so the count matches what we actually have
+        synthesized_answer = enforce_featured_diagram_markers(
+            synthesized_answer,
+            len(featured_diagrams)
+        )
+
         # Prepare response
         response_data = {
             'success': True,
@@ -599,22 +919,24 @@ def query_merged():
             'answer': synthesized_answer,
             'positions': synthesized_positions,
             'diagram_positions': diagram_positions,
+            'featured_diagrams': featured_diagrams,  # Add featured diagrams
             'sources': final_results[:5],
             'results': final_results,
+            'length_mode': length_mode,
             'timing': {
                 'embedding': round(embed_time, 2),
                 'search': round(search_time, 2),
                 'reranking': round(rerank_time, 2),
                 'rrf_merge': round(merge_time, 2),
                 'synthesis': round(synthesis_time, 2),
-                'diagrams': round(diagram_time, 2),
+                'diagrams': round(diagram_attach_time, 2),
                 'total': round(total, 2)
             },
             'rrf_metadata': {
                 'query_type': query_type,
                 'collection_weights': weights,
                 'epub_candidates': len(epub_results),
-                'pgn_candidates': len(pgn_results),
+                'pgn_candidates': len(pgn_results) if ENABLE_PGN_COLLECTION else 0,
                 'merged_count': len(merged_results),
                 'top_n': len(top_merged)
             }
@@ -649,6 +971,8 @@ def fen_to_lichess():
 @app.route('/query_pgn', methods=['POST', 'GET'])
 def query_pgn():
     """Test endpoint for querying PGN collection only."""
+    if not ENABLE_PGN_COLLECTION:
+        return jsonify({'error': 'PGN collection is currently disabled'}), 503
     try:
         # Get query from POST or GET
         if request.method == 'POST':

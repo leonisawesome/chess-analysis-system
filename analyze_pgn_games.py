@@ -39,10 +39,59 @@ class PGNAnalyzer:
             "errors": []
         }
 
+    def _iter_raw_games(self, content: str):
+        """
+        Yield individual PGN game strings without loading entire file into memory
+        multiple times. Splits on [Event ...] headers which are guaranteed to
+        begin each ChessBase/HIARCS game block.
+        """
+        buffer: List[str] = []
+        for line in content.splitlines(keepends=True):
+            stripped = line.lstrip()
+            if stripped.startswith("[Event "):
+                if buffer:
+                    yield "".join(buffer).strip()
+                    buffer = [line]
+                else:
+                    buffer.append(line)
+            else:
+                buffer.append(line)
+        if buffer:
+            yield "".join(buffer).strip()
+
+    def _log_game_error(self, filename: str, game_num: int,
+                        headers: Optional[Dict], reason: str,
+                        snippet: Optional[str] = None):
+        event = headers.get("Event", "Unknown") if headers else "Unknown"
+        white = headers.get("White", "White") if headers else "White"
+        black = headers.get("Black", "Black") if headers else "Black"
+        label = f"{filename} Game #{game_num} [{event}: {white} vs {black}]"
+        message = f"{label} - {reason}"
+        print(f"   ⚠️  {message}")
+        if snippet:
+            preview = snippet.replace("\n", " ")[:140]
+            print(f"      Snippet: {preview}")
+        self.stats["errors"].append(message)
+
+    def _stringify_game(self, game: chess.pgn.Game, filename: str, game_num: int) -> Optional[str]:
+        try:
+            return str(game)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            self._log_game_error(
+                filename,
+                game_num,
+                dict(game.headers),
+                f"Stringify failed: {exc}"
+            )
+            return None
+
     def parse_directory(self, directory: Path) -> List[Dict]:
         """Parse all PGN files in a directory."""
         chunks = []
-        pgn_files = sorted(directory.glob("*.pgn"))
+        pgn_files = sorted(
+            f for f in directory.glob("*.pgn")
+            if not f.name.startswith("._")
+        )
 
         print(f"\n{'='*80}")
         print(f"Parsing {len(pgn_files)} PGN files from: {directory}")
@@ -77,37 +126,68 @@ class PGNAnalyzer:
             self.stats["errors"].append(f"Could not decode {filepath.name}")
             return chunks
 
-        # Parse games from the file content
-        pgn_io = io.StringIO(content)
+        # Parse games from the file content (streamed per [Event ...] block)
         game_num = 0
 
-        while True:
-            try:
-                game = chess.pgn.read_game(pgn_io)
-                if game is None:
-                    break
-
-                game_num += 1
-                game_chunks = self._create_chunks(game, filepath.name, game_num)
-
-                if game_chunks:
-                    chunks.extend(game_chunks)
-                    self.stats["games_processed"] += 1
-                    self.stats["chunks_created"] += len(game_chunks)
-                    if len(game_chunks) > 1:
-                        self.stats["games_split"] = self.stats.get("games_split", 0) + 1
-                else:
-                    self.stats["games_failed"] += 1
-
-            except Exception as e:
-                self.stats["games_failed"] += 1
-                # Don't stop on individual game errors, continue parsing
+        for raw_game in self._iter_raw_games(content):
+            if not raw_game.strip():
                 continue
+
+            game_num += 1
+            try:
+                game = chess.pgn.read_game(io.StringIO(raw_game + "\n\n"))
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                self.stats["games_failed"] += 1
+                self._log_game_error(
+                    filepath.name,
+                    game_num,
+                    None,
+                    f"Parser error: {e}",
+                    raw_game
+                )
+                continue
+
+            if game is None:
+                self.stats["games_failed"] += 1
+                self._log_game_error(
+                    filepath.name,
+                    game_num,
+                    None,
+                    "Parser returned None",
+                    raw_game
+                )
+                continue
+
+            game_text = self._stringify_game(game, filepath.name, game_num)
+            if not game_text:
+                self.stats["games_failed"] += 1
+                continue
+
+            game_chunks = self._create_chunks(game, filepath.name, game_num, game_text)
+
+            if game_chunks:
+                chunks.extend(game_chunks)
+                self.stats["games_processed"] += 1
+                self.stats["chunks_created"] += len(game_chunks)
+                if len(game_chunks) > 1:
+                    self.stats["games_split"] = self.stats.get("games_split", 0) + 1
+            else:
+                self.stats["games_failed"] += 1
+                self._log_game_error(
+                    filepath.name,
+                    game_num,
+                    dict(game.headers),
+                    "No chunks generated (skipped)",
+                    raw_game
+                )
+            if game_num % 1000 == 0:
+                print(f"   ... processed {game_num:,} games from {filepath.name}")
 
         self.stats["files_processed"] += 1
         return chunks
 
-    def _create_chunks(self, game: chess.pgn.Game, filename: str, game_num: int) -> List[Dict]:
+    def _create_chunks(self, game: chess.pgn.Game, filename: str,
+                      game_num: int, game_text: str) -> List[Dict]:
         """Create one or more RAG chunks from a PGN game.
 
         Large games (>6000 tokens) are split into multiple chunks to avoid
@@ -118,7 +198,7 @@ class PGNAnalyzer:
         metadata = self._extract_metadata(game, filename, game_num)
 
         # Create full chunk text
-        chunk_text = self._create_chunk_text(game, metadata)
+        chunk_text = self._create_chunk_text(game, metadata, full_game_text=game_text)
 
         # Estimate tokens for PGN games (more conservative than typical text)
         # PGN games have many special symbols ($1, $17, {}, (), [%cal]) that increase token count
@@ -130,7 +210,7 @@ class PGNAnalyzer:
         self.stats["source_types"][source_type] = self.stats["source_types"].get(source_type, 0) + 1
 
         # Check if game needs to be split
-        MAX_TOKENS = 600  # Ultra conservative to handle heavily annotated games like Rapport Dutch
+        MAX_TOKENS = 1200  # Practical limit for embeddings (<=8k tokens hard limit)
 
         if token_estimate <= MAX_TOKENS:
             # Game fits in single chunk
@@ -143,9 +223,10 @@ class PGNAnalyzer:
             }]
 
         # Game is too large - split it
-        return self._split_large_game(game, filename, game_num, metadata)
+        return self._split_large_game(game, filename, game_num, metadata, game_text)
 
-    def _split_large_game(self, game: chess.pgn.Game, filename: str, game_num: int, metadata: Dict) -> List[Dict]:
+    def _split_large_game(self, game: chess.pgn.Game, filename: str,
+                           game_num: int, metadata: Dict, game_text: str) -> List[Dict]:
         """Split a large game into multiple chunks by move count.
 
         Strategy:
@@ -156,14 +237,22 @@ class PGNAnalyzer:
         """
 
         # Get the full game string
-        game_str = str(game)
+        game_str = game_text or self._stringify_game(game, filename, game_num)
+        if not game_str:
+            return []
 
         # Count moves in mainline (rough estimate)
         move_count = len(list(game.mainline_moves()))
 
         if move_count == 0:
             # Game has no moves (just headers/comments) - return as single chunk anyway
-            chunk_text = self._create_chunk_text(game, metadata, part_num=1, total_parts=1)
+            chunk_text = self._create_chunk_text(
+                game,
+                metadata,
+                part_num=1,
+                total_parts=1,
+                full_game_text=game_text
+            )
             token_estimate = len(chunk_text) // 3  # Conservative estimate for PGN
             self.stats["total_tokens_estimated"] += token_estimate
 
@@ -175,7 +264,7 @@ class PGNAnalyzer:
             }]
 
         # Calculate how to split
-        MOVES_PER_CHUNK = 3  # Minimal chunks to handle extreme annotation density
+        MOVES_PER_CHUNK = 18  # Balanced chunking for heavily annotated games
         total_parts = (move_count + MOVES_PER_CHUNK - 1) // MOVES_PER_CHUNK  # Ceiling division
 
         chunks = []
@@ -332,7 +421,8 @@ class PGNAnalyzer:
 
     def _create_chunk_text(self, game: chess.pgn.Game, metadata: Dict,
                           part_num: int = None, total_parts: int = None,
-                          move_range: tuple = None, game_part_text: str = None) -> str:
+                          move_range: tuple = None, game_part_text: str = None,
+                          full_game_text: str = None) -> str:
         """Create the chunk text with breadcrumb header and PGN.
 
         Args:
@@ -359,6 +449,8 @@ class PGNAnalyzer:
         lines.append("PGN:")
         if game_part_text:
             lines.append(game_part_text)
+        elif full_game_text:
+            lines.append(full_game_text)
         else:
             lines.append(str(game))
 

@@ -1,0 +1,10 @@
+# Current duplicate books to delete (scanned from disk 2025-11-10)
+# Format: filename
+
+# MacOS metadata files (should not exist)
+._herman_2017_chess_strategy_for_club_players_the_road_to_positional_advantage_new_in_chess.epub
+._rozentalis_2020_to_exchange_or_not_the_ultimate_workbook_thinkers.epub
+
+# Actual duplicates (keeping version with most diagrams)
+herman_2014_chess_strategy_for_club_players_the_road_to_positional_advantage_new_in_chess.epub
+rozentalis_0000_to_exchange_or_not_the_ultimate_workbook.epub

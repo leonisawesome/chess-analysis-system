@@ -161,8 +161,33 @@ def execute_query_rrf_merged(
     )
 
     # 3. Rerank both collections
-    epub_ranked = gpt5_rerank(openai_client, query_text, epub_candidates, top_k=TOP_K_CANDIDATES)
-    pgn_ranked = gpt5_rerank(openai_client, query_text, pgn_candidates, top_k=TOP_K_CANDIDATES)
+    epub_ranked_tuples = gpt5_rerank(openai_client, query_text, epub_candidates, top_k=TOP_K_CANDIDATES)
+    pgn_ranked_tuples = gpt5_rerank(openai_client, query_text, pgn_candidates, top_k=TOP_K_CANDIDATES)
+
+    # Convert tuples to dicts for merge_collections
+    # gpt5_rerank returns (ScoredPoint, gpt5_score) tuples
+    # ScoredPoint objects are immutable, so we need to create new dicts
+    epub_ranked = []
+    for scored_point, gpt5_score in epub_ranked_tuples:
+        # Convert ScoredPoint to dict with required fields
+        result_dict = {
+            'id': scored_point.id,
+            'score': gpt5_score,  # Use GPT-5 reranking score
+            'payload': scored_point.payload,
+            'vector': scored_point.vector
+        }
+        epub_ranked.append(result_dict)
+
+    pgn_ranked = []
+    for scored_point, gpt5_score in pgn_ranked_tuples:
+        # Convert ScoredPoint to dict with required fields
+        result_dict = {
+            'id': scored_point.id,
+            'score': gpt5_score,  # Use GPT-5 reranking score
+            'payload': scored_point.payload,
+            'vector': scored_point.vector
+        }
+        pgn_ranked.append(result_dict)
 
     # 4. Merge with RRF
     merged_results = merge_collections(

@@ -1,0 +1,43 @@
+# Chess Book Collection Cleanup Status
+Generated: $(date)
+
+## CURRENT STATE
+- EPUB files on disk: 949
+- Image directories: (checking...)
+- Qdrant chunks: 315,554
+
+## COMPLETED DELETIONS
+
+### 1. First Duplicate Cleanup (COMPLETED)
+- Deleted: 36 duplicate books
+- Date: Earlier in this session
+- Source: duplicate_books_to_delete.txt
+- Qdrant chunks removed: 11,587
+
+### 2. Beginner Books with 0 Diagrams (COMPLETED)  
+- Deleted: 6 books
+- Files: alexander, arthur, chester, fabiano, samuel, karel van delft
+- Qdrant chunks removed: 638
+
+### 3. Empty Book Directories (COMPLETED)
+- Deleted: 2 books (book_5a6ebb826baf, book_f3d46025585d)
+
+## REMAINING WORK
+
+### One Moskalenko Duplicate Still Present
+The duplicate detection found 32 books, but 31 were already deleted.
+Only ONE remains:
+- moskalenko_2019_an_attacking_repertoire_for_white_with_1d4_nic_no_dg.epub (859 diagrams)
+- KEEP: moskalenko_2019_an_attacking_repertoire_for_white_with_1d4_nic.epub (2,316 diagrams)
+- DELETE: moskalenko_2019_an_attacking_repertoire_for_white_with_1d4_nic_no_dg.epub
+
+## CONFUSION EXPLAINED
+The extraction_full.log was created BEFORE the first duplicate cleanup, so when we
+re-analyzed it, it still contained references to the 36 already-deleted books. This
+made it appear we had 32 new duplicates, when in reality we only have 1 remaining.
+
+## NEXT STEP
+Delete the one remaining Moskalenko duplicate from:
+1. EPUB directory
+2. Image directory  
+3. Qdrant database

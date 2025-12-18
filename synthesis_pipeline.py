@@ -12,8 +12,40 @@ import re
 import json
 from openai import OpenAI
 
+print("\n*** [CANARY] synthesis_pipeline.py VERSION: 6.1a-2025-11-10 LOADED ***\n")
+
 # Global variable to hold canonical library prompt
 CANONICAL_POSITIONS_PROMPT = None
+
+LENGTH_PRESETS = {
+    "concise": {
+        "label": "Concise",
+        "section_guidance": "Keep each section to ONE tight paragraph (~4 sentences). Focus on key ideas and cite at most one short illustrative variation.",
+        "section_reminder": "Limit this section to ~120-150 words. State the plan, give one concrete line, and move on.",
+        "assembly_guidance": "Overall article should be 3-4 short paragraphs (~250-350 words) highlighting critical takeaways quickly.",
+        "diagram_target": 6,
+        "stage2_tokens": 1800,
+        "stage3_tokens": 2800
+    },
+    "balanced": {
+        "label": "Balanced",
+        "section_guidance": "Write 1-2 detailed paragraphs per section blending strategy plus a representative variation.",
+        "section_reminder": "Aim for ~180-220 words so the reader sees both principles and one concrete line.",
+        "assembly_guidance": "Deliver 3-4 sections (~450-550 words total) with smooth transitions between strategy and sample moves.",
+        "diagram_target": 8,
+        "stage2_tokens": 2600,
+        "stage3_tokens": 4200
+    },
+    "in_depth": {
+        "label": "In-Depth",
+        "section_guidance": "Provide 2-3 paragraphs per section, layering strategic ideas with multiple annotated variations or plans.",
+        "section_reminder": "Take your time (~250+ words) and include both prose plus 1-2 concrete branches to illustrate the concept.",
+        "assembly_guidance": "Produce a reference-style article (~650-800+ words) with rich transitions and explicit practical advice.",
+        "diagram_target": 10,
+        "stage2_tokens": 3200,
+        "stage3_tokens": 6000
+    }
+}
 
 def build_canonical_positions_prompt():
     """
@@ -118,7 +150,7 @@ Create an outline that directly answers this question."""
 
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-5-chat-latest",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -146,7 +178,8 @@ def stage2_expand_sections(openai_client: OpenAI, sections: list, query: str,
                           expected_signature: str = None,
                           validate_stage2_diagrams_func = None,
                           generate_section_with_retry_func = None,
-                          canonical_fen: str = None) -> list:
+                          canonical_fen: str = None,
+                          length_config: dict | None = None) -> list:
     """
     Stage 2: Expand each section with detailed content and diagram markers.
 
@@ -182,51 +215,16 @@ When synthesizing your answer:
 - Use book sources to explain strategic concepts and ideas
 - Use PGN sources to show concrete move sequences and variations
 - Reference both types naturally in your explanation
+- Focus on clear explanations of strategic concepts and concrete variations
+- Place diagram markers where visual examples would enhance understanding
+- Use markers like [FEATURED_DIAGRAM_1], [FEATURED_DIAGRAM_2], etc. to show where diagrams should appear
+- Place diagrams after explaining a concept, not before
+- Spread diagrams throughout the text, don't cluster them
 
-MANDATORY DIAGRAM RULES:
+Write 2-3 detailed paragraphs per section."""
 
-RULE 1 - TACTICAL CONCEPTS (pins, forks, skewers, discovered attacks, etc.):
-  MUST use @canonical/ references from the library below.
-  Format: [DIAGRAM: @canonical/category/id | Caption: description]
-  Example: [DIAGRAM: @canonical/forks/knight_fork_queen_rook | Caption: Classic knight fork pattern]
-
-RULE 2 - OPENING SEQUENCES:
-  Use move notation showing 3-6 moves from starting position.
-  Format: [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: description]
-  Example: [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4 | Caption: Italian Game starting position]
-
-RULE 3 - ENFORCEMENT GUARANTEE:
-  All tactical diagrams are automatically validated and enforced post-synthesis.
-  Non-canonical tactical diagrams will be replaced with canonical positions.
-
-{canonical_prompt}
-
-CAPTION GUIDELINES:
-- Be concise (5-15 words)
-- Describe what's HAPPENING in the position (strategic ideas, piece placement, key moves)
-- Do NOT just repeat the move notation
-- Focus on WHY this position is important
-
-IMPORTANT: ALWAYS wrap diagrams in [DIAGRAM: ... | Caption: ...] brackets
-NEVER output bare FEN strings directly in the text without brackets
-
-CANONICAL POSITION USAGE:
-If a [CANONICAL POSITION: FEN] is provided in the context below:
-- You MUST generate diagrams based on this position
-- Use [DIAGRAM: FEN_STRING] format with the canonical FEN or variations
-- Do NOT use opening move sequences for middlegame concepts
-- The canonical position represents the KEY position for this concept
-
-Example (opening):
-"The Italian Game begins with [DIAGRAM: 1.e4 e5 2.Nf3 Nc6 3.Bc4] where White develops quickly..."
-
-Example (middlegame with canonical FEN):
-"In this position [DIAGRAM: r1bq1rk1/pp2bppp/2n1pn2/2pp4/2PP4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 9], White launches the minority attack..."
-
-Example (using canonical reference):
-"The knight fork is a powerful tactic [DIAGRAM: @canonical/forks/knight_fork_queen_rook] where the knight attacks multiple pieces..."
-
-Write 2-3 detailed paragraphs per section with diagrams."""
+    if length_config and length_config.get("section_guidance"):
+        system_prompt += f"\n\nLength Preference:\n{length_config['section_guidance']}\n"
 
     for i, section in enumerate(sections, 1):
         section_prompt = f"""Question: {query}
@@ -237,8 +235,12 @@ Focus: {section['description']}
 Context sources (Books provide concepts, PGN files provide concrete variations):
 {context[:3000]}
 
-Write detailed content for this section. Include 2-4 diagram markers showing key positions.
+Write detailed content for this section. Place 1-2 diagram markers ([FEATURED_DIAGRAM_1], [FEATURED_DIAGRAM_2], etc.)
+where visual examples would help illustrate the concepts. Position markers AFTER explaining a concept.
 Synthesize information from both book sources (strategic ideas) and PGN sources (specific lines)."""
+
+        if length_config and length_config.get("section_reminder"):
+            section_prompt += f"\n\nLength preference: {length_config['section_reminder']}"
 
         # Add canonical FEN context if provided (for middlegame concepts)
         if canonical_fen:
@@ -287,12 +289,12 @@ Do NOT repeat the same FEN multiple times. Show PROGRESSION and VARIATIONS."""
             else:
                 # Standard generation without retry
                 response = openai_client.chat.completions.create(
-                    model="gpt-4o",
+                    model="gpt-5-chat-latest",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": section_prompt}
                     ],
-                    max_completion_tokens=3000
+                    max_completion_tokens=(length_config or {}).get("stage2_tokens", 3000)
                 )
 
                 content = response.choices[0].message.content
@@ -318,7 +320,8 @@ Do NOT repeat the same FEN multiple times. Show PROGRESSION and VARIATIONS."""
 
 
 def stage3_final_assembly(openai_client: OpenAI, expanded_sections: list,
-                         query: str, opening_name: str = None) -> str:
+                         query: str, opening_name: str = None,
+                         length_config: dict | None = None) -> str:
     """
     Stage 3: Assemble final answer with smooth transitions.
 
@@ -340,11 +343,14 @@ PGN game files (concrete variations). Maintain this natural integration.
 
 Guidelines:
 - Write natural transitions between sections
-- Maintain all [DIAGRAM: ...] markers exactly as provided
+- Maintain all [FEATURED_DIAGRAM_X] markers exactly as provided - these show where diagrams will be inserted
 - Keep technical accuracy
 - Use clear, engaging prose
 - Ensure logical flow from introduction to conclusion
 - Preserve the balance between conceptual explanations and concrete examples"""
+
+    if length_config and length_config.get("assembly_guidance"):
+        system_prompt += f"\n\nLength Preference:\n{length_config['assembly_guidance']}\n"
 
     sections_text = "\n\n".join([
         f"## {section['title']}\n{section['content']}"
@@ -363,15 +369,24 @@ Create a cohesive article that flows naturally. Maintain all diagram markers."""
 
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-5-chat-latest",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": assembly_prompt}
             ],
-            max_completion_tokens=6000
+            max_completion_tokens=(length_config or {}).get("stage3_tokens", 6000)
         )
 
-        return response.choices[0].message.content
+        final_answer = response.choices[0].message.content
+
+        # Strip any old-format diagram markers (but preserve [FEATURED_DIAGRAM_X])
+        # Old format: [DIAGRAM:fen_string] - remove these
+        # New format: [FEATURED_DIAGRAM_1], [FEATURED_DIAGRAM_2] - keep these for frontend
+        final_answer = re.sub(r'\[DIAGRAM:[^\]]+\]', '', final_answer)  # Remove [DIAGRAM:...]
+        final_answer = re.sub(r'\*\*\{Diagram \d+:[^}]+\}\*\*', '', final_answer)  # Remove **{Diagram N:...}**
+        # [FEATURED_DIAGRAM_X] markers are preserved
+
+        return final_answer
 
     except Exception as e:
         print(f"Stage 3 error: {e}")
@@ -386,7 +401,8 @@ def synthesize_answer(openai_client: OpenAI, query: str, context: str,
                      opening_name: str = None, expected_signature: str = None,
                      validate_stage2_diagrams_func = None,
                      generate_section_with_retry_func = None,
-                     canonical_fen: str = None) -> str:
+                     canonical_fen: str = None,
+                     length_mode: str = "balanced") -> str:
     """
     Main synthesis pipeline: orchestrates all 3 stages.
 
@@ -403,6 +419,9 @@ def synthesize_answer(openai_client: OpenAI, query: str, context: str,
         Final synthesized answer
     """
     print(f"🎯 Starting 3-stage synthesis for: {query}")
+    length_mode = length_mode if length_mode in LENGTH_PRESETS else "balanced"
+    length_config = LENGTH_PRESETS[length_mode]
+    print(f"   Length preference: {length_config['label']}")
 
     # Stage 1: Generate outline
     print("  Stage 1: Generating outline...")
@@ -420,13 +439,20 @@ def synthesize_answer(openai_client: OpenAI, query: str, context: str,
         expected_signature,
         validate_stage2_diagrams_func,
         generate_section_with_retry_func,
-        canonical_fen
+        canonical_fen,
+        length_config
     )
     print(f"    ✓ Expanded {len(expanded)} sections")
 
     # Stage 3: Final assembly
     print("  Stage 3: Final assembly...")
-    final_answer = stage3_final_assembly(openai_client, expanded, query, opening_name)
+    final_answer = stage3_final_assembly(
+        openai_client,
+        expanded,
+        query,
+        opening_name,
+        length_config
+    )
     print(f"    ✓ Assembled final answer ({len(final_answer)} chars)")
 
     return final_answer

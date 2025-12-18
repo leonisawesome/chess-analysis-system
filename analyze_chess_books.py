@@ -474,6 +474,34 @@ def analyze_epub_fast(epub_path: str, verbose: bool = True) -> Dict:
     }
 
 
+def prompt_for_deletion(result: Dict) -> bool:
+    """
+    Prompt user to delete a low-quality book.
+    Returns True if book should be deleted, False otherwise.
+    """
+    filename = Path(result['file']).name
+    print(f"\n{'!'*80}")
+    print(f"⚠️  LOW-QUALITY BOOK DETECTED")
+    print(f"{'!'*80}")
+    print(f"File: {filename}")
+    print(f"Score: {result['total_score']}/100 ({result['tier']} tier)")
+    print(f"Reasons:")
+    metrics = result['metrics']
+    if metrics['diagram_count'] < 50:
+        print(f"  - Very few diagrams: {metrics['diagram_count']}")
+    if metrics['word_count'] < 20000:
+        print(f"  - Short length: {metrics['word_count']:,} words")
+    if metrics['notation_ratio'] < 2:
+        print(f"  - Minimal chess notation: {metrics['notation_ratio']}%")
+    if metrics['author_score'] == 0:
+        print(f"  - Unknown author")
+
+    print(f"\nThis book is unlikely to be useful for technical chess instruction.")
+
+    response = input("\n🗑️  Delete this book? [y/N]: ").strip().lower()
+    return response in ['y', 'yes']
+
+
 def main():
     """Main entry point."""
     if len(sys.argv) < 2:
@@ -485,9 +513,29 @@ def main():
         sys.exit(1)
 
     results = []
+    books_to_delete = []
+
     for epub_path in sys.argv[1:]:
         result = analyze_epub_fast(epub_path, verbose=True)
         results.append(result)
+
+        # Prompt for deletion if book is low quality (score < 40)
+        if result['success'] and result['total_score'] < 40:
+            if prompt_for_deletion(result):
+                books_to_delete.append(epub_path)
+
+    # Delete marked books
+    if books_to_delete:
+        print(f"\n{'='*80}")
+        print(f"🗑️  DELETING {len(books_to_delete)} BOOKS")
+        print(f"{'='*80}\n")
+
+        for book_path in books_to_delete:
+            try:
+                Path(book_path).unlink()
+                print(f"✅ Deleted: {Path(book_path).name}")
+            except Exception as e:
+                print(f"❌ Failed to delete {Path(book_path).name}: {e}")
 
     # Summary for multiple files
     if len(results) > 1:
@@ -500,6 +548,8 @@ def main():
 
         print(f"✅ Successfully analyzed: {len(successful)}")
         print(f"❌ Failed: {len(failed)}")
+        if books_to_delete:
+            print(f"🗑️  Deleted: {len(books_to_delete)}")
         print(f"⏱️  Average processing time: {sum(r['processing_time'] for r in successful) / len(successful):.2f}s\n")
 
         if successful:

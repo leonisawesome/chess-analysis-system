@@ -25,8 +25,10 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 
 # Import EPUB extraction
-from epub_to_analyzer import extract_epub_text
+from epub_to_analyzer import extract_epub_text, extract_epub_sections
 import tiktoken
+import ebooklib
+from ebooklib import epub
 
 
 # ============================================================================
@@ -37,6 +39,8 @@ EMBEDDING_MODEL = "text-embedding-3-small"  # Same as validation
 EMBEDDING_DIM = 1536
 COLLECTION_NAME = "chess_production"
 DB_PATH = "epub_analysis.db"
+QDRANT_MODE = os.getenv("QDRANT_MODE", "docker")
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 QDRANT_PATH = "./qdrant_production_db"
 
 TIERS_TO_INCLUDE = ['HIGH', 'MEDIUM']  # 1,052 books
@@ -130,6 +134,31 @@ def chunk_text_by_tokens(text: str, chunk_size: int = 512, overlap: int = 64) ->
 
 
 # ============================================================================
+# EPUB METADATA EXTRACTION
+# ============================================================================
+
+def extract_epub_title(epub_path: str) -> str:
+    """
+    Extract book title from EPUB metadata.
+    Falls back to filename if title not found.
+    """
+    try:
+        book = epub.read_epub(epub_path)
+        title = book.get_metadata('DC', 'title')
+
+        if title and len(title) > 0:
+            # get_metadata returns a list of tuples: [(title, {})]
+            return title[0][0] if isinstance(title[0], tuple) else title[0]
+
+        # Fallback to filename without extension
+        return Path(epub_path).stem
+
+    except Exception:
+        # Fallback to filename on any error
+        return Path(epub_path).stem
+
+
+# ============================================================================
 # CHUNK EXTRACTION
 # ============================================================================
 
@@ -141,40 +170,46 @@ def extract_chunks_from_book(book_path: str, book_metadata: Dict) -> List[Dict]:
         List of chunk dicts with text, metadata
     """
     try:
-        # Extract text from EPUB
-        text, error = extract_epub_text(book_path)
+        sections, error = extract_epub_sections(book_path)
 
-        if error:
-            # Silent failure - will be tracked in stats
+        if error or not sections:
             return []
 
-        if not text or not text.strip():
-            return []
-
-        # Chunk the full text
-        chunks = chunk_text_by_tokens(
-            text,
-            chunk_size=CHUNK_SIZE,
-            overlap=CHUNK_OVERLAP
-        )
-
-        if not chunks:
-            return []
+        # Extract book title from EPUB metadata
+        book_title = extract_epub_title(book_path)
 
         # Add metadata to each chunk
         all_chunks = []
-        for chunk_idx, chunk_text in enumerate(chunks):
-            chunk_data = {
-                'text': chunk_text,
-                'book_name': book_metadata['filename'],
-                'book_path': book_metadata['full_path'],
-                'book_tier': book_metadata['tier'],
-                'book_score': book_metadata['score'],
-                'chapter_title': book_metadata['filename'],  # Use filename as chapter
-                'chapter_index': 0,
-                'chunk_index': chunk_idx
-            }
-            all_chunks.append(chunk_data)
+        chunk_idx = 0
+
+        for section_index, section in enumerate(sections):
+            section_chunks = chunk_text_by_tokens(
+                section['text'],
+                chunk_size=CHUNK_SIZE,
+                overlap=CHUNK_OVERLAP
+            )
+
+            if not section_chunks:
+                continue
+
+            for chunk_in_section, chunk_text in enumerate(section_chunks):
+                chunk_data = {
+                    'text': chunk_text,
+                    'book_name': book_metadata['filename'],
+                    'book_title': book_title,  # Human-readable title
+                    'book_path': book_metadata['full_path'],
+                    'book_tier': book_metadata['tier'],
+                    'book_score': book_metadata['score'],
+                    'chapter_title': section.get('chapter_title') or book_metadata['filename'],
+                    'chapter_index': section_index,
+                    'section_path': section.get('section_path', section.get('chapter_title')),
+                    'section_index': section_index,
+                    'chunk_in_section': chunk_in_section,
+                    'html_document': section.get('html_document'),
+                    'chunk_index': chunk_idx
+                }
+                all_chunks.append(chunk_data)
+                chunk_idx += 1
 
         return all_chunks
 
@@ -196,25 +231,29 @@ def embed_chunks_batch(openai_client: OpenAI, chunks: List[Dict]) -> List[Dict]:
     """
     embedded_chunks = []
     total = len(chunks)
+    embedded_count = 0
+    start_time = time.time()
 
     for i in range(0, total, EMBED_BATCH_SIZE):
         batch = chunks[i:i + EMBED_BATCH_SIZE]
         batch_texts = [c['text'] for c in batch]
 
         try:
-            # Embed batch
             response = openai_client.embeddings.create(
                 model=EMBEDDING_MODEL,
                 input=batch_texts
             )
 
-            # Add embeddings to chunks
             for j, chunk in enumerate(batch):
                 chunk_with_embedding = chunk.copy()
                 chunk_with_embedding['embedding'] = response.data[j].embedding
                 embedded_chunks.append(chunk_with_embedding)
 
-            # Rate limiting
+            embedded_count += len(batch)
+            if embedded_count % 2000 == 0 or embedded_count == total:
+                elapsed = time.time() - start_time
+                print(f"   • Embedded {embedded_count}/{total} chunks ({embedded_count/total*100:.1f}%) in {elapsed/60:.1f} min")
+
             time.sleep(0.1)
 
         except Exception as e:
@@ -250,7 +289,8 @@ def create_production_collection(qdrant_client: QdrantClient):
 
 def upload_to_qdrant(qdrant_client: QdrantClient, chunks: List[Dict]):
     """Upload embedded chunks to Qdrant."""
-    print(f"\n📤 Uploading {len(chunks)} chunks to Qdrant...")
+    total_points = len(chunks)
+    print(f"\n📤 Uploading {total_points} chunks to Qdrant...")
 
     points = []
     for i, chunk in enumerate(chunks):
@@ -260,10 +300,15 @@ def upload_to_qdrant(qdrant_client: QdrantClient, chunks: List[Dict]):
             payload={
                 'text': chunk['text'],
                 'book_name': chunk['book_name'],
+                'book_title': chunk['book_title'],  # Human-readable title
                 'book_tier': chunk['book_tier'],
                 'book_score': chunk['book_score'],
                 'chapter_title': chunk['chapter_title'],
                 'chapter_index': chunk['chapter_index'],
+                'section_path': chunk.get('section_path'),
+                'section_index': chunk.get('section_index'),
+                'chunk_in_section': chunk.get('chunk_in_section'),
+                'html_document': chunk.get('html_document'),
                 'chunk_index': chunk['chunk_index']
             }
         )
@@ -271,12 +316,18 @@ def upload_to_qdrant(qdrant_client: QdrantClient, chunks: List[Dict]):
 
     # Upload in batches
     batch_size = 100
+    uploaded = 0
+    start_time = time.time()
     for i in range(0, len(points), batch_size):
         batch = points[i:i + batch_size]
         qdrant_client.upsert(
             collection_name=COLLECTION_NAME,
             points=batch
         )
+        uploaded += len(batch)
+        if uploaded % 5000 == 0 or uploaded == total_points:
+            elapsed = time.time() - start_time
+            print(f"   • Uploaded {uploaded}/{total_points} points ({uploaded/total_points*100:.1f}%) in {elapsed/60:.1f} min")
 
         if (i + batch_size) % 10000 == 0:
             print(f"   Uploaded {min(i + batch_size, len(points)):,}/{len(points):,} chunks")
@@ -307,8 +358,12 @@ def main():
     # Initialize clients
     print("1️⃣  Initializing clients...")
     openai_client = OpenAI(api_key=api_key)
-    qdrant_client = QdrantClient(path=QDRANT_PATH)
-    print("   ✅ OpenAI and Qdrant clients ready")
+    if QDRANT_MODE.lower() == 'docker':
+        qdrant_client = QdrantClient(url=QDRANT_URL)
+        print(f"   ✅ OpenAI client ready\n   ✅ Qdrant (docker) at {QDRANT_URL}")
+    else:
+        qdrant_client = QdrantClient(path=QDRANT_PATH)
+        print(f"   ✅ OpenAI client ready\n   ✅ Qdrant (local) at {QDRANT_PATH}")
 
     # Get books to process
     print(f"\n2️⃣  Loading books from database...")
@@ -328,12 +383,17 @@ def main():
     all_chunks = []
     failed_books = []
 
-    for book in tqdm(books, desc="Extracting", unit="book"):
+    progress_bar = tqdm(total=len(books), desc="Extracting", unit="book")
+    for idx, book in enumerate(books, start=1):
         chunks = extract_chunks_from_book(book['full_path'], book)
         if chunks:
             all_chunks.extend(chunks)
         else:
             failed_books.append(book['filename'])
+        if idx % 25 == 0 or idx == len(books):
+            progress_bar.set_postfix({"chunks": len(all_chunks)})
+        progress_bar.update(1)
+    progress_bar.close()
 
     print(f"   ✅ Extracted {len(all_chunks):,} chunks from {len(books) - len(failed_books)} books")
     if failed_books:

@@ -76,28 +76,28 @@ dreev_2018_improve_your_practical_play_in_the_middlegame_thinkers.epub
 ### Step 1: Rename Selected Books
 ```bash
 # Move and rename to corpus directory
-mv "/Volumes/T7 Shield/epub/1new/Simeonidis, Ioannis - Carlsen's Neo-Møller [NIC, 2020].epub" \
-   "/Volumes/T7 Shield/epub/simeonidis_2020_carlsens_neo_moller_nic.epub"
+mv "/Volumes/T7 Shield/rag/books/epub/1new/Simeonidis, Ioannis - Carlsen's Neo-Møller [NIC, 2020].epub" \
+   "/Volumes/T7 Shield/rag/books/epub/simeonidis_2020_carlsens_neo_moller_nic.epub"
 
-mv "/Volumes/T7 Shield/epub/1new/Dreev, Alexey - Improve Your Practical Play in the Endgame [Thinkers, 2019].epub" \
-   "/Volumes/T7 Shield/epub/dreev_2019_improve_your_practical_play_in_the_endgame_thinkers.epub"
+mv "/Volumes/T7 Shield/rag/books/epub/1new/Dreev, Alexey - Improve Your Practical Play in the Endgame [Thinkers, 2019].epub" \
+   "/Volumes/T7 Shield/rag/books/epub/dreev_2019_improve_your_practical_play_in_the_endgame_thinkers.epub"
 
-mv "/Volumes/T7 Shield/epub/1new/Dreev, Alexey - Improve Your Practical Play in the Middlegame [Thinkers, 2018].epub" \
-   "/Volumes/T7 Shield/epub/dreev_2018_improve_your_practical_play_in_the_middlegame_thinkers.epub"
+mv "/Volumes/T7 Shield/rag/books/epub/1new/Dreev, Alexey - Improve Your Practical Play in the Middlegame [Thinkers, 2018].epub" \
+   "/Volumes/T7 Shield/rag/books/epub/dreev_2018_improve_your_practical_play_in_the_middlegame_thinkers.epub"
 ```
 
 ### Step 2: Delete Rejected Books
 ```bash
-rm "/Volumes/T7 Shield/epub/1new/Barsky, Vladimir - A Universal Weapon 1 d4 d6 [Chess Stars, 2010].epub"
-rm "/Volumes/T7 Shield/epub/1new/Barsky, Vladimir - The Modern Philidor Defence [Chess Stars, 2010].epub"
-rm "/Volumes/T7 Shield/epub/1new/Dreev, Alexey - Attacking the Caro-Kann [Chess Stars, 2015].epub"
-rm "/Volumes/T7 Shield/epub/1new/Dreev, Alexey - Dreev vs. the Benoni [Chess Stars, 2013].epub"
+rm "/Volumes/T7 Shield/rag/books/epub/1new/Barsky, Vladimir - A Universal Weapon 1 d4 d6 [Chess Stars, 2010].epub"
+rm "/Volumes/T7 Shield/rag/books/epub/1new/Barsky, Vladimir - The Modern Philidor Defence [Chess Stars, 2010].epub"
+rm "/Volumes/T7 Shield/rag/books/epub/1new/Dreev, Alexey - Attacking the Caro-Kann [Chess Stars, 2015].epub"
+rm "/Volumes/T7 Shield/rag/books/epub/1new/Dreev, Alexey - Dreev vs. the Benoni [Chess Stars, 2013].epub"
 ```
 
 ### Step 3: Verify Renaming
 ```bash
 # Check files are in correct location with correct names
-ls -lh "/Volumes/T7 Shield/epub/" | grep -E "simeonidis_2020|dreev_2019|dreev_2018"
+ls -lh "/Volumes/T7 Shield/rag/books/epub/" | grep -E "simeonidis_2020|dreev_2019|dreev_2018"
 ```
 
 ---

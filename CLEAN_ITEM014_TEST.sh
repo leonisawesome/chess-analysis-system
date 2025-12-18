@@ -6,7 +6,12 @@ echo "════════════════════════�
 echo ""
 
 # Set API key (latest from user)
-export OPENAI_API_KEY='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'
+if [ -f .env ]; then
+    set -a
+    source .env
+    set +a
+fi
+: "${OPENAI_API_KEY:?Set OPENAI_API_KEY (or create .env)}"
 
 # Ensure no Flask is running
 echo "1. Cleaning up any existing processes..."

@@ -703,7 +703,7 @@ Partner Consult: ChatGPT, Gemini, Grok unanimous recommendation
 
 Fixes: [DIAGRAM_ID:xxx] markers now render as chess board SVGs
 
-🤖 Generated with Claude Code"
+🤖 Generated with assistant Code"
 
 echo -e "${GREEN}✓ Git commit created${NC}\n"
 

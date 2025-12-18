@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 5.1 RRF Demo - Multi-Collection Merge</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            color: white;
+        }
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+        .search-box {
+            background: #2a2a2a;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: calc(100% - 140px);
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+        .info-panel {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .proof-box {
+            background: #1e3a1e;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .proof-box h3 {
+            margin-top: 0;
+            color: #4caf50;
+        }
+        .source-item {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #666;
+        }
+        .source-item.epub {
+            border-left-color: #2196F3;
+            background: #1a2838;
+        }
+        .source-item.pgn {
+            border-left-color: #FF9800;
+            background: #382a1a;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .badge.epub {
+            background: #2196F3;
+            color: white;
+        }
+        .badge.pgn {
+            background: #FF9800;
+            color: white;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #888;
+        }
+        .answer-box {
+            background: #2a2a2a;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+        .timing {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Phase 5.1 RRF Demo</h1>
+        <div class="subtitle">
+            Reciprocal Rank Fusion - Multi-Collection Merge (EPUB Books + PGN Games)
+        </div>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="query" placeholder="Try: 'Benko Gambit repertoire' or 'What is a fork?'" value="Benko Gambit repertoire">
+        <button onclick="testRRF()" id="searchBtn">Search Both Collections</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        async function testRRF() {
+            const query = document.getElementById('query').value;
+            const btn = document.getElementById('searchBtn');
+            const resultsDiv = document.getElementById('results');
+
+            btn.disabled = true;
+            btn.textContent = 'Searching...';
+            resultsDiv.innerHTML = '<div class="loading">🔍 Searching EPUB books and PGN games in parallel...</div>';
+
+            try {
+                const response = await fetch('/query_merged', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query: query})
+                });
+
+                const data = await response.json();
+                displayResults(data, query);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="proof-box" style="background:#3a1e1e; border-left-color:#f44336;">
+                    <h3 style="color:#f44336;">❌ Error</h3>
+                    <p>${error.message}</p>
+                </div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Search Both Collections';
+            }
+        }
+
+        function displayResults(data, query) {
+            const rrf = data.rrf_metadata || {};
+            const sources = data.sources || [];
+            const timing = data.timing || {};
+
+            // Count source types
+            let epubCount = 0;
+            let pgnCount = 0;
+            sources.forEach(s => {
+                if (s.collection && s.collection.includes('production')) epubCount++;
+                else if (s.collection && s.collection.includes('pgn')) pgnCount++;
+            });
+
+            let html = `
+                <div class="info-panel">
+                    <h2>✅ Query Executed: "${query}"</h2>
+
+                    <div class="proof-box">
+                        <h3>📋 PROOF #1: Query Classification</h3>
+                        <p><strong>Query Type:</strong> ${rrf.query_type || 'N/A'}</p>
+                        <p><strong>Collection Weights:</strong></p>
+                        <ul>
+                            <li>📖 EPUB Books: ${rrf.collection_weights?.chess_production || 'N/A'}x</li>
+                            <li>♟️  PGN Games: ${rrf.collection_weights?.chess_pgn_repertoire || 'N/A'}x</li>
+                        </ul>
+                    </div>
+
+                    <div class="proof-box">
+                        <h3>📋 PROOF #2: Both Collections Searched</h3>
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-value">${rrf.epub_candidates || 0}</div>
+                                <div class="stat-label">EPUB Candidates Retrieved</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${rrf.pgn_candidates || 0}</div>
+                                <div class="stat-label">PGN Candidates Retrieved</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${rrf.merged_count || 0}</div>
+                                <div class="stat-label">Total Merged by RRF</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${rrf.top_n || 0}</div>
+                                <div class="stat-label">Top Results Returned</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="proof-box">
+                        <h3>📋 PROOF #3: Mixed Sources in Results</h3>
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: #2196F3">${epubCount}</div>
+                                <div class="stat-label">📖 EPUB Book Sources</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: #FF9800">${pgnCount}</div>
+                                <div class="stat-label">♟️  PGN Game Sources</div>
+                            </div>
+                        </div>
+                        ${epubCount > 0 && pgnCount > 0 ?
+                            '<p style="color:#4caf50; font-weight:bold;">✅ VERIFIED: Results include BOTH EPUB and PGN sources!</p>' :
+                            '<p style="color:#ff9800;">⚠️  Results dominated by one source type (this is expected based on query type and weights)</p>'
+                        }
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h2>📚 Top 5 Sources (with Collection Attribution)</h2>
+            `;
+
+            sources.slice(0, 5).forEach((source, i) => {
+                const isEpub = source.collection && source.collection.includes('production');
+                const type = isEpub ? 'epub' : 'pgn';
+                const badge = isEpub ? '📖 EPUB' : '♟️  PGN';
+                const textPreview = (source.text || '').substring(0, 200);
+
+                html += `
+                    <div class="source-item ${type}">
+                        <div>
+                            <span class="badge ${type}">${badge}</span>
+                            <strong>Result ${i + 1}</strong> - RRF Score: ${(source.rrf_score || 0).toFixed(6)}
+                        </div>
+                        <div style="margin-top:10px;">
+                            <strong>Source:</strong> ${source.book_name || 'Unknown'}
+                        </div>
+                        <div style="margin-top:5px; color:#888; font-size:13px;">
+                            ${source.chapter_title ? `Chapter: ${source.chapter_title}` : ''}
+                        </div>
+                        <div style="margin-top:10px; font-size:14px; color:#aaa;">
+                            ${textPreview}...
+                        </div>
+                        <div style="margin-top:5px; font-size:12px; color:#666;">
+                            Collection: ${source.collection || 'unknown'}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                </div>
+
+                <div class="timing">
+                    ⏱️  Performance:
+                    Embedding: ${timing.embedding || 0}s |
+                    Search: ${timing.search || 0}s |
+                    Rerank: ${timing.reranking || 0}s |
+                    RRF Merge: ${timing.rrf_merge || 0}s |
+                    Synthesis: ${timing.synthesis || 0}s |
+                    <strong>Total: ${timing.total || 0}s</strong>
+                </div>
+            `;
+
+            document.getElementById('results').innerHTML = html;
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('query').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') testRRF();
+        });
+    </script>
+</body>
+</html>
