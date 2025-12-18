@@ -82,9 +82,9 @@ Run `verify_system_stats.py` to get latest. Last verified (Nov 23, 2025):
 
 ## Common Tasks
 
-**Adding new books:** Run `scripts/analyze_staged_books.sh` against whatever the user staged (processes `/Volumes/T7 Shield/rag/books/epub/1new/` and updates `epub_analysis.db`), share the SQLite score report for approval, then follow the [full ingestion process in README](README.md#book-ingestion-process) (assistant handles renaming/moving approved titles)
+**Adding new books:** Run `scripts/books/analyze_staged_books.sh` against whatever the user staged (processes `/Volumes/T7 Shield/rag/books/epub/1new/` and updates `epub_analysis.db`), share the SQLite score report for approval, then follow the [full ingestion process in README](README.md#book-ingestion-process) (assistant handles renaming/moving approved titles)
 
-**First: dedup before scoring:** Before running the analyzer, check for existing copies of staged titles (slugs vs. proper names). Run `python scripts/find_current_duplicates.py` to flag overlaps with the corpus. If a staged file already exists under a cleaner name, delete the duplicate via `python scripts/remove_books.py <duplicate>.epub` so Qdrant/SQLite/images stay consistent.
+**First: dedup before scoring:** Before running the analyzer, check for existing copies of staged titles (slugs vs. proper names). Run `python scripts/find_current_duplicates.py` to flag overlaps with the corpus. If a staged file already exists under a cleaner name, delete the duplicate via `python scripts/books/remove_books.py <duplicate>.epub` so Qdrant/SQLite/images stay consistent.
 
 **Adding new PGNs:** Run `python pgn_quality_analyzer.py "/Volumes/T7 Shield/rag/databases/pgn/1new" --db pgn_analysis.db` to score every staged PGN, share the EVS summary for approval, then chunk + ingest only the approved files (`analyze_pgn_games.py` → `add_pgn_to_corpus.py`).
 
