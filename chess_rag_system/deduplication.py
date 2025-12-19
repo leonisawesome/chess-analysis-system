@@ -2,35 +2,103 @@
 
 import chess.pgn
 import hashlib
-import psycopg2
-from psycopg2.extras import execute_values
+import os
+import sqlite3
 from io import StringIO
 import concurrent.futures
 from typing import Dict, List, Optional, Tuple
+
+
+try:  # Optional dependency: Postgres backend
+    import psycopg2  # type: ignore
+    from psycopg2.extras import execute_values  # type: ignore
+
+    _HAS_PSYCOPG2 = True
+except Exception:  # pragma: no cover
+    psycopg2 = None  # type: ignore
+    execute_values = None  # type: ignore
+    _HAS_PSYCOPG2 = False
+
 
 class ChessDeduplicator:
     """Handles deduplication of chess games using normalized move sequences."""
 
     def __init__(self, db_config: Dict[str, str]):
         """Initialize with database configuration."""
-        self.conn = psycopg2.connect(**db_config)
+        backend = os.environ.get("CHESS_DEDUP_BACKEND", "auto").strip().lower()
+        sqlite_path = os.environ.get("CHESS_DEDUP_SQLITE_PATH", "dedup_hashes.sqlite3").strip()
+
+        if backend not in {"auto", "postgres", "sqlite"}:
+            raise ValueError("CHESS_DEDUP_BACKEND must be one of: auto, postgres, sqlite")
+
+        self._backend = "postgres"
+        self._sqlite_commit_every = int(os.environ.get("CHESS_DEDUP_SQLITE_COMMIT_EVERY", "5000"))
+        self._sqlite_pending = 0
+
+        if backend == "sqlite" or (backend == "auto" and not _HAS_PSYCOPG2):
+            self._init_sqlite(sqlite_path)
+            return
+
+        if not _HAS_PSYCOPG2:
+            raise ImportError("psycopg2 is required for CHESS_DEDUP_BACKEND=postgres")
+
+        try:
+            self.conn = psycopg2.connect(**db_config)  # type: ignore[misc]
+            self.init_db()
+        except Exception:
+            if backend == "postgres":
+                raise
+            self._init_sqlite(sqlite_path)
+
+    def _init_sqlite(self, sqlite_path: str) -> None:
+        self._backend = "sqlite"
+        self.conn = sqlite3.connect(sqlite_path)
+        # Speed/safety tradeoff: WAL + NORMAL is fine for a long-running ingest.
+        self.conn.execute("PRAGMA journal_mode=WAL;")
+        self.conn.execute("PRAGMA synchronous=NORMAL;")
+        self.conn.execute("PRAGMA temp_store=MEMORY;")
+        self.conn.execute("PRAGMA foreign_keys=ON;")
         self.init_db()
 
     def init_db(self):
         """Create deduplication table if not exists."""
-        with self.conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS game_hashes (
-                    hash VARCHAR(64) PRIMARY KEY,
-                    bundle_path TEXT,
-                    created_at TIMESTAMP DEFAULT NOW()
+        if self._backend == "postgres":
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS game_hashes (
+                        hash VARCHAR(64) PRIMARY KEY,
+                        bundle_path TEXT,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                    """
                 )
-            """)
-            cur.execute("""
-                CREATE INDEX IF NOT EXISTS idx_game_hashes_created
-                ON game_hashes(created_at DESC)
-            """)
-            self.conn.commit()
+                cur.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_game_hashes_created
+                    ON game_hashes(created_at DESC)
+                    """
+                )
+                self.conn.commit()
+            return
+
+        cur = self.conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS game_hashes (
+                hash TEXT PRIMARY KEY,
+                bundle_path TEXT,
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+            """
+        )
+        cur.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_game_hashes_created
+            ON game_hashes(created_at DESC)
+            """
+        )
+        self.conn.commit()
 
     def normalize_game(self, pgn_text: str) -> Optional[str]:
         """
@@ -42,32 +110,30 @@ class ChessDeduplicator:
         Returns:
             Hash of entire PGN content (preserving all annotations) or None if parsing fails
         """
+        normalized_pgn = pgn_text.strip()
+        if not normalized_pgn:
+            return None
+
+        # Best-effort parse: if python-chess considers the moves illegal, it may
+        # fail or warn; we still want to keep these games for ChessBase parity.
+        # We only use parsing to filter out truly empty/no-move "games".
         try:
             game = chess.pgn.read_game(StringIO(pgn_text))
-            if not game:
-                return None
-
-            # Check if game has any moves
-            moves = list(game.mainline_moves())
-            if not moves:
-                return None
-
-            # Use the ENTIRE PGN text as the basis for deduplication
-            # This preserves different annotations, commentary, variations, etc.
-            # Only removes games that are byte-for-byte identical
-            normalized_pgn = pgn_text.strip()
-
-            # Remove only insignificant whitespace differences
-            # but preserve all content including annotations
-            lines = []
-            for line in normalized_pgn.split('\n'):
-                line = line.strip()
-                if line:  # Skip empty lines
-                    lines.append(line)
-
-            return '\n'.join(lines) if lines else None
+            if game:
+                moves = list(game.mainline_moves())
+                if not moves:
+                    return None
         except Exception:
-            return None
+            pass
+
+        # Use the ENTIRE raw PGN text as the basis for deduplication.
+        # Only normalize insignificant whitespace while preserving all content.
+        lines: list[str] = []
+        for line in normalized_pgn.split("\n"):
+            line = line.strip()
+            if line:
+                lines.append(line)
+        return "\n".join(lines) if lines else None
 
     def compute_hash(self, normalized_moves: str) -> str:
         """Compute SHA256 hash of normalized moves."""
@@ -86,21 +152,23 @@ class ChessDeduplicator:
 
         game_hash = self.compute_hash(normalized)
 
-        with self.conn.cursor() as cur:
-            cur.execute(
-                "SELECT 1 FROM game_hashes WHERE hash = %s",
-                (game_hash,)
-            )
-
-            if cur.fetchone():
-                return game_hash, 'duplicate'
-            else:
-                cur.execute(
-                    "INSERT INTO game_hashes (hash) VALUES (%s)",
-                    (game_hash,)
-                )
+        if self._backend == "postgres":
+            with self.conn.cursor() as cur:
+                cur.execute("SELECT 1 FROM game_hashes WHERE hash = %s", (game_hash,))
+                if cur.fetchone():
+                    return game_hash, "duplicate"
+                cur.execute("INSERT INTO game_hashes (hash) VALUES (%s)", (game_hash,))
                 self.conn.commit()
-                return game_hash, 'new'
+                return game_hash, "new"
+
+        cur = self.conn.cursor()
+        cur.execute("INSERT OR IGNORE INTO game_hashes (hash) VALUES (?)", (game_hash,))
+        is_new = cur.rowcount == 1
+        self._sqlite_pending += 1
+        if self._sqlite_commit_every and self._sqlite_pending >= self._sqlite_commit_every:
+            self.conn.commit()
+            self._sqlite_pending = 0
+        return game_hash, ("new" if is_new else "duplicate")
 
     def process_batch(
         self,
@@ -114,6 +182,17 @@ class ChessDeduplicator:
             Dictionary with 'new', 'duplicate', and 'error' lists
         """
         results = {'new': [], 'duplicate': [], 'error': []}
+
+        if self._backend != "postgres":
+            for pgn_text in pgn_texts:
+                _, status = self.check_duplicate(pgn_text)
+                if status == "new":
+                    results["new"].append(pgn_text)
+                elif status == "duplicate":
+                    results["duplicate"].append(pgn_text)
+                else:
+                    results["error"].append(pgn_text)
+            return results
 
         # Normalize all games in parallel
         game_data = []
@@ -154,11 +233,8 @@ class ChessDeduplicator:
             ]
 
             if new_games:
-                execute_values(
-                    cur,
-                    "INSERT INTO game_hashes (hash, bundle_path) VALUES %s",
-                    new_games
-                )
+                assert execute_values is not None
+                execute_values(cur, "INSERT INTO game_hashes (hash, bundle_path) VALUES %s", new_games)
                 self.conn.commit()
 
             # Categorize results
@@ -172,4 +248,9 @@ class ChessDeduplicator:
 
     def close(self):
         """Close database connection."""
+        try:
+            if self._backend == "sqlite" and self._sqlite_pending:
+                self.conn.commit()
+        except Exception:
+            pass
         self.conn.close()

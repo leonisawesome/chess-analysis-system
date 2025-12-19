@@ -3,7 +3,7 @@
 Combine multiple PGN files into a deduplicated master PGN.
 
 Features:
-- Recursively scans a root directory for .pgn files
+- Recursively scans one or more root directories for .pgn files
 - Detects duplicates via MD5 hash
 - Skips non-English/Spanish PGNs by default (logged + copied to foreign dir)
 - Copies skipped files (encoding/permission errors) for manual triage
@@ -44,12 +44,13 @@ def normalize_path(path: str) -> Path:
     return Path(path).expanduser()
 
 
-def iter_pgn_files(root: Path) -> Iterable[Path]:
-    if not root.exists():
-        raise FileNotFoundError(f"Root directory not found: {root}")
-    for path in root.rglob("*.pgn"):
-        if path.is_file() and not path.name.startswith("._"):
-            yield path
+def iter_pgn_files(roots: Iterable[Path]) -> Iterable[Path]:
+    for root in roots:
+        if not root.exists():
+            raise FileNotFoundError(f"Root directory not found: {root}")
+        for path in root.rglob("*.pgn"):
+            if path.is_file() and not path.name.startswith("._"):
+                yield path
 
 
 def md5_file(path: Path, chunk_size: int = 8192) -> str:
@@ -95,7 +96,7 @@ def safe_copy(src: Path, dst_dir: Optional[str]):
 
 
 def combine_pgns(
-    root: Path,
+    roots: List[Path],
     output: Path,
     duplicates_report: Path,
     skipped_report: Path,
@@ -118,7 +119,7 @@ def combine_pgns(
         output.unlink()
 
     with output.open("w", encoding="utf-8") as master:
-        for file_path in iter_pgn_files(root):
+        for file_path in iter_pgn_files(roots):
             total += 1
             if log_every and total % log_every == 0:
                 print(
@@ -173,7 +174,12 @@ def combine_pgns(
 
 def parse_args(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Combine PGNs with deduplication and language filtering.")
-    parser.add_argument("--root", required=True, help="Root directory containing PGN files.")
+    parser.add_argument(
+        "--root",
+        action="append",
+        required=True,
+        help="Root directory containing PGN files (repeatable).",
+    )
     parser.add_argument("--output", required=True, help="Destination master PGN file.")
     parser.add_argument("--duplicates", required=True, help="CSV path for duplicate report.")
     parser.add_argument("--skipped", required=True, help="CSV path for skipped files.")
@@ -187,7 +193,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
 def main(argv: List[str]) -> int:
     args = parse_args(argv)
-    root = normalize_path(Path(args.root))
+    roots = [normalize_path(r) for r in args.root]
     output = normalize_path(Path(args.output))
     duplicates = normalize_path(Path(args.duplicates))
     skipped = normalize_path(Path(args.skipped))
@@ -196,7 +202,8 @@ def main(argv: List[str]) -> int:
     print("=" * 80)
     print("PGN CORPUS COMBINER")
     print("=" * 80)
-    print(f"Root directory : {root}")
+    for idx, root in enumerate(roots, start=1):
+        print(f"Root directory {idx:02d}: {root}")
     print(f"Output PGN     : {output}")
     print(f"Duplicates CSV : {duplicates}")
     print(f"Skipped CSV    : {skipped}")
@@ -204,7 +211,7 @@ def main(argv: List[str]) -> int:
     print("=" * 80)
 
     stats = combine_pgns(
-        root,
+        roots,
         output,
         duplicates,
         skipped,
