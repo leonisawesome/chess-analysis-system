@@ -1,24 +1,2 @@
-# Chess RAG System Dependencies
-# Generated: 2025-10-30
-# Compatible with Python 3.9+
-
-# Core Framework
-flask==3.0.0
-
-# OpenAI API (use latest for compatibility)
-openai>=1.50.0
-
-# Vector Database (must match version used to create database)
-qdrant-client==1.15.1
-
-# Chess Library
-python-chess==1.999
-
-# NLP
-spacy==3.7.2
-
-# Additional dependencies
-requests==2.31.0
-
-# HTTP client (required by openai)
-httpx>=0.27.0
+python-chess
+google-genai
