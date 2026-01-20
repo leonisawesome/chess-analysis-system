@@ -1,8 +1,0 @@
-CSS INTEGRATION REQUIRED
-========================
-
-Add this line to templates/index.html in the <head> section:
-
-<link rel="stylesheet" href="{{ url_for('static', filename='css/diagrams.css') }}">
-
-Or, if you have an existing CSS file, append the contents of static/css/diagrams.css to it.

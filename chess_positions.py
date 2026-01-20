@@ -87,22 +87,17 @@ def parse_moves_to_fen(moves_text: str, max_moves: int = 20) -> str:
         FEN string after the moves, or None if parsing fails
     """
     try:
-        # DEBUG: Log input
-        print(f"  [parse_moves_to_fen] Input: {repr(moves_text[:100])}")
-
         # Clean up moves text
         moves_text = moves_text.strip()
 
         # Find the start of the game (move 1)
         move_1_match = re.search(r'\b1\.\s*[a-hNBRQKO]', moves_text)
         if not move_1_match:
-            print(f"  [parse_moves_to_fen] SKIP: No '1.' found, mid-game fragment")
             return None
 
         # Extract from move 1 onwards
         game_start = move_1_match.start()
         game_text = moves_text[game_start:]
-        print(f"  [parse_moves_to_fen] Found '1.' at position {game_start}")
 
         # Try parsing as PGN moves
         # Remove move numbers
@@ -113,11 +108,9 @@ def parse_moves_to_fen(moves_text: str, max_moves: int = 20) -> str:
 
         # Split into tokens
         tokens = cleaned.split()
-        print(f"  [parse_moves_to_fen] Tokens: {tokens[:10]}")
 
         board = chess.Board()
         move_count = 0
-        failed_tokens = []
 
         for token in tokens:
             if move_count >= max_moves:
@@ -132,25 +125,15 @@ def parse_moves_to_fen(moves_text: str, max_moves: int = 20) -> str:
                 move = board.parse_san(token)
                 board.push(move)
                 move_count += 1
-            except Exception as e:
+            except:
                 # If parsing fails, skip this token
-                failed_tokens.append(f"{token}({str(e)[:20]})")
                 continue
-
-        print(f"  [parse_moves_to_fen] Parsed {move_count} moves, {len(failed_tokens)} failed")
-        if failed_tokens:
-            print(f"  [parse_moves_to_fen] Failed tokens: {failed_tokens[:5]}")
 
         # Require at least 2 successful moves to avoid garbage
         if move_count >= 2:
-            fen = board.fen()
-            print(f"  [parse_moves_to_fen] SUCCESS: {fen[:50]}")
-            return fen
-        else:
-            print(f"  [parse_moves_to_fen] FAIL: only {move_count} moves parsed (need ≥2)")
+            return board.fen()
 
-    except Exception as e:
-        print(f"  [parse_moves_to_fen] EXCEPTION: {str(e)}")
+    except Exception:
         pass
 
     return None
@@ -237,7 +220,7 @@ def extract_chess_positions(text: str, query: str = "") -> list:
             board = chess.Board(fen)
             svg = chess.svg.board(board, size=350)
 
-            # Extract FULL context for caption (500 chars)
+            # Extract context for caption
             caption_start = max(0, pos - 250)
             caption_end = min(len(text), pos + 250)
             raw_caption = text[caption_start:caption_end].strip()
@@ -253,8 +236,7 @@ def extract_chess_positions(text: str, query: str = "") -> list:
                 'type': 'fen',
                 'lichess_url': lichess_url
             })
-        except Exception as e:
-            print(f"  [extract_chess_positions] Failed to generate SVG for FEN: {e}")
+        except:
             continue
 
     # 2. Detect move sequences
@@ -264,7 +246,7 @@ def extract_chess_positions(text: str, query: str = "") -> list:
     for match in re.finditer(move_number_pattern, text):
         start_pos = match.start()
 
-        # Extract context window (300 chars ahead from move number)
+        # Extract context window
         end_pos = min(len(text), start_pos + 300)
         search_start = max(0, start_pos - 500)
         context_window = text[search_start:end_pos]
@@ -295,7 +277,7 @@ def extract_chess_positions(text: str, query: str = "") -> list:
                 seen_positions.add(fen)
                 svg = chess.svg.board(board, size=350)
 
-                # Extract FULL context for caption (500 chars around match)
+                # Extract context for caption
                 caption_start = max(0, start_pos - 250)
                 caption_end = min(len(text), start_pos + 250)
                 raw_caption = text[caption_start:caption_end].strip()
@@ -313,12 +295,10 @@ def extract_chess_positions(text: str, query: str = "") -> list:
                     'lichess_url': lichess_url
                 })
 
-                # Limit to 5 positions max (will filter down further)
                 if len(positions) >= 5:
                     break
 
-            except Exception as e:
-                print(f"  [extract_chess_positions] Failed to generate SVG for moves: {e}")
+            except:
                 continue
 
     # 3. Filter by relevance to query

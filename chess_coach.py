@@ -6,6 +6,7 @@ import chess.engine
 import time
 import os
 from typing import Optional, List, Dict, Any
+from openai import OpenAI  # NEW: OpenAI Fallback
 
 # Requirements:
 # google-genai
@@ -22,8 +23,10 @@ class RemediationAgent:
     """
     Handles communication with the Coach Agent (Gemini) and future RAG integration.
     """
-    def __init__(self, api_key: str, model_name: str = "gemini-2.0-flash"):
-        self.client = genai.Client(api_key=api_key)
+    def __init__(self, gemini_key: str, openai_key: str = None, model_name: str = "gemini-2.0-flash"):
+        self.gemini_key = gemini_key
+        self.openai_key = openai_key
+        self.gemini_client = genai.Client(api_key=gemini_key)
         self.model_name = model_name
         self.system_prompt = (
             "You are a Grandmaster Chess Coach. The user played [Move] in position [FEN]. "
@@ -38,7 +41,7 @@ class RemediationAgent:
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                response = self.client.models.generate_content(
+                response = self.gemini_client.models.generate_content(
                     model=self.model_name,
                     contents=prompt,
                     config=genai.types.GenerateContentConfig(
@@ -50,13 +53,33 @@ class RemediationAgent:
             except Exception as e:
                 if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
                     if attempt < max_retries - 1:
-                        sleep_time = 10 * (attempt + 1) # Increase wait: 10s, 20s, 30s
-                        print(f"Rate limit hit. Retrying in {sleep_time} seconds...")
+                        sleep_time = 10 * (attempt + 1)
+                        print(f"  [Coach] Gemini Rate limit hit. Retrying...")
                         time.sleep(sleep_time)
                         continue
+                    elif self.openai_key:
+                        print(f"  [Coach] ⚠️ Gemini failed. Falling back to OpenAI...")
+                        return self._explain_error_openai(prompt)
+                
                 print(f"Gemini API Error: {e}")
                 return "Better was " + best_move
         return "Better was " + best_move
+
+    def _explain_error_openai(self, prompt: str) -> str:
+        """Fallback for GPT-4o."""
+        try:
+            client = OpenAI(api_key=self.openai_key)
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"OpenAI Fallback Error: {e}")
+            return "Analysis currently limited."
 
     def query_library(self, topic: str) -> None:
         """

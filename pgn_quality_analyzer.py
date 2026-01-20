@@ -334,7 +334,11 @@ class PGNQualityAnalyzer:
         try:
             headers = dict(game.headers)
             self._strip_empty_variations(game)
-            text = str(game)
+            if raw_text:
+                text = raw_text
+            else:
+                text = str(game)
+            
             total_moves = len(list(game.mainline_moves()))
             if total_moves == 0:
                 return None
@@ -437,6 +441,30 @@ class PGNQualityAnalyzer:
             if comment_words < 65 and annotation_density < 0.22:
                 evs = min(evs, 79)
 
+            # --- MASTERS HYGIENE GATES ---
+            # 1. Words Per Move (WPM) > 1.5
+            wpm = comment_words / max(total_moves, 1)
+            if wpm <= 1.5:
+                # Failing WPM is fatal for "High Quality" status
+                evs = 0
+                return GameScore(
+                        evs=0, structure=0, annotations=0, humanness=0, educational=0,
+                        total_moves=total_moves, annotation_density=annotation_density,
+                        comment_words=comment_words, has_variations=has_variations,
+                        game_type="low_density", language=lang, dropped_reason="Low WPM (< 1.5)"
+                    )
+
+            # 2. Variation Presence (Must show calculation)
+            if variation_moves == 0:
+                evs = 0
+                return GameScore(
+                        evs=0, structure=0, annotations=0, humanness=0, educational=0,
+                        total_moves=total_moves, annotation_density=annotation_density,
+                        comment_words=comment_words, has_variations=has_variations,
+                        game_type="no_variations", language=lang, dropped_reason="No Variations"
+                    )
+            # -----------------------------
+
             # Simple game_type heuristic with comment bias
             if comment_words < 5:
                 game_type = "database_dump"
@@ -524,8 +552,11 @@ class PGNQualityAnalyzer:
         filepath: Path,
         keep_thresholds: List[float],
         out_handles: Dict[float, any],
+        bucket_handles: List[Tuple[float, float, any]] = None,
         kept_writer: Optional[csv.writer] = None,
     ) -> Optional[FileSummary]:
+        bucket_handles = bucket_handles or []
+
         scores: List[GameScore] = []
         if not filepath.exists():
             print(f"   ⚠️  Missing file on disk, skipping: {filepath}")
@@ -569,10 +600,17 @@ class PGNQualityAnalyzer:
             scored = self.score_game(game, file_name=filepath.name, game_index=idx, raw_text=raw_game)
             if scored:
                 scores.append(scored)
+                # 1. Threshold Handles (Cumulative >=)
                 for t, handle in out_handles.items():
                     if scored.evs >= t:
                         handle.write((scored.raw_game or raw_game) + "\n\n")
-                if kept_writer and scored.evs >= min(keep_thresholds):
+                
+                # 2. Bucket Handles (Range min <= evs <= max)
+                for (b_min, b_max, handle) in bucket_handles:
+                    if b_min <= scored.evs <= b_max:
+                        handle.write((scored.raw_game or raw_game) + "\n\n")
+
+                if kept_writer and scored.evs >= min(keep_thresholds or [0]):
                     kept_writer.writerow(
                         [
                             filepath.name,
@@ -681,6 +719,25 @@ def parse_thresholds(thr_str: str) -> List[float]:
     return vals or [70.0]
 
 
+def parse_buckets(bucket_args: List[str]) -> List[Tuple[float, float, str]]:
+    """ Parses '30-40=path.pgn' into (30.0, 40.0, 'path.pgn') """
+    buckets = []
+    if not bucket_args:
+        return buckets
+    for arg in bucket_args:
+        try:
+            r, path = arg.split("=", 1)
+            parts = r.split("-")
+            if len(parts) == 2:
+                low, high = float(parts[0]), float(parts[1])
+                buckets.append((low, high, path))
+            else:
+                print(f"Warning: Invalid bucket definition '{arg}' (expected min-max=path)")
+        except Exception:
+             print(f"Warning: Could not parse bucket '{arg}'")
+    return buckets
+
+
 def main():
     parser = argparse.ArgumentParser(description="Analyze PGN quality before ingestion")
     parser.add_argument("pgn_path", nargs="+", help="PGN file(s) or directory/ies")
@@ -694,10 +751,12 @@ def main():
     parser.add_argument("--output-dir", help="Directory to place thresholded PGNs (when multiple thresholds)")
     parser.add_argument("--kept-csv", help="Optional CSV with per-game scores for kept games")
     parser.add_argument("--thresholds", default="70", help="Comma-separated EVS thresholds (default: 70)")
+    parser.add_argument("--bucket", action="append", default=[], help="Range bucket: '30-40=out.pgn'")
     parser.add_argument("--append", action="store_true", help="Append to existing output files instead of overwriting")
     args = parser.parse_args()
 
-    thresholds = sorted(set(parse_thresholds(args.thresholds)))
+    thresholds = sorted(set(parse_thresholds(args.thresholds))) if args.thresholds else []
+    buckets = parse_buckets(args.bucket)
 
     all_files: List[Path] = []
     for p in args.pgn_path:
@@ -731,6 +790,13 @@ def main():
             path = base / f"high_quality_{int(t)}.pgn"
             out_handles[t] = path.open(mode, encoding="utf-8")
 
+    # Prepare Bucket handles
+    bucket_handles: List[Tuple[float, float, any]] = []
+    for (b_min, b_max, path_str) in buckets:
+        path = Path(path_str)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        bucket_handles.append((b_min, b_max, path.open(mode, encoding="utf-8")))
+
     kept_csv_writer = None
     kept_csv_handle = None
     if args.kept_csv:
@@ -753,6 +819,7 @@ def main():
             file,
             keep_thresholds=thresholds,
             out_handles=out_handles,
+            bucket_handles=bucket_handles,
             kept_writer=kept_csv_writer,
         )
         if summary:
