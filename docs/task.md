@@ -15,9 +15,10 @@
     - [ ] Implement SQLite-based storage for text and metadata
     - [ ] Documentation: `docs/DATABASE_SCHEMA.md`
     - [ ] **Verification**: Manually test search results for 5 diverse chess topics.
-- [ ] **PGN Ingestion Pipeline (Rigorous Verification Required)**
+- [/] **PGN Ingestion Pipeline (Rigorous Verification Required)**
     - [ ] Integrate and verify preserved PGN ingestion script
     - [ ] Ensure deduplication and filtering (remove games with no text)
+    - [x] Documentation: `docs/PGN_INGEST.md`
     - [ ] Implement SQLite-based storage for PGN games
     - [ ] **Verification**: Confirm zero "textless" games remain and deduplication is 100% accurate.
 
