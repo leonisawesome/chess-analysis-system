@@ -15,6 +15,40 @@ import chess.svg
 import urllib.parse
 
 
+def clean_caption(text: str) -> str:
+    """
+    Clean up chess-specific debris from captions (PGN variations, engine evals, etc.)
+    """
+    if not text:
+        return ""
+    
+    # 1. Remove move numbers with evaluations (e.g., "12... Nf6 $15")
+    text = re.sub(r'\d+\.+\s*[a-hNBRQKO][a-h0-9x+#=]*\s*\$\d+', '', text)
+    
+    # 2. Remove engine evaluations like $15, $1, $11, $14, $4, $18, etc.
+    text = re.sub(r'\$\d+', '', text)
+    
+    # 3. Remove nested variations in parentheses e.g. ( 9... Qd6 $15 { } )
+    # This handles one level of nesting which is usually enough for PGN comments
+    text = re.sub(r'\([^)]*\)', ' ', text)
+    
+    # 4. Remove comments in braces { }
+    text = re.sub(r'\{[^}]*\}', ' ', text)
+    
+    # 5. Remove long move sequences (e.g., "10. Qe1 Bb7 11. e4...")
+    # This looks for 3+ consecutive move numbers
+    text = re.sub(r'(\d+\.+\s*[a-hNBRQKO][^ \n]*\s*){3,}', ' [moves... ] ', text)
+    
+    # 6. Collapse whitespace
+    text = re.sub(r'\s+', ' ', text)
+    
+    # 7. Truncate to a reasonable length if still too long
+    if len(text) > 300:
+        text = text[:300] + "..."
+        
+    return text.strip()
+
+
 def detect_fen(text: str) -> list:
     """
     Detect FEN strings in text.
@@ -206,7 +240,8 @@ def extract_chess_positions(text: str, query: str = "") -> list:
             # Extract FULL context for caption (500 chars)
             caption_start = max(0, pos - 250)
             caption_end = min(len(text), pos + 250)
-            caption = text[caption_start:caption_end].strip()
+            raw_caption = text[caption_start:caption_end].strip()
+            caption = clean_caption(raw_caption)
 
             # Create Lichess URL
             lichess_url = create_lichess_url(fen)
@@ -263,7 +298,8 @@ def extract_chess_positions(text: str, query: str = "") -> list:
                 # Extract FULL context for caption (500 chars around match)
                 caption_start = max(0, start_pos - 250)
                 caption_end = min(len(text), start_pos + 250)
-                caption = text[caption_start:caption_end].strip()
+                raw_caption = text[caption_start:caption_end].strip()
+                caption = clean_caption(raw_caption)
 
                 # Create Lichess URL
                 lichess_url = create_lichess_url(fen)

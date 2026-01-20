@@ -1,19 +1,32 @@
 import os
 import time
+import threading
 from flask import Flask, render_template, request, jsonify, send_file, abort
 from content_surfacing_agent import ContentSurfacingAgent
 from diagram_service import diagram_index
 
 # Phase 6.1a: Static EPUB diagram integration
 METADATA_PATH = "diagram_metadata_full.json"
-if os.path.exists(METADATA_PATH):
-    diagram_index.load(METADATA_PATH)
+
+def load_diagram_index():
+    if os.path.exists(METADATA_PATH):
+        print(f"📊 [BACKGROUND] Loading heavy diagram index ({METADATA_PATH})...")
+        start = time.time()
+        diagram_index.load(METADATA_PATH)
+        print(f"✅ [BACKGROUND] Diagram index loaded in {time.time() - start:.2f}s")
+    else:
+        print(f"⚠️ [BACKGROUND] {METADATA_PATH} not found. Static book diagrams will be unavailable.")
+
+# Start background load
+threading.Thread(target=load_diagram_index, daemon=True).start()
+
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 import chess
 import chess.svg
+from chess_positions import clean_caption
 
 # Configuration
 DB_PATH = "/Volumes/T7 Shield/rag/databases/chess_text.db"
@@ -123,10 +136,11 @@ def query_merged():
                 # Just grab top 1-2 diagrams for now to keep it lite
                 # In a full app we'd rank them by chunk text
                 for d in all_diags[:2]:
+                    raw_cap = d.get('context_after') or d.get('context_before') or "Chess Diagram"
                     epub_diagrams.append({
                         'id': d['diagram_id'],
                         'url': f"/diagram/{d['diagram_id']}",
-                        'caption': d.get('context_after') or d.get('context_before') or "Chess Diagram",
+                        'caption': clean_caption(raw_cap),
                         'book_title': d.get('book_title')
                     })
     except Exception as e:
@@ -173,4 +187,4 @@ def serve_diagram(diagram_id):
 
 if __name__ == "__main__":
     print("🚀 Starting Chess Coach Lite on http://localhost:5001")
-    app.run(debug=True, port=5001)
+    app.run(debug=False, port=5001)

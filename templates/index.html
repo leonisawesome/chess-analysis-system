@@ -785,25 +785,33 @@
                 diagContainer.style.marginTop = '20px';
                 diagContainer.style.justifyContent = 'center';
 
-                data.diagram_positions.forEach(pos => {
+                data.diagram_positions.forEach((pos, idx) => {
                     const wrapper = document.createElement('div');
                     wrapper.style.textAlign = 'center';
 
-                    const img = document.createElement('img');
-                    img.src = `/board?fen=${encodeURIComponent(pos.fen)}`;
-                    img.style.width = '300px';
-                    img.style.height = '300px';
-                    img.style.border = '2px solid #444';
+                    const boardId = `top-board-${idx}`;
+                    const boardDiv = document.createElement('div');
+                    boardDiv.id = boardId;
+                    boardDiv.style.width = '300px';
+                    boardDiv.style.margin = '0 auto';
+                    boardDiv.style.border = '2px solid #444';
 
                     const label = document.createElement('div');
-                    label.innerText = pos.title;
+                    label.innerText = pos.title || 'Detected Position';
                     label.style.color = '#ccc';
                     label.style.marginTop = '5px';
                     label.style.fontSize = '0.9em';
 
-                    wrapper.appendChild(img);
+                    wrapper.appendChild(boardDiv);
                     wrapper.appendChild(label);
                     diagContainer.appendChild(wrapper);
+
+                    // Render board in next tick to ensure DOM is ready
+                    setTimeout(() => {
+                        if (typeof renderChessboard === 'function') {
+                            renderChessboard(pos.fen, boardId);
+                        }
+                    }, 0);
                 });
 
                 resultsDiv.prepend(diagContainer);
@@ -989,13 +997,33 @@
                 result.epub_diagrams.forEach((diagram, diagIndex) => {
                     const item = document.createElement('div');
                     item.className = 'diagram-item';
+                    item.style.textAlign = 'center';
 
-                    const img = document.createElement('img');
-                    img.src = diagram.url;
-                    img.alt = diagram.caption;
-                    img.loading = 'lazy';
-                    img.onerror = function () { this.style.display = 'none'; };  // Silent fail
-                    item.appendChild(img);
+                    const boardId = `epub-board-${index}-${diagIndex}`;
+                    const boardDiv = document.createElement('div');
+                    boardDiv.id = boardId;
+                    boardDiv.style.width = '300px';
+                    boardDiv.style.margin = '0 auto';
+                    boardDiv.style.border = '1px solid #ddd';
+                    item.appendChild(boardDiv);
+
+                    // Render board in next tick
+                    setTimeout(() => {
+                        // Use FEN if available, or try to fallback to image if needed
+                        // For static book diagrams, we might only have the image URL.
+                        // If we have no FEN, we should keep the image fallback.
+                        if (diagram.fen && typeof renderChessboard === 'function') {
+                            renderChessboard(diagram.fen, boardId);
+                        } else {
+                            const img = document.createElement('img');
+                            img.src = diagram.url;
+                            img.alt = diagram.caption;
+                            img.loading = 'lazy';
+                            img.style.maxWidth = '100%';
+                            img.onerror = function () { this.style.display = 'none'; };
+                            boardDiv.appendChild(img);
+                        }
+                    }, 0);
 
                     const caption = document.createElement('p');
                     caption.className = 'diagram-caption';
@@ -1016,21 +1044,31 @@
             const item = document.createElement('div');
             item.className = 'position-item';
 
-            // Render SVG board (server-side generated)
-            if (position.svg) {
-                const boardContainer = document.createElement('div');
-                boardContainer.className = 'chessboard-container';
-                boardContainer.innerHTML = position.svg;
-                item.appendChild(boardContainer);
-            }
+            // Render interactive board
+            const boardContainer = document.createElement('div');
+            boardContainer.id = boardId;
+            boardContainer.className = 'chessboard-container';
+            boardContainer.style.width = '350px';
+            boardContainer.style.margin = '0 auto';
+            item.appendChild(boardContainer);
+
+            // Render board in next tick
+            setTimeout(() => {
+                if (typeof renderChessboard === 'function') {
+                    renderChessboard(position.fen, boardId);
+                }
+            }, 0);
 
             // Lichess link
+            const linkWrapper = document.createElement('div');
+            linkWrapper.style.marginTop = '10px';
             const lichessLink = document.createElement('a');
             lichessLink.className = 'lichess-btn';
             lichessLink.href = `https://lichess.org/analysis/${encodeURIComponent(position.fen)}`;
             lichessLink.target = '_blank';
             lichessLink.textContent = '📊 Analyze on Lichess';
-            item.appendChild(lichessLink);
+            linkWrapper.appendChild(lichessLink);
+            item.appendChild(linkWrapper);
 
             // FULL caption (NOT TRUNCATED)
             if (position.caption) {

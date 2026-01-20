@@ -21,11 +21,18 @@
 
 ### 3. Answer Synthesis Quality
 - **Discovery:** Default synthesis was factual but brief/encyclopedic.
-- **Fix:** Updated Gemini 2.0 system instructions to act as a "Grandmaster Coach," demanding 600-1000+ word deep-dive lessons with move-by-move explanations.
+- **Fix:** Updated Gemini 2.0 system instructions to act as a "Grandmaster Coach," demanding 800-1500+ word "Masterclass" lessons.
 
-## Ongoing Work: Interactive Diagrams
-- **Current State:** Diagrams are static SVG/IMG or static `chessboard.js` (draggable: false).
-- **Goal:** Enable "Play through variations" by integrating a PGN player or interactive move stack.
+### 4. Interactive & Static Diagrams (Enabled)
+- **Discovery:** Diagrams were missing because:
+  1. The agent wasn't extracting positions (FEN/PGN) from retrieved text.
+  2. The agent wasn't using `[DIAGRAM_ID:UUID]` markers to tell Gemini where to put them.
+  3. `app_lite.py` wasn't serving static board images from the EPUB corpus.
+- **Fix:**
+  - Integrated `chess_positions.py` for dynamic FEN/PGN extraction.
+  - Enabled marker injection in the agent prompt so Gemini can place boards.
+  - Loaded `diagram_index` in `app_lite.py` to map results back to actual book images.
+  - Added `/diagram/<id>` route and enabled dragging (`draggable: true`) for interactivity.
 
 ## Stale Configuration Notes
 - `TROUBLESHOOTING.md` and `ARCHITECTURE.md` still contain legacy references to OpenAI/GPT-5.
