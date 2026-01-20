@@ -1,3 +1,4 @@
+import hashlib
 #!/usr/bin/env python3
 """
 PGN Quality Analyzer
@@ -144,6 +145,22 @@ class PGNQualityAnalyzer:
                 )
                 """
             )
+            # Table for deduplication
+            # game_id = UCI Moves Hash (Groups versions of same game)
+            # fingerprint = Normalized Content Hash (Unique Document)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS game_hashes (
+                    fingerprint TEXT PRIMARY KEY,
+                    game_id TEXT,
+                    evs REAL,
+                    source_file TEXT,
+                    source_index INTEGER
+                )
+                """
+            )
+            # Index for faster "Show me all versions of this game" queries
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_game_id ON game_hashes(game_id)")
 
     def _score_structure(self, headers: Dict[str, str], moves: int, has_result: bool) -> float:
         header_hits = sum(1 for field in REQUIRED_HEADERS if headers.get(field))
@@ -321,6 +338,37 @@ class PGNQualityAnalyzer:
                 kept.append(var)
         node.variations = [main_child] + kept
 
+    def _generate_game_id(self, game: chess.pgn.Game) -> str:
+        """
+        Layer 1: Canonical Game ID (UCI moves only).
+        Groups all versions of the same game (Raw, Annotated, etc.)
+        """
+        try:
+             # Fast export of moves only
+             skeleton = []
+             for move in game.mainline_moves():
+                 # UCI format (e.g., e2e4) is robust and standard
+                 skeleton.append(move.uci())
+             moves_str = "".join(skeleton)
+        except:
+             moves_str = "" # Should not happen if game parsed
+        
+        return hashlib.md5(moves_str.encode("utf-8")).hexdigest()
+
+    def _generate_content_fingerprint(self, raw_game: str) -> str:
+        """
+        Layer 2: Normalized Content Fingerprint.
+        Collapses whitespace/formatting but PRESERVES unique commentary.
+        """
+        # 1. Normalize line endings
+        text = raw_game.replace('\r\n', '\n').replace('\r', '\n')
+        
+        # 2. Collapse whitespace runs (but not inside quoted strings in headers if we were strict,
+        # but for PGN, collapsing all whitespace runs to single space is usually safe fo ident)
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
     def score_game(
         self,
         game: chess.pgn.Game,
@@ -454,15 +502,20 @@ class PGNQualityAnalyzer:
                         game_type="low_density", language=lang, dropped_reason="Low WPM (< 1.5)"
                     )
 
-            # 2. Variation Presence (Must show calculation)
+            # 2. Variation Presence (Must show calculation OR deep prose)
+            # Relaxed logic: If WPM > 3.5 (e.g. Logical Chess Move by Move), we accept it even without variations.
             if variation_moves == 0:
-                evs = 0
-                return GameScore(
-                        evs=0, structure=0, annotations=0, humanness=0, educational=0,
-                        total_moves=total_moves, annotation_density=annotation_density,
-                        comment_words=comment_words, has_variations=has_variations,
-                        game_type="no_variations", language=lang, dropped_reason="No Variations"
-                    )
+                if wpm <= 3.5:
+                     evs = 0
+                     return GameScore(
+                             evs=0, structure=0, annotations=0, humanness=0, educational=0,
+                             total_moves=total_moves, annotation_density=annotation_density,
+                             comment_words=comment_words, has_variations=has_variations,
+                             game_type="no_variations", language=lang, dropped_reason="No Variations & Low WPM"
+                         )
+                else:
+                    # Slight penalty for no variations, but not fatal if prose is rich
+                    evs = max(evs - 15, 0)
             # -----------------------------
 
             # Simple game_type heuristic with comment bias
@@ -739,166 +792,98 @@ def parse_buckets(bucket_args: List[str]) -> List[Tuple[float, float, str]]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze PGN quality before ingestion")
-    parser.add_argument("pgn_path", nargs="+", help="PGN file(s) or directory/ies")
-    parser.add_argument("--db", default="pgn_analysis.db", help="SQLite database path")
-    parser.add_argument("--json", help="Optional JSON output file")
-    parser.add_argument("--limit", type=int, help="Only analyze first N files")
-    parser.add_argument("--print-summary", action="store_true", help="Print per-file summary table (sorted by avg EVS)")
-    parser.add_argument("--summary-csv", help="Optional CSV path for per-file summaries")
-    parser.add_argument("--worst", type=int, help="Limit summary output to the lowest N avg EVS files")
-    parser.add_argument("--output-pgn", help="Optional output PGN file containing kept games (single threshold)")
-    parser.add_argument("--output-dir", help="Directory to place thresholded PGNs (when multiple thresholds)")
-    parser.add_argument("--kept-csv", help="Optional CSV with per-game scores for kept games")
-    parser.add_argument("--thresholds", default="70", help="Comma-separated EVS thresholds (default: 70)")
-    parser.add_argument("--bucket", action="append", default=[], help="Range bucket: '30-40=out.pgn'")
-    parser.add_argument("--append", action="store_true", help="Append to existing output files instead of overwriting")
+    parser = argparse.ArgumentParser(description="Analyze PGN quality and filter for RAG.")
+    parser.add_argument("input_pgn", type=Path, help="Path to PGN file")
+    parser.add_argument("--db", type=Path, default=Path("/Volumes/T7 Shield/rag/databases/pgn_analysis.db"), help="Path to output SQLite DB")
+    parser.add_argument("--limit", type=int, default=None, help="Number of games to analyze (default: All)")
     args = parser.parse_args()
 
-    thresholds = sorted(set(parse_thresholds(args.thresholds))) if args.thresholds else []
-    buckets = parse_buckets(args.bucket)
+    analyzer = PGNQualityAnalyzer(args.db)
+    
+    print(f"♟️  Analyzing: {args.input_pgn}")
+    print(f"📊 Tracking results in: {args.db}")
+    print(f"🎯 Limit: {args.limit} games")
+    
+    count = 0
+    accepted = 0
+    rejected = 0
+    
+    print("\n[Analysis Log]")
+    for raw_game in analyzer._iter_streaming_games(args.input_pgn):
+        if args.limit and count >= args.limit:
+            break
+            
+        count += 1
+        try:
+            game = chess.pgn.read_game(io.StringIO(raw_game))
+            # Extract basics for log before scoring (in case scoring fails)
+            white = game.headers.get("White", "?")
+            black = game.headers.get("Black", "?")
+            title = f"{white} vs {black}"
+            
+            score = analyzer.score_game(game, file_name=args.input_pgn.name, game_index=count, raw_text=raw_game)
+            
+            # ---------------------------------------------------------
+            # TWO-LAYER DEDUPLICATION
+            # Layer 1: Game ID (Moves) -> Grouping
+            # Layer 2: Fingerprint (Content) -> Identity
+            # ---------------------------------------------------------
+            game_id = analyzer._generate_game_id(game)
+            fingerprint = analyzer._generate_content_fingerprint(raw_game)
+            
+            status = "unknown"
+            reason = "instructional value"
+            
+            with sqlite3.connect(analyzer.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Check Fingerprint first (Exact Content Duplicate)
+                cursor.execute("SELECT evs FROM game_hashes WHERE fingerprint=?", (fingerprint,))
+                row = cursor.fetchone()
+                
+                if row:
+                    # EXACT DUPLICATE: We skip strict re-indexing, but we count it as rejected for this run
+                    rejected += 1
+                    status = "⚠️  DUPLICATE"
+                    reason = "Exact content match exists"
+                else:
+                    # NEW CONTENT FIND (Even if game_id exists, this is a new *version*)
+                    if score and score.evs > 0:
+                        # Check if we have seen this GAME_ID before (for logging "Upgrade" status)
+                        cursor.execute("SELECT max(evs) FROM game_hashes WHERE game_id=?", (game_id,))
+                        best_existing = cursor.fetchone()[0]
+                        
+                        accepted += 1
+                        if best_existing is None:
+                            status = "✅ NEW GAME"
+                            reason = f"EVS: {score.evs:.1f}"
+                        elif score.evs > best_existing:
+                            status = "💎 UPGRADE"
+                            reason = f"EVS: {score.evs:.1f} > Old Best ({best_existing:.1f})"
+                        else:
+                            status = "📄 VERSION"
+                            reason = f"EVS: {score.evs:.1f} (Alt version)"
+                            
+                        # Insert the new fingerprint
+                        cursor.execute("INSERT INTO game_hashes VALUES (?, ?, ?, ?, ?)", 
+                                     (fingerprint, game_id, score.evs, args.input_pgn.name, count))
+                    else:
+                         rejected += 1
+                         status = "❌ REJECTED"
+                         # Diagnostics for rejection
+                         if score and score.dropped_reason:
+                             reason = score.dropped_reason
+                         else:
+                             reason = "Low Quality / No Score"
+            
+            # Print readable log line
+            print(f"#{count:<4} | {status} | {title[:40]:<40} | {reason}")
+            
+        except Exception as e:
+            print(f"#{count:<4} | ⚠️  ERROR    | Parser Failed                            | {e}")
+            rejected += 1
 
-    all_files: List[Path] = []
-    for p in args.pgn_path:
-        all_files.extend(iter_pgn_files(Path(p)))
-    # filter out AppleDouble/hidden and hash-prefixed
-    all_files = [p for p in all_files if not (p.name.startswith("._") or p.name.startswith("#") or p.name.startswith("."))]
-    if not all_files:
-        print(f"No .pgn files found in given paths: {args.pgn_path}")
-        sys.exit(1)
-    if args.limit:
-        all_files = all_files[: args.limit]
+    print(f"\nSummary: {accepted} Accepted, {rejected} Rejected ({(accepted/count)*100 if count else 0:.1f}%)")
 
-    analyzer = PGNQualityAnalyzer(Path(args.db))
-    summaries: List[Dict] = []
-
-    # Prepare output PGN handles keyed by threshold
-    out_handles: Dict[float, any] = {}
-    if len(thresholds) == 1:
-        target_path = Path(args.output_pgn) if args.output_pgn else Path(args.output_dir or ".") / f"high_quality_{int(thresholds[0])}.pgn"
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        mode = "a" if args.append else "w"
-        out_handles[thresholds[0]] = target_path.open(mode, encoding="utf-8")
-    else:
-        if not args.output_dir:
-            print("When using multiple thresholds, provide --output-dir.")
-            sys.exit(1)
-        base = Path(args.output_dir)
-        base.mkdir(parents=True, exist_ok=True)
-        mode = "a" if args.append else "w"
-        for t in thresholds:
-            path = base / f"high_quality_{int(t)}.pgn"
-            out_handles[t] = path.open(mode, encoding="utf-8")
-
-    # Prepare Bucket handles
-    bucket_handles: List[Tuple[float, float, any]] = []
-    for (b_min, b_max, path_str) in buckets:
-        path = Path(path_str)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        bucket_handles.append((b_min, b_max, path.open(mode, encoding="utf-8")))
-
-    kept_csv_writer = None
-    kept_csv_handle = None
-    if args.kept_csv:
-        kept_csv_path = Path(args.kept_csv)
-        kept_csv_path.parent.mkdir(parents=True, exist_ok=True)
-        mode = "a" if args.append else "w"
-        kept_csv_handle = kept_csv_path.open(mode, encoding="utf-8", newline="")
-        kept_csv_writer = csv.writer(kept_csv_handle)
-        if kept_csv_path.stat().st_size == 0:
-            kept_csv_writer.writerow(
-                ["file", "game_index", "event", "site", "date", "evs", "language", "game_type", "total_moves", "annotation_density", "comment_words"]
-            )
-
-    print(f"\nAnalyzing {len(all_files)} PGN file(s)...\n")
-    start = time.time()
-
-    for idx, file in enumerate(all_files, start=1):
-        print(f"[{idx}/{len(all_files)}] {file.name}")
-        summary = analyzer.analyze_file(
-            file,
-            keep_thresholds=thresholds,
-            out_handles=out_handles,
-            bucket_handles=bucket_handles,
-            kept_writer=kept_csv_writer,
-        )
-        if summary:
-            summaries.append(asdict(summary))
-            print(
-                f"   Games: {summary.total_games}, "
-                f"Avg EVS: {summary.avg_evs}, "
-                f"High-quality: {summary.high_quality}, "
-                f"Annotation density: {summary.avg_annotation_density}"
-            )
-        else:
-            print("   ⚠️  No valid games parsed (skipped)")
-
-    elapsed = time.time() - start
-    print(f"\nCompleted in {elapsed/60:.1f} minutes.")
-
-    if args.json and summaries:
-        out_path = Path(args.json)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(out_path, "w", encoding="utf-8") as f:
-            json.dump({"summaries": summaries}, f, indent=2)
-        print(f"JSON summary written to {out_path}")
-
-    if (args.print_summary or args.summary_csv) and summaries:
-        ordered = sorted(summaries, key=lambda s: s["avg_evs"])
-        if args.worst:
-            ordered = ordered[: args.worst]
-        if args.print_summary:
-            header = f"{'AVG':>6} {'MED':>6} {'HQ':>5} {'MQ':>5} {'LQ':>5} {'MOVES':>7}  Filename"
-            print("\nPer-file summary (lowest avg EVS first):")
-            print(header)
-            print("-" * len(header))
-            for summary in ordered:
-                print(
-                    f"{summary['avg_evs']:6.2f} "
-                    f"{summary['median_evs']:6.2f} "
-                    f"{summary['high_quality']:5d} "
-                    f"{summary['medium_quality']:5d} "
-                    f"{summary['low_quality']:5d} "
-                    f"{summary['avg_moves']:7.1f}  "
-                    f"{summary['filename']}"
-                )
-        if args.summary_csv:
-            out_csv = Path(args.summary_csv)
-            out_csv.parent.mkdir(parents=True, exist_ok=True)
-            with open(out_csv, "w", encoding="utf-8", newline="") as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(
-                    [
-                        "filename",
-                        "total_games",
-                        "high_quality",
-                        "medium_quality",
-                        "low_quality",
-                        "avg_evs",
-                        "median_evs",
-                        "avg_annotation_density",
-                        "avg_moves",
-                    ]
-                )
-                for summary in ordered:
-                    writer.writerow(
-                        [
-                            summary["filename"],
-                            summary["total_games"],
-                            summary["high_quality"],
-                            summary["medium_quality"],
-                            summary["low_quality"],
-                            summary["avg_evs"],
-                            summary["median_evs"],
-                            summary["avg_annotation_density"],
-                            summary["avg_moves"],
-                        ]
-                    )
-            print(f"Summary CSV written to {out_csv}")
-
-    for h in out_handles.values():
-        h.close()
-    if kept_csv_handle:
-        kept_csv_handle.close()
 if __name__ == "__main__":
     main()
