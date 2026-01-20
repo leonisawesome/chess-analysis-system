@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
+from chess_positions import extract_chess_positions
 
 class ContentSurfacingAgent:
     def __init__(self, db_path: str):
@@ -126,25 +127,50 @@ class ContentSurfacingAgent:
                 conn.close()
         return stats
 
-    def answer_question(self, query: str, api_key: str, results: Optional[List[Dict]] = None) -> str:
+    def answer_question(self, query: str, api_key: str, results: Optional[List[Dict]] = None) -> Tuple[str, List[Dict]]:
         """
         Synthesizes a high-value answer using Gemini 2.0 based on retrieved context.
+        Returns (answer_text, diagram_list).
         """
         # 1. Retrieve Context if not provided
         if results is None:
             results = self.search_library(query, limit=15)
             
         if not results:
-            return "I could not find any relevant information in the library."
+            return "I could not find any relevant information in the library.", []
 
-        # 2. Build Prompt
+        # 2. Extract and Deduplicate Diagrams from results
+        import uuid
+        diagram_map = {}
+        diagram_list = []
+        
+        # Analyze results for both explicit FENs and move sequences
+        for res in results:
+            content = res.get('content', '')
+            found_positions = extract_chess_positions(content, query=query)
+            
+            for pos in found_positions:
+                fen = pos['fen']
+                if fen not in diagram_map:
+                    diag_id = str(uuid.uuid4())
+                    diagram_map[fen] = diag_id
+                    diagram_list.append({
+                        'id': diag_id,
+                        'fen': fen,
+                        'title': res['title'],
+                        'caption': pos.get('caption', f"Analysis from: {res['title']}")
+                    })
+
+        # 3. Build Prompt with Diagram Mapping Instructions
         context_str = ""
-        for i, res in enumerate(results, 1):
-            # Use full content but truncate slightly to avoid overwhelming context if many results
-            # Gemini has a huge window but let's keep it focused.
-            text = res['content']
-            if len(text) > 8000:
-                text = text[:8000] + "..."
+        diagram_instructions = ""
+        if diagram_list:
+            diagram_instructions = "\nAVAILABLE INTERACTIVE DIAGRAMS (You can use these by inserting [DIAGRAM_ID:UUID]):\n"
+            for d in diagram_list:
+                diagram_instructions += f"- [DIAGRAM_ID:{d['id']}] : {d['title']}\n"
+
+        for i, res in enumerate(results):
+            text = res['content'] if 'content' in res else res['snippet']
             context_str += f"SOURCE {i}: [{res['title']}] ({res['chapter']})\n{text}\n\n"
 
         system_instruction = (
@@ -152,17 +178,19 @@ class ContentSurfacingAgent:
             "Your goal is to provide a COMPLETE, COMPREHENSIVE, AND EXHAUSTIVE MASTERCLASS on the user's topic. "
             "DO NOT BE BRIEF. Aim for an extremely detailed, reference-quality article (800-1500+ words). "
             "Structure your lesson like a high-end training manual: "
-            "1. **Strategic Overview & Core Philosophy** (Explain the 'why' behind the opening/topic). "
-            "2. **Thematic Variations & Move Sequences** (Detailed move-by-move breakdowns with annotations for BOTH sides). "
-            "3. **Pawn Structures & Piece Placement** (Positional nuances). "
-            "4. **Common Pitfalls & Deviations** (What to watch out for). "
-            "5. **Grandmaster Plans for the Middlegame** (How to transition). "
+            "1. **Strategic Overview & Core Philosophy** (Explain the 'why'). "
+            "2. **Thematic Variations & Move Sequences** (Detailed move-by-move breakdowns). "
+            "3. **Pawn Structures & Piece Placement**. "
+            "4. **Common Pitfalls & Deviations**. "
+            "5. **Grandmaster Plans for the Middlegame**.\n\n"
+            "DIAGRAM USAGE: You MUST insert interactive chessboards into your lesson to illustrate key positions. "
+            "Use the provided [DIAGRAM_ID:UUID] tags. For example: 'As we can see in this position [DIAGRAM_ID:123], White has a clear advantage.' "
+            "Do not make up IDs; only use the ones provided below.\n\n"
             "CITATIONS ARE MANDATORY: Every single variant, evaluation, or strategic claim MUST be cited using [Source X] format. "
-            "If sources provide specific PGN move lists, synthesize them into a clear narrative with analysis. "
-            "Use ONLY the provided context. If the context is insufficient for 800 words, provide as much depth as humanly possible based on every detail available."
+            "Use ONLY the provided context."
         )
         
-        full_prompt = f"Context:\n{context_str}\n\nUser Question: {query}\n\nDetailed Analysis and Coaching:"
+        full_prompt = f"Context:\n{context_str}\n{diagram_instructions}\n\nUser Question: {query}\n\nDetailed Analysis and Coaching Masterclass:"
 
         # 3. Call Gemini
         try:
@@ -175,9 +203,11 @@ class ContentSurfacingAgent:
                     system_instruction=system_instruction
                 )
             )
-            return response.text
+            raw_answer = response.text
+            return raw_answer, diagram_list
         except Exception as e:
-            return f"Error generating answer: {e}"
+            print(f"Gemini API Error: {e}")
+            return f"Error communicating with Gemini: {e}", []
 
 if __name__ == "__main__":
     # Test

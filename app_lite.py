@@ -1,7 +1,13 @@
 import os
 import time
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file, abort
 from content_surfacing_agent import ContentSurfacingAgent
+from diagram_service import diagram_index
+
+# Phase 6.1a: Static EPUB diagram integration
+METADATA_PATH = "diagram_metadata_full.json"
+if os.path.exists(METADATA_PATH):
+    diagram_index.load(METADATA_PATH)
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -98,16 +104,48 @@ def query_merged():
 
     # 3. Generate High-Value Answer via Gemini
     import markdown
-    
-    # We get the API key from args or env (passed via command line when running the script)
     api_key = os.getenv("GOOGLE_API_KEY")
+
+    # Try to find relevant static diagrams from the source books
+    epub_diagrams = []
+    try:
+        # Extract book IDs from results to fetch diagrams
+        book_ids = set()
+        for r in results:
+            # Use source_name or title to match book_id
+            bid = diagram_index.get_book_id_from_name(r.get('title', ''))
+            if bid:
+                book_ids.add(bid)
+        
+        for bid in book_ids:
+            all_diags = diagram_index.get_diagrams_for_book(bid)
+            if all_diags:
+                # Just grab top 1-2 diagrams for now to keep it lite
+                # In a full app we'd rank them by chunk text
+                for d in all_diags[:2]:
+                    epub_diagrams.append({
+                        'id': d['diagram_id'],
+                        'url': f"/diagram/{d['diagram_id']}",
+                        'caption': d.get('context_after') or d.get('context_before') or "Chess Diagram",
+                        'book_title': d.get('book_title')
+                    })
+    except Exception as e:
+        print(f"Error fetching static diagrams: {e}")
+
+    # Add these to the source metadata for the first result that matches
+    for res in formatted_results:
+        res['epub_diagrams'] = [d for d in epub_diagrams if d['book_title'] == res.get('book')]
+
     if not api_key:
         answer_html = "<p style='color:red'>⚠️ API Key Missing. Please restart server with GOOGLE_API_KEY set.</p>"
     else:
         print(f"🧠 Synthesizing Answer for: {query_text}")
         try:
-            raw_answer = agent.answer_question(query_text, api_key, results=results)
+            raw_answer, answer_diagrams = agent.answer_question(query_text, api_key, results=results)
             answer_html = markdown.markdown(raw_answer)
+            # Add Gemini-generated diagrams to the list
+            if answer_diagrams:
+                diagram_positions.extend(answer_diagrams)
         except Exception as e:
             answer_html = f"<p>Error generating answer: {e}</p>"
 
@@ -119,6 +157,19 @@ def query_merged():
     }
 
     return jsonify(response)
+
+@app.route('/diagram/<diagram_id>')
+def serve_diagram(diagram_id):
+    """Serve a static diagram image from the EPUB corpus."""
+    diagram = diagram_index.get_diagram_by_id(diagram_id)
+    if not diagram or not diagram.get('file_path'):
+        abort(404)
+    
+    file_path = diagram['file_path']
+    if not os.path.exists(file_path):
+        abort(404)
+        
+    return send_file(file_path)
 
 if __name__ == "__main__":
     print("🚀 Starting Chess Coach Lite on http://localhost:5001")
