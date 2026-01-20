@@ -61,16 +61,50 @@
   // Render interactive chessboard from FEN
   function renderChessboard(fen, containerId) {
     try {
+      console.log('  ♟️ Initializing interactive board for:', containerId);
+      
+      // Initialize chess.js game state
+      const game = new Chess(fen);
+      
+      const onDragStart = (source, piece, position, orientation) => {
+        // Do not pick up pieces if the game is over
+        if (game.game_over()) return false;
+
+        // Only pick up pieces for the side to move
+        if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+            (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+          return false;
+        }
+      };
+
+      const onDrop = (source, target) => {
+        // See if the move is legal
+        const move = game.move({
+          from: source,
+          to: target,
+          promotion: 'q' // Always promote to queen for simplicity
+        });
+
+        // Illegal move
+        if (move === null) return 'snapback';
+      };
+
+      const onSnapEnd = () => {
+        board.position(game.fen());
+      };
+
       const board = Chessboard(containerId, {
         position: fen,
-        draggable: false,
-        dropOffBoard: 'trash',
-        sparePieces: false,
+        draggable: true, // ENABLE INTERACTIVITY
+        onDragStart: onDragStart,
+        onDrop: onDrop,
+        onSnapEnd: onSnapEnd,
         pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
       });
-      return board;
+      
+      return { board, game };
     } catch (e) {
-      console.error('Failed to render chessboard:', e);
+      console.error('Failed to render interactive chessboard:', e);
       return null;
     }
   }
