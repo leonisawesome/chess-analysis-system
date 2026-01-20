@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -51,7 +52,7 @@
             background: white;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
         }
 
@@ -160,7 +161,7 @@
             padding: 25px;
             margin-bottom: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .result-header {
@@ -324,7 +325,7 @@
             padding: 30px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .answer-content {
@@ -364,7 +365,7 @@
             margin-bottom: 12px;
             border-radius: 8px;
             border-left: 4px solid #4CAF50;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .source-header {
@@ -494,11 +495,16 @@
         }
     </style>
 </head>
+
 <body>
     <header>
         <div class="container">
             <h1>🏰 System A: Chess Knowledge Search</h1>
-            <p class="subtitle">600,205 total chunks from 988 EPUB books + 64,251 PGN games (559,406 diagrams)</p>
+            <p class="subtitle">
+                <span id="book-count">...</span> Books (<span id="chunk-count">...</span> Chunks) +
+                <span id="game-count">...</span> PGN games
+                ( <span id="total-count">...</span> items )
+            </p>
         </div>
     </header>
 
@@ -509,43 +515,18 @@
                 <div id="exampleButtons"></div>
             </div>
 
-            <input
-                type="text"
-                id="queryInput"
-                class="search-input"
+            <input type="text" id="queryInput" class="search-input"
                 placeholder="Ask a chess question... (e.g., How do I improve my calculation in the middlegame?)"
-                onkeypress="if(event.key === 'Enter') search()"
-            >
-            <div class="length-control">
-                <div class="length-control-header">
-                    <span>Answer Length</span>
-                    <span id="lengthChoiceLabel">Balanced • 3-4 sections</span>
-                </div>
-                <input
-                    type="range"
-                    min="0"
-                    max="2"
-                    step="1"
-                    value="1"
-                    id="lengthSlider"
-                    class="length-slider"
-                >
-                <div class="length-labels">
-                    <span data-index="0">Concise</span>
-                    <span data-index="1">Balanced</span>
-                    <span data-index="2">In-Depth</span>
-                </div>
-                <p class="length-description" id="lengthDescription">
-                    Balanced: Default 3-4 sections mixing strategy explanations with concrete PGN examples.
-                </p>
-            </div>
+                onkeypress="if(event.key === 'Enter') search()">
+
             <button class="search-btn" onclick="search()" id="searchBtn">
                 Search
             </button>
         </div>
 
         <div id="loading" class="loading" style="display: none;">
-            ⏳ Searching 359,095 chunks (EPUB/MOBI corpus from 937 books; PGN refresh in progress), reranking, and synthesizing answer with GPT-5... (this may take 50-60 seconds)
+            ⏳ Searching 359,095 chunks (EPUB/MOBI corpus from 937 books; PGN refresh in progress), reranking, and
+            synthesizing answer with GPT-5... (this may take 50-60 seconds)
         </div>
 
         <div id="error" class="error" style="display: none;"></div>
@@ -564,52 +545,33 @@
 
     <!-- INLINE FALLBACK FOR renderAnswerWithDiagrams (ITEM-024.6 Emergency Fix) -->
     <script>
-    (function ensureDiagramRenderer() {
-        console.log("🔧 Checking for renderAnswerWithDiagrams...");
+        (function ensureDiagramRenderer() {
+            console.log("🔧 Checking for renderAnswerWithDiagrams...");
 
-        if (typeof window.renderAnswerWithDiagrams === 'undefined') {
-            console.warn("⚠️ External diagram-renderer.js not loaded, using inline fallback");
+            if (typeof window.renderAnswerWithDiagrams === 'undefined') {
+                console.warn("⚠️ External diagram-renderer.js not loaded, using inline fallback");
 
-            window.renderAnswerWithDiagrams = function(answer, diagramPositions, container) {
-                console.log("🎨 [FALLBACK] renderAnswerWithDiagrams called");
-                console.log("  Answer length:", answer?.length || 0);
-                console.log("  Diagrams:", diagramPositions?.length || 0);
+                window.renderAnswerWithDiagrams = function (answer, diagramPositions, container) {
+                    console.log("🎨 [FALLBACK] renderAnswerWithDiagrams called");
+                    console.log("  Answer length:", answer?.length || 0);
+                    console.log("  Diagrams:", diagramPositions?.length || 0);
 
-                if (!container) {
-                    container = document.getElementById('answer-content-container') || document.body;
-                }
+                    if (!container) {
+                        container = document.getElementById('answer-content-container') || document.body;
+                    }
 
-                container.innerHTML = answer;
+                    container.innerHTML = answer;
 
-                console.log("✅ [FALLBACK] Answer inserted with embedded HTML");
-            };
-        } else {
-            console.log("✅ External renderAnswerWithDiagrams loaded successfully");
-        }
-    })();
+                    console.log("✅ [FALLBACK] Answer inserted with embedded HTML");
+                };
+            } else {
+                console.log("✅ External renderAnswerWithDiagrams loaded successfully");
+            }
+        })();
     </script>
 
     <script>
-        const LENGTH_MODES = [
-            {
-                id: "concise",
-                label: "Concise",
-                summary: "Short overview (~250 words)",
-                description: "Focus on one paragraph per section, highlight the main plan, and cite a single concrete variation."
-            },
-            {
-                id: "balanced",
-                label: "Balanced",
-                summary: "Default (3-4 sections)",
-                description: "Blend strategy explanations with at least one PGN-backed variation in each section."
-            },
-            {
-                id: "in_depth",
-                label: "In-Depth",
-                summary: "Reference-style (~700+ words)",
-                description: "Layer multiple variations per section and expand on plans, move-order nuances, and practical tips."
-            }
-        ];
+
 
         // Example queries with random selection
         const allExampleQueries = [
@@ -653,7 +615,7 @@
         }
 
         // Generate random example buttons on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log('DOMContentLoaded fired at', new Date().getTime());
             const exampleButtons = document.getElementById('exampleButtons');
             const randomQueries = getRandomQueries(allExampleQueries, 5);
@@ -667,62 +629,15 @@
                 exampleButtons.appendChild(button);
             });
 
-            updateLengthModeUI(parseInt(document.getElementById('lengthSlider')?.value || '1', 10));
-            const slider = document.getElementById('lengthSlider');
-            if (slider) {
-                slider.addEventListener('input', (event) => {
-                    updateLengthModeUI(parseInt(event.target.value, 10));
-                });
-            }
-            document.querySelectorAll('.length-labels span').forEach(span => {
-                span.addEventListener('click', () => {
-                    const idx = parseInt(span.dataset.index || '0', 10);
-                    updateLengthModeUI(idx);
-                });
-            });
+
         });
 
-        function updateLengthModeUI(index) {
-            const slider = document.getElementById('lengthSlider');
-            const label = document.getElementById('lengthChoiceLabel');
-            const description = document.getElementById('lengthDescription');
-            const labelSpans = document.querySelectorAll('.length-labels span');
-            if (!slider || !label || !description) {
-                return;
-            }
-            const safeIndex = Math.min(Math.max(isNaN(index) ? 1 : index, 0), LENGTH_MODES.length - 1);
-            const meta = LENGTH_MODES[safeIndex];
-            slider.value = safeIndex;
-            label.textContent = `${meta.label} • ${meta.summary}`;
-            description.textContent = `${meta.label}: ${meta.description}`;
-            labelSpans.forEach(span => {
-                const spanIndex = parseInt(span.dataset.index || '0', 10);
-                span.classList.toggle('active', spanIndex === safeIndex);
-            });
-        }
 
-        function getSelectedLengthMode() {
-            const slider = document.getElementById('lengthSlider');
-            const index = slider ? parseInt(slider.value || '1', 10) : 1;
-            const safeIndex = Math.min(Math.max(isNaN(index) ? 1 : index, 0), LENGTH_MODES.length - 1);
-            return LENGTH_MODES[safeIndex].id;
-        }
-
-        function getLengthMetadata(mode) {
-            return LENGTH_MODES.find(m => m.id === mode) || LENGTH_MODES[1];
-        }
-
-        function getLengthLabelFromMode(mode) {
-            const meta = getLengthMetadata(mode);
-            return `${meta.label} • ${meta.summary}`;
-        }
 
         function search() {
             console.log("=== SEARCH FUNCTION CALLED ===");
             const query = document.getElementById('queryInput').value.trim();
-            const lengthMode = getSelectedLengthMode();
             console.log("Query:", query);
-            console.log("Length mode:", lengthMode);
 
             if (!query) {
                 alert('Please enter a question');
@@ -743,30 +658,30 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ query: query, length_mode: lengthMode })
+                body: JSON.stringify({ query: query })
             })
-            .then(response => {
-                console.log("Response received:", response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log("Data received:", data);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('searchBtn').disabled = false;
+                .then(response => {
+                    console.log("Response received:", response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Data received:", data);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('searchBtn').disabled = false;
 
-                if (data.error) {
-                    showError(data.error);
-                    return;
-                }
+                    if (data.error) {
+                        showError(data.error);
+                        return;
+                    }
 
-                displayResults(data);
-            })
-            .catch(error => {
-                console.error("FETCH ERROR:", error);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('searchBtn').disabled = false;
-                showError('An error occurred: ' + error.message);
-            });
+                    displayResults(data);
+                })
+                .catch(error => {
+                    console.error("FETCH ERROR:", error);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('searchBtn').disabled = false;
+                    showError('An error occurred: ' + error.message);
+                });
         }
 
         function showError(message) {
@@ -809,10 +724,7 @@
 
             const heading = answerSection.querySelector('h2');
             if (heading) {
-                const lengthChip = document.createElement('div');
-                lengthChip.className = 'length-chip';
-                lengthChip.textContent = `Length preference: ${getLengthLabelFromMode(data.length_mode || 'balanced')}`;
-                heading.insertAdjacentElement('afterend', lengthChip);
+
             }
 
             // ITEM-024.6: Process answer with inline featured diagrams
@@ -858,12 +770,43 @@
                 // Final validation: Check if any markers remain
                 const remainingMarkers = processedAnswer.match(/\[FEATURED_DIAGRAM_\d+\]/g);
                 if (remainingMarkers) {
-                    console.error(`❌ ${remainingMarkers.length} unreplaced markers found:`, remainingMarkers);
-                    processedAnswer = processedAnswer.replace(/\[FEATURED_DIAGRAM_\d+\]/g, '');
-                    console.warn('🧹 Removed leftover [FEATURED_DIAGRAM_X] markers to keep text clean');
                 } else {
                     console.log(`✅ All diagram markers successfully replaced`);
                 }
+            }
+
+            // Add Diagrams if available
+            if (data.diagram_positions && data.diagram_positions.length > 0) {
+                const diagContainer = document.createElement('div');
+                diagContainer.className = 'diagram-container';
+                diagContainer.style.display = 'flex';
+                diagContainer.style.flexWrap = 'wrap';
+                diagContainer.style.gap = '20px';
+                diagContainer.style.marginTop = '20px';
+                diagContainer.style.justifyContent = 'center';
+
+                data.diagram_positions.forEach(pos => {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.textAlign = 'center';
+
+                    const img = document.createElement('img');
+                    img.src = `/board?fen=${encodeURIComponent(pos.fen)}`;
+                    img.style.width = '300px';
+                    img.style.height = '300px';
+                    img.style.border = '2px solid #444';
+
+                    const label = document.createElement('div');
+                    label.innerText = pos.title;
+                    label.style.color = '#ccc';
+                    label.style.marginTop = '5px';
+                    label.style.fontSize = '0.9em';
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(label);
+                    diagContainer.appendChild(wrapper);
+                });
+
+                resultsDiv.prepend(diagContainer);
             }
 
             if (data.results && Array.isArray(data.results)) {
@@ -1051,7 +994,7 @@
                     img.src = diagram.url;
                     img.alt = diagram.caption;
                     img.loading = 'lazy';
-                    img.onerror = function() { this.style.display = 'none'; };  // Silent fail
+                    img.onerror = function () { this.style.display = 'none'; };  // Silent fail
                     item.appendChild(img);
 
                     const caption = document.createElement('p');
@@ -1106,5 +1049,28 @@
             return div.innerHTML;
         }
     </script>
+    <script>
+        // --- Live Stats Poller ---
+        async function updateStats() {
+            try {
+                const response = await fetch('/stats');
+                const data = await response.json();
+
+                // Animate/Update numbers
+                document.getElementById('book-count').innerText = data.epubs.toLocaleString();
+                document.getElementById('chunk-count').innerText = data.chunks.toLocaleString();
+                document.getElementById('game-count').innerText = data.pgn_games.toLocaleString();
+                document.getElementById('total-count').innerText = (data.chunks + data.pgn_games).toLocaleString();
+
+            } catch (e) {
+                console.error("Stats poll failed", e);
+            }
+        }
+
+        // Poll every 3 seconds to show "explosive" growth
+        setInterval(updateStats, 3000);
+        updateStats(); // Initial call
+    </script>
 </body>
+
 </html>

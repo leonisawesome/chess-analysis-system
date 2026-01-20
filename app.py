@@ -41,8 +41,7 @@ from dynamic_diagram_service import create_dynamic_diagram, get_dynamic_diagram_
 # Feature flag for dynamic middlegame pipeline
 USE_DYNAMIC_PIPELINE = True  # Set to False to disable middlegame handling
 ENABLE_PGN_COLLECTION = True  # PGN corpus rebuild complete (233,211 chunks ingested Nov 13, 2025)
-DEFAULT_LENGTH_MODE = "balanced"
-LENGTH_MODE_CHOICES = set(LENGTH_PRESETS.keys())
+
 
 FEATURED_MARKER_PATTERN = re.compile(r'\[FEATURED_DIAGRAM_\d+\]')
 SECTION_HEADING_PATTERN = re.compile(r'(##\s+[^\n]+\n)')
@@ -405,10 +404,8 @@ def query():
         # Step 1: Parse request
         data = request.get_json() or {}
         query_text = data.get('query', '').strip()
-        requested_length_mode = data.get('length_mode', DEFAULT_LENGTH_MODE)
-        length_mode = requested_length_mode if requested_length_mode in LENGTH_MODE_CHOICES else DEFAULT_LENGTH_MODE
-        length_config = LENGTH_PRESETS.get(length_mode, LENGTH_PRESETS[DEFAULT_LENGTH_MODE])
-        print(f"📝 Length preference: {length_mode}")
+        length_config = LENGTH_PRESETS["in_depth"]
+        print(f"📝 Length preset: in_depth")
         t1 = time.time()
         print(f"⏱  Request parsing: {t1-start:.2f}s")
 
@@ -471,8 +468,7 @@ def query():
             expected_signature=expected_signature,
             validate_stage2_diagrams_func=None,  # Dynamic diagram validation removed
             generate_section_with_retry_func=None,  # Dynamic diagram validation removed
-            canonical_fen=canonical_fen,
-            length_mode=DEFAULT_LENGTH_MODE
+            canonical_fen=canonical_fen
         )
 
         rag_timing['synthesis'] = round(time.time() - synthesis_start, 2)
@@ -580,10 +576,8 @@ def query_merged():
         # Step 1: Parse request
         data = request.get_json()
         query_text = data.get('query', '').strip()
-        requested_length_mode = data.get('length_mode', DEFAULT_LENGTH_MODE)
-        length_mode = requested_length_mode if requested_length_mode in LENGTH_MODE_CHOICES else DEFAULT_LENGTH_MODE
-        length_config = LENGTH_PRESETS.get(length_mode, LENGTH_PRESETS[DEFAULT_LENGTH_MODE])
-        print(f"📝 Length preference: {length_mode}")
+        length_config = LENGTH_PRESETS["in_depth"]
+        print(f"📝 Length preset: in_depth")
         t1 = time.time()
         print(f"⏱  Request parsing: {t1-start:.2f}s")
 
@@ -754,8 +748,7 @@ def query_merged():
             expected_signature=None,
             validate_stage2_diagrams_func=None,  # Dynamic diagram validation removed
             generate_section_with_retry_func=None,  # Dynamic diagram validation removed
-            canonical_fen=None,
-            length_mode=length_mode
+            canonical_fen=None
         )
 
         synthesis_time = time.time() - synthesis_start
@@ -922,7 +915,7 @@ def query_merged():
             'featured_diagrams': featured_diagrams,  # Add featured diagrams
             'sources': final_results[:5],
             'results': final_results,
-            'length_mode': length_mode,
+
             'timing': {
                 'embedding': round(embed_time, 2),
                 'search': round(search_time, 2),
@@ -1060,11 +1053,11 @@ def query_pgn():
 
 if __name__ == '__main__':
     # Check for API key
-    api_key = os.getenv('OPENAI_API_KEY')
+    api_key = os.getenv('GOOGLE_API_KEY')
     if not api_key:
-        print("❌ Error: OPENAI_API_KEY environment variable not set!")
-        print("   Set it with: export OPENAI_API_KEY='your-key-here'")
-        exit(1)
+        print("❌ Error: GOOGLE_API_KEY environment variable not set!")
+        print("   Set it in your .env file or with: export GOOGLE_API_KEY='your-key-here'")
+        # For now we'll allow it to run but warn, as app_lite handled this gracefully
 
     print("=" * 80)
     print("SYSTEM A WEB UI")
