@@ -1,5 +1,11 @@
 const API_URL = 'http://localhost:8000';
 
+export interface Diagram {
+    image_path: string;
+    fen: string;
+    is_ocr_based: boolean;
+}
+
 export interface Chunk {
     chunk_id: number;
     book_title: string;
@@ -7,6 +13,7 @@ export interface Chunk {
     fen: string;
     quality_score: number;
     is_instructional: boolean;
+    diagrams: Diagram[];
 }
 
 export interface SearchResult {

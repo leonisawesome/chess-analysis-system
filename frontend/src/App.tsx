@@ -70,14 +70,22 @@ function App() {
 
   const loadLesson = async (query: string) => {
     setLoading(true);
+    console.log("[SYSTEM] Searching for:", query);
     try {
       const data = await searchConcepts(query);
-      setLessonChunks(data.results);
-      if (data.results.length > 0) {
-        handleChunkClick(data.results[0].fen);
+      console.log("[SYSTEM] Data received:", data);
+      if (data && data.results) {
+        setLessonChunks(data.results);
+        if (data.results.length > 0) {
+          handleChunkClick(data.results[0].fen);
+        }
+      } else {
+        console.warn("[SYSTEM] No results found or malformed response");
+        setLessonChunks([]);
       }
     } catch (e) {
-      console.error("API Error:", e);
+      console.error("[SYSTEM] API Error:", e);
+      setLessonChunks([]);
     } finally {
       setLoading(false);
     }
@@ -264,6 +272,13 @@ function App() {
         <div className="flex-1 overflow-y-auto px-12 py-10 space-y-12">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-96 text-ink-light"><Loader className="animate-spin mb-4" size={40} /><p className="text-xl font-serif">Consulting the Grandmasters...</p></div>
+          ) : lessonChunks.length === 0 ? (
+            <div className="max-w-4xl mx-auto flex flex-col items-center justify-center h-96 text-ink-light/50 border-2 border-dashed border-ink/5 rounded-3xl">
+              <Search size={48} className="mb-4 opacity-20" />
+              <p className="text-2xl font-serif">No insights found for "{searchQuery}"</p>
+              <p className="text-sm mt-2">Try searching for concepts like "French Defense" or "King side attack"</p>
+              <button onClick={() => loadLesson("Scandinavian")} className="mt-8 px-6 py-2 bg-board-accent/20 text-board-accent rounded-full hover:bg-board-accent/30 transition-all font-bold">Try "Scandinavian"</button>
+            </div>
           ) : (
             <div className="max-w-4xl mx-auto">
               {lessonChunks.map((chunk, i) => (

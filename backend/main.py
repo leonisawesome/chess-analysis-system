@@ -105,9 +105,24 @@ def search_by_concept(query: str, limit: int = 10):
             LIMIT ?
         """
         try:
+            print(f"DEBUG: Searching FTS5 for '{fts_query}'")
             rows = cursor.execute(sql_query, (fts_query, limit)).fetchall()
-        except sqlite3.OperationalError:
-            rows = cursor.execute(sql_query.replace("MATCH ?", "LIKE ?"), (f"%{fts_query}%", limit)).fetchall()
+            if not rows:
+                print("DEBUG: FTS5 returned no results. Falling back to LIKE.")
+                like_query = f"%{query}%"
+                sql_fallback = """
+                    SELECT c.chunk_id, b.title, c.text_content, c.fen, c.quality_score, c.is_instructional
+                    FROM chunks c
+                    JOIN books b ON c.book_id = b.book_id
+                    WHERE c.text_content LIKE ?
+                    LIMIT ?
+                """
+                rows = cursor.execute(sql_fallback, (like_query, limit)).fetchall()
+        except sqlite3.OperationalError as e:
+            print(f"DEBUG: FTS5 Error: {e}. Falling back to basic LIKE.")
+            rows = cursor.execute(sql_fallback, (f"%{query}%", limit)).fetchall()
+        
+        print(f"DEBUG: Found {len(rows)} results")
         results = []
         for row in rows:
             diagrams = fetch_diagrams(cursor, row['chunk_id'])
