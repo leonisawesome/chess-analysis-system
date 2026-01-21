@@ -52,3 +52,6 @@ test_output*/
 *.log
 start_server.sh
 diagram_metadata.json
+
+# Extracted Diagrams (EPUB Pipeline)
+frontend/public/diagrams/

@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Force Chessboard Colors (Fix for Ryan Gregory Library) */
+div[style*="background-color: rgb(181, 136, 99)"],
+div[style*="background-color: #b58863"] {
+  background-color: #5ca1e6 !important;
+}
+
+div[style*="background-color: rgb(240, 217, 181)"],
+div[style*="background-color: #f0d9b5"] {
+  background-color: #f1f5f9 !important;
+}
+
+/* Ensure moves in text match paragraph style */
+.move-link {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+@layer base {
+  body {
+    @apply bg-board-dark text-paper font-sans antialiased;
+  }
+}
